@@ -44,6 +44,12 @@ pnpm format           # Format code with Prettier
 - `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
 - API key stored in document settings, configured in Settings view
 
+**Google Calendar Integration**
+
+- `src/lib/google-calendar.ts` - OAuth flow and Calendar API for fetching events
+- `src/hooks/useGoogleCalendar.ts` - React hook managing OAuth authentication state and event fetching
+- OAuth callback handled at `/oauth/callback` path - the app detects this URL, processes the authorization code, and redirects to settings on completion
+
 **Geolocation**
 
 - `src/hooks/useGeolocation.ts` - React hook for accessing device geolocation with permission management

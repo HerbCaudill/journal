@@ -1,4 +1,4 @@
-import { render, screen, act } from "@testing-library/react"
+import { render, screen, act, waitFor } from "@testing-library/react"
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { App } from "./App"
 import type { JournalDoc } from "./types/journal"
@@ -12,6 +12,9 @@ vi.mock("./lib/dates", async () => {
     getToday: () => "2025-01-16",
   }
 })
+
+// Store original location for restoration
+const originalLocation = window.location
 
 // Mock the JournalContext to avoid IndexedDB issues
 vi.mock("./context/JournalContext", () => ({
@@ -35,6 +38,11 @@ describe("App", () => {
   beforeEach(() => {
     // Reset hash before each test
     window.location.hash = ""
+    // Reset pathname and search for OAuth tests
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
+    })
   })
 
   it("renders header with today's date by default", () => {
@@ -91,5 +99,73 @@ describe("App", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Thursday, January 16, 2025",
     )
+  })
+
+  describe("OAuth callback", () => {
+    it("shows processing state when on OAuth callback route", () => {
+      // Mock location for OAuth callback
+      Object.defineProperty(window, "location", {
+        value: {
+          ...originalLocation,
+          pathname: "/oauth/callback",
+          search: "?code=test-auth-code&state=test-state",
+          hash: "",
+          href: "http://localhost/oauth/callback?code=test-auth-code&state=test-state",
+        },
+        writable: true,
+      })
+
+      render(<App />)
+      expect(screen.getByText("Completing authentication...")).toBeInTheDocument()
+    })
+
+    it("falls back to day view when OAuth callback has missing parameters", () => {
+      // Mock location for OAuth callback without required params
+      // Since code and state are missing, it should NOT be treated as OAuth callback
+      Object.defineProperty(window, "location", {
+        value: {
+          ...originalLocation,
+          pathname: "/oauth/callback",
+          search: "",
+          hash: "",
+          href: "http://localhost/oauth/callback",
+        },
+        writable: true,
+      })
+
+      render(<App />)
+
+      // Should show the normal day view since params are missing
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        "Thursday, January 16, 2025",
+      )
+    })
+
+    it("shows error state when OAuth state validation fails", async () => {
+      // Mock location for OAuth callback with valid params but state won't match
+      Object.defineProperty(window, "location", {
+        value: {
+          ...originalLocation,
+          pathname: "/oauth/callback",
+          search: "?code=test-code&state=invalid-state",
+          hash: "",
+          href: "http://localhost/oauth/callback?code=test-code&state=invalid-state",
+        },
+        writable: true,
+      })
+
+      // Clear sessionStorage to simulate state mismatch
+      sessionStorage.removeItem("google_oauth_state")
+      sessionStorage.removeItem("google_oauth_verifier")
+
+      render(<App />)
+
+      // Should show processing first, then error
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Failed to complete authentication|Invalid OAuth/),
+        ).toBeInTheDocument()
+      })
+    })
   })
 })
