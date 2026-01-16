@@ -1,16 +1,18 @@
 import { useState, useCallback, useEffect } from "react"
 import { useJournal } from "../context/JournalContext"
+import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
 
 /**
  * Settings view component for managing app configuration.
  * Allows users to:
  * - Enter their Claude API key for AI integration
- * - Connect their Google account (coming soon)
+ * - Connect their Google account for calendar integration
  */
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
   const [apiKey, setApiKey] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
 
   // Sync local state with document on mount
   useEffect(() => {
@@ -151,16 +153,66 @@ export function SettingsView() {
           Connect your Google account to import calendar events and more.
         </p>
 
-        <button
-          type="button"
-          disabled
-          className="bg-muted text-muted-foreground flex cursor-not-allowed items-center justify-center gap-2 rounded-md border px-4 py-2"
-          aria-label="Connect Google Account (coming soon)"
-        >
-          <GoogleIcon />
-          Connect Google Account
-          <span className="bg-muted-foreground/20 rounded px-2 py-0.5 text-xs">Coming Soon</span>
-        </button>
+        {googleError && (
+          <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-2 rounded p-2 text-sm">
+            <span>{googleError}</span>
+            <button
+              type="button"
+              onClick={clearError}
+              className="text-destructive hover:text-destructive/80 transition-colors"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {authState === "unconfigured" && (
+          <p className="text-muted-foreground text-sm italic">
+            Google Calendar integration is not configured. Set up VITE_GOOGLE_CLIENT_ID in your
+            environment to enable this feature.
+          </p>
+        )}
+
+        {authState === "unauthenticated" && (
+          <button
+            type="button"
+            onClick={authenticate}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 rounded-md px-4 py-2 transition-colors"
+            aria-label="Connect Google Account"
+          >
+            <GoogleIcon />
+            Connect Google Account
+          </button>
+        )}
+
+        {authState === "authenticating" && (
+          <button
+            type="button"
+            disabled
+            className="bg-muted text-muted-foreground flex cursor-not-allowed items-center justify-center gap-2 rounded-md border px-4 py-2"
+            aria-label="Connecting to Google"
+          >
+            <GoogleIcon />
+            Connecting...
+          </button>
+        )}
+
+        {authState === "authenticated" && (
+          <div className="flex flex-col gap-2">
+            <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+              <CheckIcon />
+              Google account connected
+            </p>
+            <button
+              type="button"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-destructive hover:border-destructive w-fit rounded-md border px-4 py-2 transition-colors"
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )
