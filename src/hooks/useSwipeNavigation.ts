@@ -86,7 +86,7 @@ export function useSwipeNavigation(options: SwipeNavigationOptions = {}): SwipeH
         onSwipeRight()
       }
     },
-    [onSwipeLeft, onSwipeRight, threshold, maxVerticalRatio]
+    [onSwipeLeft, onSwipeRight, threshold, maxVerticalRatio],
   )
 
   return {

@@ -12,9 +12,13 @@ interface LocationBadgeProps {
  * Shows 4 decimal places which gives ~11m precision.
  */
 function formatCoordinate(value: number, isLatitude: boolean): string {
-  const direction = isLatitude
-    ? value >= 0 ? "N" : "S"
-    : value >= 0 ? "E" : "W"
+  const direction =
+    isLatitude ?
+      value >= 0 ?
+        "N"
+      : "S"
+    : value >= 0 ? "E"
+    : "W"
   return `${Math.abs(value).toFixed(4)}° ${direction}`
 }
 
@@ -44,9 +48,7 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
       <span className="text-xs">
         {formattedLat}, {formattedLng}
         {accuracy !== undefined && (
-          <span className="text-muted-foreground ml-1">
-            ({formatAccuracy(accuracy)})
-          </span>
+          <span className="text-muted-foreground ml-1">({formatAccuracy(accuracy)})</span>
         )}
       </span>
     </>
@@ -59,7 +61,7 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
     return (
       <button
         onClick={onClick}
-        className={`${className} hover:bg-muted/80 transition-colors cursor-pointer`}
+        className={`${className} hover:bg-muted/80 cursor-pointer transition-colors`}
         aria-label={`Location: ${formattedLat}, ${formattedLng}`}
       >
         {content}

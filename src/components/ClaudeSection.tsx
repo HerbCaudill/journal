@@ -89,7 +89,7 @@ export function ClaudeSection({
   const displayError = localError || error
 
   // Filter to only show assistant messages in the response area
-  const assistantMessages = messages.filter((m) => m.role === "assistant")
+  const assistantMessages = messages.filter(m => m.role === "assistant")
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,24 +98,22 @@ export function ClaudeSection({
         <button
           onClick={handleSubmit}
           disabled={isLoading || !apiKey}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Ask Claude"
         >
-          {isLoading ? (
+          {isLoading ?
             <span className="flex items-center gap-2">
               <span className="animate-spin">⏳</span>
               Thinking...
             </span>
-          ) : (
-            "Ask Claude"
-          )}
+          : "Ask Claude"}
         </button>
 
         {messages.length > 0 && (
           <button
             onClick={handleReset}
             disabled={isLoading}
-            className="px-4 py-2 text-muted-foreground hover:text-foreground border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border px-4 py-2 transition-colors disabled:opacity-50"
             aria-label="Clear conversation"
           >
             Clear
@@ -125,10 +123,7 @@ export function ClaudeSection({
 
       {/* Error display */}
       {displayError && (
-        <div
-          role="alert"
-          className="p-3 bg-destructive/10 text-destructive rounded-md text-sm"
-        >
+        <div role="alert" className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
           {displayError}
         </div>
       )}
@@ -136,19 +131,11 @@ export function ClaudeSection({
       {/* Response display */}
       {assistantMessages.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Claude's Response
-          </h3>
-          {assistantMessages.map((message) => (
-            <div
-              key={message.id}
-              className="p-4 bg-muted rounded-md"
-              data-testid="claude-response"
-            >
-              <p className="text-foreground whitespace-pre-wrap">
-                {message.content}
-              </p>
-              <span className="text-xs text-muted-foreground mt-2 block">
+          <h3 className="text-muted-foreground text-sm font-medium">Claude's Response</h3>
+          {assistantMessages.map(message => (
+            <div key={message.id} className="bg-muted rounded-md p-4" data-testid="claude-response">
+              <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+              <span className="text-muted-foreground mt-2 block text-xs">
                 {formatTime(message.createdAt)}
               </span>
             </div>
@@ -158,9 +145,9 @@ export function ClaudeSection({
 
       {/* No API key message */}
       {!apiKey && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           To use Claude, please add your API key in{" "}
-          <a href="#/settings" className="underline hover:text-foreground">
+          <a href="#/settings" className="hover:text-foreground underline">
             Settings
           </a>
           .

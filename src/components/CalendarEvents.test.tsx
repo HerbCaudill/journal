@@ -101,7 +101,7 @@ describe("CalendarEvents", () => {
       render(<CalendarEvents date="2024-01-15" />)
 
       expect(
-        screen.getByText("Connect your Google Calendar to see today's events.")
+        screen.getByText("Connect your Google Calendar to see today's events."),
       ).toBeInTheDocument()
     })
 

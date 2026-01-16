@@ -15,7 +15,11 @@ import {
 /**
  * Authentication state for Google Calendar
  */
-export type GoogleCalendarAuthState = "unconfigured" | "unauthenticated" | "authenticating" | "authenticated"
+export type GoogleCalendarAuthState =
+  | "unconfigured"
+  | "unauthenticated"
+  | "authenticating"
+  | "authenticated"
 
 /**
  * Options for the useGoogleCalendar hook
@@ -176,7 +180,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
         return false
       }
     },
-    [config]
+    [config],
   )
 
   /**
@@ -228,7 +232,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
         isFetchingRef.current = false
       }
     },
-    [authState, config, events]
+    [authState, config, events],
   )
 
   /**

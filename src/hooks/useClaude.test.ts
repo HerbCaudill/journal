@@ -34,9 +34,7 @@ describe("useClaude", () => {
       { id: "2", role: "assistant", content: "Hi there!", createdAt: 1001 },
     ]
 
-    const { result } = renderHook(() =>
-      useClaude({ ...defaultOptions, initialMessages })
-    )
+    const { result } = renderHook(() => useClaude({ ...defaultOptions, initialMessages }))
 
     expect(result.current.messages).toEqual(initialMessages)
   })
@@ -65,9 +63,9 @@ describe("useClaude", () => {
     let resolvePromise: (value: claudeModule.ClaudeResponse) => void
     mockSendMessage.mockImplementation(
       () =>
-        new Promise((resolve) => {
+        new Promise(resolve => {
           resolvePromise = resolve
-        })
+        }),
     )
 
     const { result } = renderHook(() => useClaude(defaultOptions))
@@ -134,7 +132,7 @@ describe("useClaude", () => {
     expect(mockSendMessage).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      "Hello world"
+      "Hello world",
     )
   })
 
@@ -163,7 +161,7 @@ describe("useClaude", () => {
         maxTokens: 2048,
       },
       [],
-      "Hello"
+      "Hello",
     )
   })
 
@@ -178,19 +176,13 @@ describe("useClaude", () => {
       { id: "2", role: "assistant", content: "Response 1", createdAt: 1001 },
     ]
 
-    const { result } = renderHook(() =>
-      useClaude({ ...defaultOptions, initialMessages })
-    )
+    const { result } = renderHook(() => useClaude({ ...defaultOptions, initialMessages }))
 
     await act(async () => {
       await result.current.send("Second")
     })
 
-    expect(mockSendMessage).toHaveBeenCalledWith(
-      expect.anything(),
-      initialMessages,
-      "Second"
-    )
+    expect(mockSendMessage).toHaveBeenCalledWith(expect.anything(), initialMessages, "Second")
   })
 
   it("resets conversation state", async () => {
@@ -270,7 +262,7 @@ describe("useClaude", () => {
       await result.current.send("Second")
     })
 
-    const ids = result.current.messages.map((m) => m.id)
+    const ids = result.current.messages.map(m => m.id)
     const uniqueIds = new Set(ids)
     expect(uniqueIds.size).toBe(ids.length)
   })

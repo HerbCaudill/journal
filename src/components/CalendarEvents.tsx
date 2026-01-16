@@ -35,15 +35,8 @@ function formatEventTime(event: CalendarEvent): string {
  * Handles authentication state and loading/error states.
  */
 export function CalendarEvents({ date }: CalendarEventsProps) {
-  const {
-    authState,
-    isLoading,
-    error,
-    events,
-    authenticate,
-    fetchEvents,
-    clearError,
-  } = useGoogleCalendar()
+  const { authState, isLoading, error, events, authenticate, fetchEvents, clearError } =
+    useGoogleCalendar()
 
   // Fetch events when the date changes and user is authenticated
   useEffect(() => {
@@ -60,22 +53,16 @@ export function CalendarEvents({ date }: CalendarEventsProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+        <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
           <CalendarIcon />
           Calendar
         </h3>
         <AuthButton authState={authState} onAuthenticate={authenticate} />
       </div>
 
-      {error && (
-        <ErrorMessage message={error} onDismiss={clearError} />
-      )}
+      {error && <ErrorMessage message={error} onDismiss={clearError} />}
 
-      <EventsList
-        authState={authState}
-        isLoading={isLoading}
-        events={events}
-      />
+      <EventsList authState={authState} isLoading={isLoading} events={events} />
     </div>
   )
 }
@@ -91,17 +78,13 @@ function AuthButton({ authState, onAuthenticate }: AuthButtonProps) {
   }
 
   if (authState === "authenticating") {
-    return (
-      <span className="text-xs text-muted-foreground">
-        Connecting...
-      </span>
-    )
+    return <span className="text-muted-foreground text-xs">Connecting...</span>
   }
 
   return (
     <button
       onClick={onAuthenticate}
-      className="text-xs text-primary hover:text-primary/80 transition-colors"
+      className="text-primary hover:text-primary/80 text-xs transition-colors"
     >
       Connect Google Calendar
     </button>
@@ -117,12 +100,12 @@ function ErrorMessage({ message, onDismiss }: ErrorMessageProps) {
   return (
     <div
       role="alert"
-      className="flex items-start justify-between gap-2 p-2 bg-destructive/10 text-destructive text-sm rounded"
+      className="bg-destructive/10 text-destructive flex items-start justify-between gap-2 rounded p-2 text-sm"
     >
       <span>{message}</span>
       <button
         onClick={onDismiss}
-        className="text-destructive hover:text-destructive/80 transition-colors shrink-0"
+        className="text-destructive hover:text-destructive/80 shrink-0 transition-colors"
         aria-label="Dismiss error"
       >
         <XIcon />
@@ -140,7 +123,7 @@ interface EventsListProps {
 function EventsList({ authState, isLoading, events }: EventsListProps) {
   if (authState !== "authenticated") {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Connect your Google Calendar to see today's events.
       </p>
     )
@@ -156,16 +139,12 @@ function EventsList({ authState, isLoading, events }: EventsListProps) {
   }
 
   if (events.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No events scheduled for this day.
-      </p>
-    )
+    return <p className="text-muted-foreground text-sm">No events scheduled for this day.</p>
   }
 
   return (
     <ul className="space-y-2" role="list" aria-label="Calendar events">
-      {events.map((event) => (
+      {events.map(event => (
         <EventItem key={event.id} event={event} />
       ))}
     </ul>
@@ -182,26 +161,20 @@ function EventItem({ event }: EventItemProps) {
   const isTentative = event.status === "tentative"
 
   return (
-    <li
-      className={`p-2 bg-muted rounded ${isCancelled ? "opacity-50" : ""}`}
-    >
+    <li className={`bg-muted rounded p-2 ${isCancelled ? "opacity-50" : ""}`}>
       <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <p
-            className={`text-sm font-medium text-foreground truncate ${
+            className={`text-foreground truncate text-sm font-medium ${
               isCancelled ? "line-through" : ""
             }`}
           >
             {event.summary}
-            {isTentative && (
-              <span className="ml-1 text-xs text-muted-foreground">(tentative)</span>
-            )}
+            {isTentative && <span className="text-muted-foreground ml-1 text-xs">(tentative)</span>}
           </p>
-          <p className="text-xs text-muted-foreground">{timeText}</p>
+          <p className="text-muted-foreground text-xs">{timeText}</p>
           {event.location && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
-              📍 {event.location}
-            </p>
+            <p className="text-muted-foreground mt-0.5 truncate text-xs">📍 {event.location}</p>
           )}
         </div>
         {event.htmlLink && (
@@ -209,7 +182,7 @@ function EventItem({ event }: EventItemProps) {
             href={event.htmlLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
             aria-label={`Open ${event.summary} in Google Calendar`}
           >
             <ExternalLinkIcon />
@@ -222,9 +195,9 @@ function EventItem({ event }: EventItemProps) {
 
 function EventSkeleton() {
   return (
-    <div className="p-2 bg-muted rounded animate-pulse" aria-hidden="true">
-      <div className="h-4 bg-muted-foreground/20 rounded w-3/4 mb-1" />
-      <div className="h-3 bg-muted-foreground/20 rounded w-1/2" />
+    <div className="bg-muted animate-pulse rounded p-2" aria-hidden="true">
+      <div className="bg-muted-foreground/20 mb-1 h-4 w-3/4 rounded" />
+      <div className="bg-muted-foreground/20 h-3 w-1/2 rounded" />
     </div>
   )
 }

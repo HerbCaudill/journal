@@ -24,10 +24,8 @@ function formatDisplayDate(dateString: string): string {
  */
 export function Header({ date }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between p-4 border-b border-border">
-      <h1 className="text-xl font-semibold text-foreground">
-        {formatDisplayDate(date)}
-      </h1>
+    <header className="border-border flex items-center justify-between border-b p-4">
+      <h1 className="text-foreground text-xl font-semibold">{formatDisplayDate(date)}</h1>
       <a
         href="#/settings"
         className="text-muted-foreground hover:text-foreground transition-colors"

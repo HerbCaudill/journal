@@ -32,7 +32,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-16">
         <div data-testid="child">Child Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     expect(screen.getByTestId("child")).toBeInTheDocument()
@@ -43,7 +43,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-16">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!
@@ -58,7 +58,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-16">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!
@@ -73,7 +73,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-31">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!
@@ -88,7 +88,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-02-01">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!
@@ -105,7 +105,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-16">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!
@@ -120,7 +120,7 @@ describe("SwipeContainer", () => {
     render(
       <SwipeContainer date="2025-01-16">
         <div data-testid="content">Content</div>
-      </SwipeContainer>
+      </SwipeContainer>,
     )
 
     const container = screen.getByTestId("content").parentElement!

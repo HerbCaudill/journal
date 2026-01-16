@@ -41,10 +41,7 @@ describe("ClaudeSection", () => {
     render(<ClaudeSection entryContent="Test entry" apiKey="" />)
 
     expect(screen.getByText(/please add your api key/i)).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute(
-      "href",
-      "#/settings"
-    )
+    expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute("href", "#/settings")
   })
 
   it("disables submit button when no API key is provided", () => {
@@ -61,7 +58,7 @@ describe("ClaudeSection", () => {
     await user.click(screen.getByRole("button", { name: /ask claude/i }))
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      /please write something in your journal first/i
+      /please write something in your journal first/i,
     )
     expect(mockSend).not.toHaveBeenCalled()
   })
@@ -212,7 +209,7 @@ describe("ClaudeSection", () => {
         entryContent="My entry"
         apiKey="test-key"
         onMessagesChange={onMessagesChange}
-      />
+      />,
     )
 
     await user.click(screen.getByRole("button", { name: /ask claude/i }))
@@ -250,7 +247,7 @@ describe("ClaudeSection", () => {
         entryContent="Test entry"
         apiKey="test-key"
         onMessagesChange={onMessagesChange}
-      />
+      />,
     )
 
     await user.click(screen.getByRole("button", { name: /clear/i }))
@@ -269,7 +266,7 @@ describe("ClaudeSection", () => {
         entryContent="Test entry"
         apiKey="test-key"
         initialMessages={initialMessages}
-      />
+      />,
     )
 
     expect(mockUseClaude).toHaveBeenCalledWith({

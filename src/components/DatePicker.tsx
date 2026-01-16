@@ -37,7 +37,7 @@ function getFirstDayOfWeek(year: number, month: number): number {
  */
 function generateCalendarDays(
   year: number,
-  month: number
+  month: number,
 ): { date: string; isCurrentMonth: boolean }[] {
   const days: { date: string; isCurrentMonth: boolean }[] = []
   const firstDayOfWeek = getFirstDayOfWeek(year, month)
@@ -104,7 +104,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
 
   const calendarDays = useMemo(
     () => generateCalendarDays(viewYear, viewMonth),
-    [viewYear, viewMonth]
+    [viewYear, viewMonth],
   )
 
   const monthName = new Date(viewYear, viewMonth).toLocaleDateString("en-US", {
@@ -146,20 +146,20 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
   return (
-    <div className="bg-popover border border-border rounded-lg shadow-lg p-4 w-72">
+    <div className="bg-popover border-border w-72 rounded-lg border p-4 shadow-lg">
       {/* Month navigation header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <button
           onClick={handlePreviousMonth}
-          className="p-1 hover:bg-accent rounded transition-colors"
+          className="hover:bg-accent rounded p-1 transition-colors"
           aria-label="Previous month"
         >
           <ChevronLeftIcon />
         </button>
-        <span className="text-sm font-medium text-foreground">{monthName}</span>
+        <span className="text-foreground text-sm font-medium">{monthName}</span>
         <button
           onClick={handleNextMonth}
-          className="p-1 hover:bg-accent rounded transition-colors"
+          className="hover:bg-accent rounded p-1 transition-colors"
           aria-label="Next month"
         >
           <ChevronRightIcon />
@@ -167,12 +167,9 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-xs font-medium text-muted-foreground py-1"
-          >
+      <div className="mb-2 grid grid-cols-7 gap-1">
+        {weekDays.map(day => (
+          <div key={day} className="text-muted-foreground py-1 text-center text-xs font-medium">
             {day}
           </div>
         ))}
@@ -189,19 +186,14 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
             <button
               key={date}
               onClick={() => handleDateClick(date)}
-              className={`
-                relative p-2 text-sm rounded transition-colors
-                ${!isCurrentMonth ? "text-muted-foreground/50" : "text-foreground"}
-                ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
-                ${isToday && !isSelected ? "ring-1 ring-primary" : ""}
-              `}
+              className={`relative rounded p-2 text-sm transition-colors ${!isCurrentMonth ? "text-muted-foreground/50" : "text-foreground"} ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent"} ${isToday && !isSelected ? "ring-primary ring-1" : ""} `}
               aria-label={date}
               aria-current={isToday ? "date" : undefined}
             >
               {parseDate(date).getDate()}
               {hasEntry && (
                 <span
-                  className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                  className={`absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
                     isSelected ? "bg-primary-foreground" : "bg-primary"
                   }`}
                   aria-hidden="true"
@@ -213,10 +205,10 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
       </div>
 
       {/* Today button */}
-      <div className="mt-4 pt-4 border-t border-border">
+      <div className="border-border mt-4 border-t pt-4">
         <button
           onClick={handleTodayClick}
-          className="w-full text-sm text-primary hover:text-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 w-full text-sm transition-colors"
         >
           Go to Today
         </button>

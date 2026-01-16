@@ -109,9 +109,7 @@ describe("useGoogleCalendar", () => {
       vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
 
-      const { result } = renderHook(() =>
-        useGoogleCalendar({ clientId: "custom-client-id" })
-      )
+      const { result } = renderHook(() => useGoogleCalendar({ clientId: "custom-client-id" }))
 
       await waitFor(() => {
         expect(result.current.authState).toBe("unauthenticated")
@@ -143,9 +141,9 @@ describe("useGoogleCalendar", () => {
     it("sets authenticating state during authentication", async () => {
       let resolveAuth: (value: { url: string; state: string; codeVerifier: string }) => void
       vi.mocked(googleCalendar.getAuthUrl).mockReturnValue(
-        new Promise((resolve) => {
+        new Promise(resolve => {
           resolveAuth = resolve
-        })
+        }),
       )
 
       const { result } = renderHook(() => useGoogleCalendar())
@@ -169,7 +167,7 @@ describe("useGoogleCalendar", () => {
 
     it("handles authentication errors", async () => {
       vi.mocked(googleCalendar.getAuthUrl).mockRejectedValue(
-        new Error("Google Client ID is required")
+        new Error("Google Client ID is required"),
       )
 
       const { result } = renderHook(() => useGoogleCalendar())
@@ -202,7 +200,7 @@ describe("useGoogleCalendar", () => {
       expect(googleCalendar.exchangeCodeForTokens).toHaveBeenCalledWith(
         "auth-code",
         "valid-verifier",
-        expect.any(Object)
+        expect.any(Object),
       )
       expect(googleCalendar.storeTokens).toHaveBeenCalledWith(mockTokens)
       expect(result.current.authState).toBe("authenticated")
@@ -238,9 +236,7 @@ describe("useGoogleCalendar", () => {
       })
 
       expect(success!).toBe(false)
-      expect(result.current.error).toBe(
-        "Missing code verifier - please try authenticating again"
-      )
+      expect(result.current.error).toBe("Missing code verifier - please try authenticating again")
     })
 
     it("handles token exchange errors", async () => {
@@ -248,7 +244,7 @@ describe("useGoogleCalendar", () => {
       sessionStorage.setItem("google_oauth_verifier", "verifier")
 
       vi.mocked(googleCalendar.exchangeCodeForTokens).mockRejectedValue(
-        new Error("Invalid authorization code")
+        new Error("Invalid authorization code"),
       )
 
       const { result } = renderHook(() => useGoogleCalendar())
@@ -282,10 +278,7 @@ describe("useGoogleCalendar", () => {
 
       expect(fetchedEvents!).toEqual(mockEvents)
       expect(result.current.events).toEqual(mockEvents)
-      expect(googleCalendar.fetchAllEventsForDate).toHaveBeenCalledWith(
-        mockTokens,
-        "2024-01-15"
-      )
+      expect(googleCalendar.fetchAllEventsForDate).toHaveBeenCalledWith(mockTokens, "2024-01-15")
     })
 
     it("sets loading state while fetching", async () => {
@@ -293,9 +286,9 @@ describe("useGoogleCalendar", () => {
 
       let resolveTokens: (value: googleCalendar.GoogleTokens) => void
       vi.mocked(googleCalendar.getValidTokens).mockReturnValue(
-        new Promise((resolve) => {
+        new Promise(resolve => {
           resolveTokens = resolve
-        })
+        }),
       )
 
       const { result } = renderHook(() => useGoogleCalendar())
@@ -348,7 +341,7 @@ describe("useGoogleCalendar", () => {
 
       expect(result.current.authState).toBe("unauthenticated")
       expect(result.current.error).toBe(
-        "Authentication expired. Please reconnect your Google account."
+        "Authentication expired. Please reconnect your Google account.",
       )
     })
 

@@ -26,10 +26,8 @@ function formatDisplayDate(dateString: string): string {
  */
 export function DayView({ date }: DayViewProps) {
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-foreground">
-        {formatDisplayDate(date)}
-      </h2>
+    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
+      <h2 className="text-foreground text-2xl font-semibold">{formatDisplayDate(date)}</h2>
       <EntryEditor date={date} />
     </div>
   )

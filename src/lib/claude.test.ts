@@ -70,7 +70,7 @@ describe("sendMessage", () => {
           { role: "assistant", content: "Hi there!" },
           { role: "user", content: "How are you?" },
         ]),
-      })
+      }),
     )
   })
 
@@ -93,7 +93,7 @@ describe("sendMessage", () => {
       expect.objectContaining({
         model: "claude-3-opus-20240229",
         max_tokens: 2048,
-      })
+      }),
     )
   })
 

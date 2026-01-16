@@ -49,7 +49,7 @@ const localStorageMock = {
     delete mockLocalStorage[key]
   }),
   clear: vi.fn(() => {
-    Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key])
+    Object.keys(mockLocalStorage).forEach(key => delete mockLocalStorage[key])
   }),
 }
 Object.defineProperty(global, "localStorage", { value: localStorageMock })
@@ -125,7 +125,7 @@ describe("google-calendar", () => {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-        })
+        }),
       )
     })
 
@@ -136,13 +136,13 @@ describe("google-calendar", () => {
       })
 
       await expect(
-        exchangeCodeForTokens("bad-code", "code-verifier", { clientId: "test-client-id" })
+        exchangeCodeForTokens("bad-code", "code-verifier", { clientId: "test-client-id" }),
       ).rejects.toThrow("Invalid code")
     })
 
     it("throws error when client ID is missing", async () => {
       await expect(exchangeCodeForTokens("code", "verifier", { clientId: "" })).rejects.toThrow(
-        "Google Client ID is required"
+        "Google Client ID is required",
       )
     })
   })
@@ -174,7 +174,7 @@ describe("google-calendar", () => {
       })
 
       await expect(refreshAccessToken("bad-token", { clientId: "test-client-id" })).rejects.toThrow(
-        "Token expired"
+        "Token expired",
       )
     })
   })
@@ -192,7 +192,7 @@ describe("google-calendar", () => {
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         "google_calendar_tokens",
-        JSON.stringify(mockTokens)
+        JSON.stringify(mockTokens),
       )
 
       const retrieved = getStoredTokens()

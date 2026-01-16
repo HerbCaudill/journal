@@ -90,7 +90,7 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
       }
 
       // Optimistically add the user message
-      setMessages((prev) => [...prev, userMessage])
+      setMessages(prev => [...prev, userMessage])
 
       const config: ClaudeConfig = {
         apiKey,
@@ -108,17 +108,17 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
           content: response.content,
           createdAt: Date.now(),
         }
-        setMessages((prev) => [...prev, assistantMessage])
+        setMessages(prev => [...prev, assistantMessage])
       } else {
         // Remove the optimistically added user message on error
-        setMessages((prev) => prev.slice(0, -1))
+        setMessages(prev => prev.slice(0, -1))
         setError(response.error ?? "An unknown error occurred")
       }
 
       setIsLoading(false)
       return response
     },
-    [apiKey, model, maxTokens, messages]
+    [apiKey, model, maxTokens, messages],
   )
 
   const reset = useCallback(() => {

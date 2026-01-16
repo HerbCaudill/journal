@@ -33,23 +33,13 @@ describe("DatePicker", () => {
   })
 
   it("renders the current month and year", () => {
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     expect(screen.getByText("June 2024")).toBeInTheDocument()
   })
 
   it("renders weekday headers", () => {
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     expect(screen.getByText("Su")).toBeInTheDocument()
     expect(screen.getByText("Mo")).toBeInTheDocument()
@@ -64,12 +54,7 @@ describe("DatePicker", () => {
     const user = userEvent.setup()
     const onDateSelect = vi.fn()
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={onDateSelect}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={onDateSelect} />)
 
     // Click on June 20th
     const dateButton = screen.getByRole("button", { name: "2024-06-20" })
@@ -81,12 +66,7 @@ describe("DatePicker", () => {
   it("navigates to previous month", async () => {
     const user = userEvent.setup()
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     const prevButton = screen.getByRole("button", { name: "Previous month" })
     await user.click(prevButton)
@@ -97,12 +77,7 @@ describe("DatePicker", () => {
   it("navigates to next month", async () => {
     const user = userEvent.setup()
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     const nextButton = screen.getByRole("button", { name: "Next month" })
     await user.click(nextButton)
@@ -111,12 +86,7 @@ describe("DatePicker", () => {
   })
 
   it("shows 'Go to Today' button", () => {
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     expect(screen.getByRole("button", { name: /go to today/i })).toBeInTheDocument()
   })
@@ -125,13 +95,7 @@ describe("DatePicker", () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-        onClose={onClose}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} onClose={onClose} />)
 
     const dateButton = screen.getByRole("button", { name: "2024-06-20" })
     await user.click(dateButton)
@@ -169,12 +133,7 @@ describe("DatePicker", () => {
       isLoading: false,
     })
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     // The date button for June 10 should have an entry dot (span child)
     const june10Button = screen.getByRole("button", { name: "2024-06-10" })
@@ -212,12 +171,7 @@ describe("DatePicker", () => {
       isLoading: false,
     })
 
-    render(
-      <DatePicker
-        selectedDate="2024-06-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
     // June 10 should NOT have a dot because messages array is empty
     const june10Button = screen.getByRole("button", { name: "2024-06-10" })
@@ -227,12 +181,7 @@ describe("DatePicker", () => {
   it("handles year transition when navigating months", async () => {
     const user = userEvent.setup()
 
-    render(
-      <DatePicker
-        selectedDate="2024-01-15"
-        onDateSelect={vi.fn()}
-      />
-    )
+    render(<DatePicker selectedDate="2024-01-15" onDateSelect={vi.fn()} />)
 
     expect(screen.getByText("January 2024")).toBeInTheDocument()
 

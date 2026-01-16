@@ -50,7 +50,7 @@ describe("useSwipeNavigation", () => {
     const onSwipeLeft = vi.fn()
     const onSwipeRight = vi.fn()
     const { result } = renderHook(() =>
-      useSwipeNavigation({ onSwipeLeft, onSwipeRight, threshold: 50 })
+      useSwipeNavigation({ onSwipeLeft, onSwipeRight, threshold: 50 }),
     )
 
     act(() => {
@@ -64,9 +64,7 @@ describe("useSwipeNavigation", () => {
 
   it("does not call callbacks when vertical movement is too large", () => {
     const onSwipeLeft = vi.fn()
-    const { result } = renderHook(() =>
-      useSwipeNavigation({ onSwipeLeft, maxVerticalRatio: 0.5 })
-    )
+    const { result } = renderHook(() => useSwipeNavigation({ onSwipeLeft, maxVerticalRatio: 0.5 }))
 
     act(() => {
       result.current.onTouchStart(createTouchEvent(200, 100))
@@ -79,9 +77,7 @@ describe("useSwipeNavigation", () => {
 
   it("allows slight vertical movement during swipe", () => {
     const onSwipeLeft = vi.fn()
-    const { result } = renderHook(() =>
-      useSwipeNavigation({ onSwipeLeft, maxVerticalRatio: 0.5 })
-    )
+    const { result } = renderHook(() => useSwipeNavigation({ onSwipeLeft, maxVerticalRatio: 0.5 }))
 
     act(() => {
       result.current.onTouchStart(createTouchEvent(200, 100))
@@ -94,9 +90,7 @@ describe("useSwipeNavigation", () => {
 
   it("uses custom threshold", () => {
     const onSwipeLeft = vi.fn()
-    const { result } = renderHook(() =>
-      useSwipeNavigation({ onSwipeLeft, threshold: 100 })
-    )
+    const { result } = renderHook(() => useSwipeNavigation({ onSwipeLeft, threshold: 100 }))
 
     // Swipe 80px - should not trigger
     act(() => {

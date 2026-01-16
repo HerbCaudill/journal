@@ -17,10 +17,7 @@ vi.mock("../context/JournalContext", async () => {
 
 const mockUseJournal = vi.mocked(JournalContext.useJournal)
 
-type ChangeDocFn = (
-  changeFn: ChangeFn<JournalDoc>,
-  options?: ChangeOptions<JournalDoc>
-) => void
+type ChangeDocFn = (changeFn: ChangeFn<JournalDoc>, options?: ChangeOptions<JournalDoc>) => void
 
 describe("EntryEditor", () => {
   let mockChangeDoc: ReturnType<typeof vi.fn<ChangeDocFn>>

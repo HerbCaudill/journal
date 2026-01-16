@@ -68,7 +68,7 @@ describe("useGeolocation", () => {
   })
 
   it("requests position and updates state on success", async () => {
-    mockGetCurrentPosition.mockImplementation((success) => {
+    mockGetCurrentPosition.mockImplementation(success => {
       success(mockPosition)
     })
 
@@ -92,7 +92,7 @@ describe("useGeolocation", () => {
 
   it("sets isLoading to true while requesting", async () => {
     let resolvePosition: (pos: GeolocationPosition) => void
-    mockGetCurrentPosition.mockImplementation((success) => {
+    mockGetCurrentPosition.mockImplementation(success => {
       resolvePosition = success
     })
 
@@ -183,7 +183,7 @@ describe("useGeolocation", () => {
   })
 
   it("passes options to getCurrentPosition", async () => {
-    mockGetCurrentPosition.mockImplementation((success) => {
+    mockGetCurrentPosition.mockImplementation(success => {
       success(mockPosition)
     })
 
@@ -192,7 +192,7 @@ describe("useGeolocation", () => {
         enableHighAccuracy: true,
         maximumAge: 5000,
         timeout: 15000,
-      })
+      }),
     )
 
     await act(async () => {
@@ -206,12 +206,12 @@ describe("useGeolocation", () => {
         enableHighAccuracy: true,
         maximumAge: 5000,
         timeout: 15000,
-      }
+      },
     )
   })
 
   it("clears position and error", async () => {
-    mockGetCurrentPosition.mockImplementation((success) => {
+    mockGetCurrentPosition.mockImplementation(success => {
       success(mockPosition)
     })
 
@@ -232,7 +232,7 @@ describe("useGeolocation", () => {
   })
 
   it("auto-requests position on mount when enabled", async () => {
-    mockGetCurrentPosition.mockImplementation((success) => {
+    mockGetCurrentPosition.mockImplementation(success => {
       success(mockPosition)
     })
 
@@ -268,9 +268,7 @@ describe("useGeolocation", () => {
     })
 
     expect(returnedPosition!).toBeNull()
-    expect(result.current.error).toBe(
-      "Geolocation is not supported by this browser"
-    )
+    expect(result.current.error).toBe("Geolocation is not supported by this browser")
   })
 
   it("checks permission status on mount", async () => {
@@ -303,7 +301,7 @@ describe("useGeolocation", () => {
     await waitFor(() => {
       expect(mockPermissionStatus.addEventListener).toHaveBeenCalledWith(
         "change",
-        expect.any(Function)
+        expect.any(Function),
       )
     })
 

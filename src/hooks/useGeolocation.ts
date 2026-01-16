@@ -87,9 +87,7 @@ function getErrorMessage(error: GeolocationPositionError): string {
  * }
  * ```
  */
-export function useGeolocation(
-  options: UseGeolocationOptions = {}
-): UseGeolocationReturn {
+export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocationReturn {
   const {
     enableHighAccuracy = false,
     maximumAge = 0,
@@ -116,7 +114,7 @@ export function useGeolocation(
     if ("permissions" in navigator) {
       navigator.permissions
         .query({ name: "geolocation" })
-        .then((result) => {
+        .then(result => {
           setPermission(result.state as GeolocationPermission)
 
           // Listen for permission changes
@@ -144,9 +142,9 @@ export function useGeolocation(
     setIsLoading(true)
     setError(null)
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(
-        (geoPosition) => {
+        geoPosition => {
           const pos: GeoPosition = {
             latitude: geoPosition.coords.latitude,
             longitude: geoPosition.coords.longitude,
@@ -158,7 +156,7 @@ export function useGeolocation(
           setIsLoading(false)
           resolve(pos)
         },
-        (geoError) => {
+        geoError => {
           const errorMessage = getErrorMessage(geoError)
           setError(errorMessage)
           setIsLoading(false)
@@ -173,7 +171,7 @@ export function useGeolocation(
           enableHighAccuracy,
           maximumAge,
           timeout,
-        }
+        },
       )
     })
   }, [isSupported, enableHighAccuracy, maximumAge, timeout])

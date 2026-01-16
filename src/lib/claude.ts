@@ -43,10 +43,8 @@ function createClient(apiKey: string): Anthropic {
 /**
  * Convert journal messages to Anthropic message format
  */
-function toAnthropicMessages(
-  messages: Message[]
-): Anthropic.MessageParam[] {
-  return messages.map((msg) => ({
+function toAnthropicMessages(messages: Message[]): Anthropic.MessageParam[] {
+  return messages.map(msg => ({
     role: msg.role,
     content: msg.content,
   }))
@@ -63,7 +61,7 @@ function toAnthropicMessages(
 export async function sendMessage(
   config: ClaudeConfig,
   messages: Message[],
-  userMessage: string
+  userMessage: string,
 ): Promise<ClaudeResponse> {
   if (!config.apiKey) {
     return {
@@ -90,7 +88,7 @@ export async function sendMessage(
     })
 
     // Extract text content from the response
-    const textContent = response.content.find((block) => block.type === "text")
+    const textContent = response.content.find(block => block.type === "text")
     const content = textContent?.type === "text" ? textContent.text : ""
 
     return {
@@ -98,8 +96,7 @@ export async function sendMessage(
       success: true,
     }
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred"
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
     return {
       content: "",
       success: false,

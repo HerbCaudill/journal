@@ -6,7 +6,8 @@
 // Google OAuth configuration
 // These should be set up in a Google Cloud project with Calendar API enabled
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
-const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI ?? `${window.location.origin}/oauth/callback`
+const GOOGLE_REDIRECT_URI =
+  import.meta.env.VITE_GOOGLE_REDIRECT_URI ?? `${window.location.origin}/oauth/callback`
 
 // OAuth and API endpoints
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -90,7 +91,7 @@ export interface GoogleCalendarConfig {
 function generateState(): string {
   const array = new Uint8Array(32)
   crypto.getRandomValues(array)
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("")
+  return Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("")
 }
 
 /**
@@ -164,7 +165,7 @@ export async function getAuthUrl(config: GoogleCalendarConfig = {}): Promise<{
 export async function exchangeCodeForTokens(
   code: string,
   codeVerifier: string,
-  config: GoogleCalendarConfig = {}
+  config: GoogleCalendarConfig = {},
 ): Promise<GoogleTokens> {
   const clientId = config.clientId ?? GOOGLE_CLIENT_ID
   const redirectUri = config.redirectUri ?? GOOGLE_REDIRECT_URI
@@ -209,7 +210,7 @@ export async function exchangeCodeForTokens(
  */
 export async function refreshAccessToken(
   refreshToken: string,
-  config: GoogleCalendarConfig = {}
+  config: GoogleCalendarConfig = {},
 ): Promise<GoogleTokens> {
   const clientId = config.clientId ?? GOOGLE_CLIENT_ID
 
@@ -283,7 +284,9 @@ export function isTokenExpired(tokens: GoogleTokens): boolean {
 /**
  * Get valid tokens, refreshing if necessary
  */
-export async function getValidTokens(config: GoogleCalendarConfig = {}): Promise<GoogleTokens | null> {
+export async function getValidTokens(
+  config: GoogleCalendarConfig = {},
+): Promise<GoogleTokens | null> {
   const tokens = getStoredTokens()
   if (!tokens) return null
 
@@ -340,7 +343,7 @@ function parseEventDateTime(dateTime: { date?: string; dateTime?: string }): {
 export async function fetchEventsForDate(
   tokens: GoogleTokens,
   date: string,
-  calendarId: string = "primary"
+  calendarId: string = "primary",
 ): Promise<CalendarEventsResponse> {
   try {
     // Create time bounds for the date (full day in local timezone)
@@ -360,7 +363,7 @@ export async function fetchEventsForDate(
         headers: {
           Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
         },
-      }
+      },
     )
 
     if (!response.ok) {
@@ -407,7 +410,7 @@ export async function fetchEventsForDate(
           htmlLink: item.htmlLink,
           status: (item.status ?? "confirmed") as CalendarEvent["status"],
         }
-      }
+      },
     )
 
     return {
@@ -432,7 +435,7 @@ export async function fetchEventsForDate(
  */
 export async function fetchAllEventsForDate(
   tokens: GoogleTokens,
-  date: string
+  date: string,
 ): Promise<CalendarEventsResponse> {
   try {
     // First, get the list of calendars
@@ -461,7 +464,7 @@ export async function fetchAllEventsForDate(
     const calendars: { id: string }[] = calendarListData.items ?? []
 
     // Fetch events from all calendars in parallel
-    const eventPromises = calendars.map((calendar) => fetchEventsForDate(tokens, date, calendar.id))
+    const eventPromises = calendars.map(calendar => fetchEventsForDate(tokens, date, calendar.id))
     const results = await Promise.all(eventPromises)
 
     // Combine all events

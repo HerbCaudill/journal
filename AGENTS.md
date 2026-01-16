@@ -23,15 +23,18 @@ pnpm format           # Format code with Prettier
 ## Architecture
 
 **Data Layer (Automerge)**
+
 - `src/lib/repo.ts` - Lazy-initialized Automerge repo singleton with IndexedDB storage
 - `src/context/JournalContext.tsx` - Provides `useJournal()` hook for document access
 - `src/types/journal.ts` - Core interfaces: `JournalDoc`, `JournalEntry`, `Message`, `Settings`
 
 **Components**
+
 - `DayView` - Main view displaying date header and entry editor
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
 
 **Utilities**
+
 - `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout
 - `src/lib/utils.ts` - `cn()` function for Tailwind class merging
 

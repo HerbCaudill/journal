@@ -45,7 +45,9 @@ describe("App", () => {
   it("renders day view at root", () => {
     render(<App />)
     // Should show today's date in the DayView heading
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Thursday, January 16, 2025")
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Thursday, January 16, 2025",
+    )
   })
 
   it("renders day view for specific date", () => {
@@ -64,7 +66,9 @@ describe("App", () => {
     render(<App />)
 
     // Initially shows today's day view
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Thursday, January 16, 2025")
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Thursday, January 16, 2025",
+    )
 
     // Navigate to settings
     act(() => {
@@ -84,6 +88,8 @@ describe("App", () => {
   it("defaults to today for invalid routes", () => {
     window.location.hash = "#/invalid/route"
     render(<App />)
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Thursday, January 16, 2025")
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Thursday, January 16, 2025",
+    )
   })
 })

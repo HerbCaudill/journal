@@ -135,10 +135,9 @@ describe("useKeyboardNavigation", () => {
   it("updates event listener when callbacks change", () => {
     const onPrevious1 = vi.fn()
     const onPrevious2 = vi.fn()
-    const { rerender } = renderHook(
-      ({ onPrevious }) => useKeyboardNavigation({ onPrevious }),
-      { initialProps: { onPrevious: onPrevious1 } }
-    )
+    const { rerender } = renderHook(({ onPrevious }) => useKeyboardNavigation({ onPrevious }), {
+      initialProps: { onPrevious: onPrevious1 },
+    })
 
     dispatchKeyDown("ArrowLeft")
     expect(onPrevious1).toHaveBeenCalledTimes(1)

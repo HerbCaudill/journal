@@ -35,11 +35,7 @@ export function parseDate(dateString: string): Date {
   const date = new Date(year, month, day)
 
   // Validate that the date components are valid
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month ||
-    date.getDate() !== day
-  ) {
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
     throw new Error(`Invalid date: ${dateString}`)
   }
 

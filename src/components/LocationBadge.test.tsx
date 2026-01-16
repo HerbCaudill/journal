@@ -99,8 +99,6 @@ describe("LocationBadge", () => {
   it("has accessible aria-label", () => {
     render(<LocationBadge position={mockPosition} />)
 
-    expect(
-      screen.getByLabelText(/Location: 40\.7128° N, 74\.0060° W/)
-    ).toBeInTheDocument()
+    expect(screen.getByLabelText(/Location: 40\.7128° N, 74\.0060° W/)).toBeInTheDocument()
   })
 })

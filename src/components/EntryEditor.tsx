@@ -28,7 +28,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
 
   // Find or initialize the entry for this date
   const entry = doc?.entries[date]
-  const userMessage = entry?.messages.find((m) => m.role === "user")
+  const userMessage = entry?.messages.find(m => m.role === "user")
 
   // Sync local content with document on mount and when entry changes
   useEffect(() => {
@@ -53,7 +53,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
     (content: string) => {
       if (!doc) return
 
-      changeDoc((d) => {
+      changeDoc(d => {
         const now = Date.now()
 
         if (!d.entries[date]) {
@@ -72,9 +72,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
         existingEntry.updatedAt = now
 
         // Find existing user message or create new one
-        const existingUserMessageIndex = existingEntry.messages.findIndex(
-          (m) => m.role === "user"
-        )
+        const existingUserMessageIndex = existingEntry.messages.findIndex(m => m.role === "user")
 
         if (existingUserMessageIndex >= 0) {
           // Update existing message
@@ -91,7 +89,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
         }
       })
     },
-    [doc, changeDoc, date]
+    [doc, changeDoc, date],
   )
 
   // Handle content change with debouncing
@@ -110,7 +108,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
         saveToDocument(newContent)
       }, DEBOUNCE_DELAY)
     },
-    [saveToDocument]
+    [saveToDocument],
   )
 
   // Auto-resize textarea based on content
@@ -125,7 +123,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
   if (isLoading) {
     return (
       <div className="animate-pulse">
-        <div className="h-32 bg-muted rounded-md" />
+        <div className="bg-muted h-32 rounded-md" />
       </div>
     )
   }
@@ -136,7 +134,7 @@ export function EntryEditor({ date }: EntryEditorProps) {
       value={localContent}
       onChange={handleChange}
       placeholder="What's on your mind today?"
-      className="w-full min-h-[200px] p-4 text-base leading-relaxed resize-none border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+      className="bg-background focus:ring-ring min-h-[200px] w-full resize-none rounded-md border p-4 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none"
       aria-label="Journal entry"
     />
   )
