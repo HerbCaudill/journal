@@ -2,6 +2,7 @@ import { useCallback } from "react"
 import { useJournal } from "../context/JournalContext"
 import { EntryEditor } from "./EntryEditor"
 import { ClaudeSection } from "./ClaudeSection"
+import { CalendarEvents } from "./CalendarEvents"
 import type { Message } from "../types/journal"
 
 interface DayViewProps {
@@ -62,6 +63,7 @@ export function DayView({ date }: DayViewProps) {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
+      <CalendarEvents date={date} />
       <EntryEditor date={date} />
       <ClaudeSection
         entryContent={entryContent}

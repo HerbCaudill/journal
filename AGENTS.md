@@ -32,7 +32,8 @@ pnpm format           # Format code with Prettier
 
 - `Header` - App header with day/date on left, back/calendar/forward navigation in center, and settings on right
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
-- `DayView` - Main view displaying the entry editor and Claude section for a specific date
+- `DayView` - Main view displaying calendar events, entry editor, and Claude section for a specific date
+- `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
 - `ClaudeSection` - Submit button to ask Claude about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days

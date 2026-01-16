@@ -26,6 +26,19 @@ vi.mock("../hooks/useClaude", () => ({
   })),
 }))
 
+// Mock the useGoogleCalendar hook
+vi.mock("../hooks/useGoogleCalendar", () => ({
+  useGoogleCalendar: vi.fn(() => ({
+    authState: "unconfigured",
+    isLoading: false,
+    error: null,
+    events: [],
+    authenticate: vi.fn(),
+    fetchEvents: vi.fn(),
+    clearError: vi.fn(),
+  })),
+}))
+
 const mockUseJournal = vi.mocked(JournalContext.useJournal)
 
 type ChangeDocFn = (changeFn: ChangeFn<JournalDoc>, options?: ChangeOptions<JournalDoc>) => void
