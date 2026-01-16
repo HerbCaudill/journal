@@ -37,6 +37,7 @@ pnpm format           # Format code with Prettier
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
 - `ClaudeSection` - Submit button to ask Claude about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
+- `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
 
 **Claude Integration**
 
