@@ -14,7 +14,8 @@
     "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "ralph": "pnpm dlx @herbcaudill/ralph"
+    "ralph": "pnpm dlx @herbcaudill/ralph",
+    "beads": "pnpm dlx beads-ui start --open"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
