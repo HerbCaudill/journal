@@ -1,4 +1,6 @@
+import { useState, useRef, useEffect, useCallback } from "react"
 import { parseDate } from "../lib/dates"
+import { DatePicker } from "./DatePicker"
 
 interface HeaderProps {
   /** The current date in YYYY-MM-DD format */
@@ -21,11 +23,76 @@ function formatDisplayDate(dateString: string): string {
 
 /**
  * Header component displaying the current date and a settings link.
+ * Clicking on the date opens a date picker for navigation.
  */
 export function Header({ date }: HeaderProps) {
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const datePickerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const handleDateSelect = useCallback((newDate: string) => {
+    window.location.hash = `#/day/${newDate}`
+    setIsDatePickerOpen(false)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    setIsDatePickerOpen(false)
+  }, [])
+
+  // Close date picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsDatePickerOpen(false)
+      }
+    }
+
+    if (isDatePickerOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isDatePickerOpen])
+
+  // Close date picker on Escape key
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsDatePickerOpen(false)
+      }
+    }
+
+    if (isDatePickerOpen) {
+      document.addEventListener("keydown", handleKeyDown)
+      return () => document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isDatePickerOpen])
+
   return (
     <header className="border-border flex items-center justify-between border-b p-4">
-      <h1 className="text-foreground text-xl font-semibold">{formatDisplayDate(date)}</h1>
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+          className="text-foreground hover:text-primary flex items-center gap-2 text-xl font-semibold transition-colors"
+          aria-expanded={isDatePickerOpen}
+          aria-haspopup="dialog"
+        >
+          <h1>{formatDisplayDate(date)}</h1>
+          <ChevronDownIcon
+            className={`transition-transform ${isDatePickerOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {isDatePickerOpen && (
+          <div ref={datePickerRef} className="absolute top-full left-0 z-50 mt-2">
+            <DatePicker selectedDate={date} onDateSelect={handleDateSelect} onClose={handleClose} />
+          </div>
+        )}
+      </div>
       <a
         href="#/settings"
         className="text-muted-foreground hover:text-foreground transition-colors"
@@ -34,6 +101,25 @@ export function Header({ date }: HeaderProps) {
         <SettingsIcon />
       </a>
     </header>
+  )
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   )
 }
 
