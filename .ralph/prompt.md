@@ -13,6 +13,7 @@ Only work on a single issue in a single turn. If the issue you choose is complex
 When you complete a task:
 
 - Where applicable, add tests to validate your changes and confirm that they pass
+- Update AGENTS.md with any relevant changes
 - Run `pnpm build && pnpm test:all`
 - Run `ppnpm format`
 - Commit your work
