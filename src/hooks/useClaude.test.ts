@@ -266,4 +266,35 @@ describe("useClaude", () => {
     const uniqueIds = new Set(ids)
     expect(uniqueIds.size).toBe(ids.length)
   })
+
+  it("handles rapid consecutive sends without race conditions", async () => {
+    // Track the messages passed to each API call
+    const callHistory: Message[][] = []
+
+    mockSendMessage.mockImplementation(async (_config, messages, _content) => {
+      // Capture a copy of messages at the time of the call
+      callHistory.push([...messages])
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 10))
+      return { content: "Response", success: true }
+    })
+
+    const { result } = renderHook(() => useClaude(defaultOptions))
+
+    // Send two messages rapidly without waiting for the first to complete
+    await act(async () => {
+      const promise1 = result.current.send("First message")
+      const promise2 = result.current.send("Second message")
+      await Promise.all([promise1, promise2])
+    })
+
+    // Both calls should have been made
+    expect(callHistory).toHaveLength(2)
+
+    // The second call should include the first user message in its history
+    // This validates that the ref-based approach fixes the race condition
+    // where the second call would otherwise see an empty messages array
+    expect(callHistory[1].length).toBeGreaterThanOrEqual(1)
+    expect(callHistory[1].some(m => m.content === "First message")).toBe(true)
+  })
 })

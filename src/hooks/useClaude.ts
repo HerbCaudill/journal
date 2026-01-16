@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { sendMessage, type ClaudeConfig, type ClaudeResponse } from "@/lib/claude"
 import type { Message } from "@/types/journal"
 
@@ -68,6 +68,11 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Use a ref to always have access to the current messages, avoiding stale closure issues
+  // when send is called rapidly in succession
+  const messagesRef = useRef<Message[]>(messages)
+  messagesRef.current = messages
+
   const send = useCallback(
     async (content: string): Promise<ClaudeResponse> => {
       if (!content.trim()) {
@@ -89,8 +94,13 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
         createdAt: Date.now(),
       }
 
-      // Optimistically add the user message
-      setMessages(prev => [...prev, userMessage])
+      // Update the ref synchronously BEFORE the async operation starts
+      // This ensures rapid consecutive calls see the accumulated messages
+      const currentMessages = messagesRef.current
+      messagesRef.current = [...currentMessages, userMessage]
+
+      // Also update React state for UI rendering
+      setMessages(messagesRef.current)
 
       const config: ClaudeConfig = {
         apiKey,
@@ -98,7 +108,9 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
         maxTokens,
       }
 
-      const response = await sendMessage(config, messages, content.trim())
+      // Use currentMessages (before adding userMessage) for the API call
+      // The API expects the history without the current user message
+      const response = await sendMessage(config, currentMessages, content.trim())
 
       if (response.success) {
         // Add the assistant's response
@@ -108,20 +120,25 @@ export function useClaude(options: UseClaudeOptions): UseClaudeReturn {
           content: response.content,
           createdAt: Date.now(),
         }
-        setMessages(prev => [...prev, assistantMessage])
+        // Update ref synchronously, then state
+        messagesRef.current = [...messagesRef.current, assistantMessage]
+        setMessages(messagesRef.current)
       } else {
         // Remove the optimistically added user message on error
-        setMessages(prev => prev.slice(0, -1))
+        // Find and remove the specific userMessage to handle race conditions correctly
+        messagesRef.current = messagesRef.current.filter(m => m.id !== userMessage.id)
+        setMessages(messagesRef.current)
         setError(response.error ?? "An unknown error occurred")
       }
 
       setIsLoading(false)
       return response
     },
-    [apiKey, model, maxTokens, messages],
+    [apiKey, model, maxTokens],
   )
 
   const reset = useCallback(() => {
+    messagesRef.current = []
     setMessages([])
     setError(null)
     setIsLoading(false)
