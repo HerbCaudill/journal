@@ -46,9 +46,10 @@ Copy `.env.example` to `.env` and configure:
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 - `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
 
-**Claude Integration**
+**LLM Integration**
 
-- `src/lib/claude.ts` - Low-level Anthropic API wrapper
+- `src/lib/llm/types.ts` - Provider-agnostic interfaces: `LLMProvider`, `LLMConfig`, `LLMResponse`, `ProviderType`
+- `src/lib/claude.ts` - Low-level Anthropic API wrapper (currently the only provider implementation)
 - `src/hooks/useClaude.ts` - React hook for managing conversation state
 - `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
 - API key stored in document settings, configured in Settings view
