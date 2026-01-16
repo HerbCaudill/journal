@@ -42,7 +42,7 @@ Copy `.env.example` to `.env` and configure:
 - `DayView` - Main view displaying calendar events, entry editor, and Claude section for a specific date
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
-- `ClaudeSection` - Submit button to ask Claude about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned)
+- `LLMSection` - Submit button to ask LLM about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned). Provider-agnostic (supports Claude and OpenAI)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 - `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
 
@@ -53,7 +53,7 @@ Copy `.env.example` to `.env` and configure:
 - `src/hooks/useLLM.ts` - Provider-agnostic React hook for managing LLM conversation state
 - `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude")
 - `src/lib/claude.ts` - Legacy Anthropic API wrapper (deprecated, use Claude provider instead)
-- `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
+- `src/components/LLMSection.tsx` - Provider-agnostic UI component with submit button, follow-up input, and response display
 - `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
 - Settings view allows selecting LLM provider and configuring API keys for each provider
 - API keys stored in document settings, masked (password field with show/hide toggle) with security warning

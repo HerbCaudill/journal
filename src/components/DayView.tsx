@@ -1,9 +1,10 @@
 import { useCallback } from "react"
 import { useJournal } from "../context/JournalContext"
 import { EntryEditor } from "./EntryEditor"
-import { ClaudeSection } from "./ClaudeSection"
+import { LLMSection } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
 import type { Message } from "../types/journal"
+import type { ProviderType } from "../lib/llm/types"
 
 interface DayViewProps {
   /** The date to display in YYYY-MM-DD format */
@@ -20,7 +21,13 @@ export function DayView({ date }: DayViewProps) {
   const entry = doc?.entries[date]
   const userMessage = entry?.messages.find(m => m.role === "user")
   const entryContent = userMessage?.content ?? ""
-  const apiKey = doc?.settings?.claudeApiKey ?? ""
+
+  // Get LLM provider and corresponding API key
+  const llmProvider = (doc?.settings?.llmProvider ?? "claude") as ProviderType
+  const apiKey =
+    llmProvider === "claude" ?
+      (doc?.settings?.claudeApiKey ?? "")
+    : (doc?.settings?.openaiApiKey ?? "")
 
   // Get assistant messages for initial conversation state
   const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []
@@ -65,9 +72,10 @@ export function DayView({ date }: DayViewProps) {
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
       <EntryEditor date={date} />
-      <ClaudeSection
+      <LLMSection
         entryContent={entryContent}
         apiKey={apiKey}
+        provider={llmProvider}
         initialMessages={assistantMessages}
         onMessagesChange={handleMessagesChange}
       />

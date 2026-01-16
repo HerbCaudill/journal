@@ -1,12 +1,15 @@
 import { useState, useCallback, useRef } from "react"
-import { useClaude } from "../hooks/useClaude"
+import { useLLM } from "../hooks/useLLM"
 import type { Message } from "../types/journal"
+import type { ProviderType } from "../lib/llm/types"
 
-interface ClaudeSectionProps {
-  /** The user's journal entry content to send to Claude */
+interface LLMSectionProps {
+  /** The user's journal entry content to send to the LLM */
   entryContent: string
-  /** API key for Claude */
+  /** API key for the LLM provider */
   apiKey: string
+  /** LLM provider to use */
+  provider: ProviderType
   /** Optional existing messages to initialize the conversation with */
   initialMessages?: Message[]
   /** Callback when messages change (for persisting to document) */
@@ -24,17 +27,33 @@ function formatTime(timestamp: number): string {
 }
 
 /**
- * Component for interacting with Claude AI.
- * Displays a submit button to send the journal entry to Claude,
- * and shows the conversation history with Claude's responses.
+ * Returns the display name for an LLM provider
  */
-export function ClaudeSection({
+function getProviderDisplayName(provider: ProviderType): string {
+  switch (provider) {
+    case "claude":
+      return "Claude"
+    case "openai":
+      return "AI"
+    default:
+      return "AI"
+  }
+}
+
+/**
+ * Component for interacting with an LLM provider.
+ * Displays a submit button to send the journal entry to the LLM,
+ * and shows the conversation history with assistant responses.
+ */
+export function LLMSection({
   entryContent,
   apiKey,
+  provider,
   initialMessages = [],
   onMessagesChange,
-}: ClaudeSectionProps) {
-  const { messages, isLoading, error, send, reset } = useClaude({
+}: LLMSectionProps) {
+  const { messages, isLoading, error, send, reset } = useLLM({
+    provider,
     apiKey,
     initialMessages,
   })
@@ -43,7 +62,9 @@ export function ClaudeSection({
   const [followUpInput, setFollowUpInput] = useState("")
   const followUpInputRef = useRef<HTMLInputElement>(null)
 
-  // Handle sending the journal entry to Claude
+  const providerName = getProviderDisplayName(provider)
+
+  // Handle sending the journal entry to the LLM
   const handleSubmit = useCallback(async () => {
     setLocalError(null)
 
@@ -132,7 +153,7 @@ export function ClaudeSection({
           onClick={handleSubmit}
           disabled={isLoading || !apiKey}
           className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Ask Claude"
+          aria-label={`Ask ${providerName}`}
         >
           {isLoading ?
             <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -164,7 +185,7 @@ export function ClaudeSection({
           }
         </button>
         <span className="text-muted-foreground text-sm">
-          {isLoading ? "Thinking..." : "Ask Claude"}
+          {isLoading ? "Thinking..." : `Ask ${providerName}`}
         </span>
 
         {messages.length > 0 && (
@@ -196,7 +217,7 @@ export function ClaudeSection({
               className={`rounded-md p-4 ${
                 message.role === "user" ? "bg-primary/10 ml-8 text-right" : "bg-muted mr-8"
               }`}
-              data-testid={message.role === "user" ? "user-message" : "claude-response"}
+              data-testid={message.role === "user" ? "user-message" : "assistant-response"}
             >
               <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
               <span className="text-muted-foreground mt-2 block text-xs">
@@ -266,7 +287,7 @@ export function ClaudeSection({
       {/* No API key message */}
       {!apiKey && (
         <p className="text-muted-foreground text-sm">
-          To use Claude, please add your API key in{" "}
+          To use {providerName}, please add your API key in{" "}
           <a href="#/settings" className="hover:text-foreground underline">
             Settings
           </a>
