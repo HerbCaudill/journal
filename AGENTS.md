@@ -44,11 +44,17 @@ pnpm format           # Format code with Prettier
 - `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
 - API key stored in document settings, configured in Settings view
 
+**Geolocation**
+
+- `src/hooks/useGeolocation.ts` - React hook for accessing device geolocation with permission management
+- `src/hooks/useReverseGeocode.ts` - React hook for converting coordinates to locality names (uses geocoding library)
+- `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching and rate limiting
+- `src/components/LocationBadge.tsx` - Compact badge component displaying location information
+
 **Utilities**
 
 - `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout
 - `src/lib/utils.ts` - `cn()` function for Tailwind class merging
-- `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching and rate limiting
 
 ## Code Conventions
 
