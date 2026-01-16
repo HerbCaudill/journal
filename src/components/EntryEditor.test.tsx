@@ -48,12 +48,11 @@ describe("EntryEditor", () => {
     vi.clearAllMocks()
   })
 
-  it("renders a textarea with placeholder", () => {
+  it("renders a textarea", () => {
     render(<EntryEditor date="2024-01-15" />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     expect(textarea).toBeInTheDocument()
-    expect(textarea).toHaveAttribute("placeholder", "What's on your mind today?")
   })
 
   it("accepts user input", async () => {

@@ -133,7 +133,6 @@ export function EntryEditor({ date }: EntryEditorProps) {
       ref={textareaRef}
       value={localContent}
       onChange={handleChange}
-      placeholder="What's on your mind today?"
       className="bg-card focus:ring-ring min-h-[200px] w-full resize-none rounded-md border p-4 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none"
       aria-label="Journal entry"
     />
