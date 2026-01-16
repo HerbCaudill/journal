@@ -12,3 +12,6 @@ export type {
 } from "./types"
 
 export { DEFAULT_MODELS, DEFAULT_MAX_TOKENS } from "./types"
+
+// Provider implementations
+export { createClaudeProvider, ClaudeProvider } from "./providers"
