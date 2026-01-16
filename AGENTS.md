@@ -20,6 +20,13 @@ pnpm typecheck        # TypeScript type checking only
 pnpm format           # Format code with Prettier
 ```
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+- `VITE_GOOGLE_CLIENT_ID` - Required for Google Calendar integration (OAuth 2.0 Client ID)
+- `VITE_GOOGLE_REDIRECT_URI` - Optional, defaults to `${origin}/oauth/callback`
+
 ## Architecture
 
 **Data Layer (Automerge)**
