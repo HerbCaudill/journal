@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest"
 import { renderHook, act, waitFor } from "@testing-library/react"
-import { useClaude } from "./useClaude"
+import { useLLM } from "./useLLM"
 import * as claudeProviderModule from "@/lib/llm/providers/claude"
 import type { Message } from "@/types/journal"
 import type { LLMResponse, LLMProvider } from "@/lib/llm/types"
@@ -12,8 +12,9 @@ vi.mock("@/lib/llm/providers/claude", () => ({
 
 const mockCreateClaudeProvider = vi.mocked(claudeProviderModule.createClaudeProvider)
 
-describe("useClaude", () => {
+describe("useLLM", () => {
   const defaultOptions = {
+    provider: "claude" as const,
     apiKey: "test-api-key",
   }
 
@@ -33,7 +34,7 @@ describe("useClaude", () => {
   })
 
   it("initializes with empty messages by default", () => {
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     expect(result.current.messages).toEqual([])
     expect(result.current.isLoading).toBe(false)
@@ -46,9 +47,26 @@ describe("useClaude", () => {
       { id: "2", role: "assistant", content: "Hi there!", createdAt: 1001 },
     ]
 
-    const { result } = renderHook(() => useClaude({ ...defaultOptions, initialMessages }))
+    const { result } = renderHook(() => useLLM({ ...defaultOptions, initialMessages }))
 
     expect(result.current.messages).toEqual(initialMessages)
+  })
+
+  it("creates provider with correct config", () => {
+    const options = {
+      provider: "claude" as const,
+      apiKey: "custom-key",
+      model: "claude-3-opus",
+      maxTokens: 2048,
+    }
+
+    renderHook(() => useLLM(options))
+
+    expect(mockCreateClaudeProvider).toHaveBeenCalledWith({
+      apiKey: "custom-key",
+      model: "claude-3-opus",
+      maxTokens: 2048,
+    })
   })
 
   it("sends a message and receives a response", async () => {
@@ -57,7 +75,7 @@ describe("useClaude", () => {
       success: true,
     })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("Help me journal")
@@ -80,7 +98,7 @@ describe("useClaude", () => {
         }),
     )
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     act(() => {
       result.current.send("Hello")
@@ -104,7 +122,7 @@ describe("useClaude", () => {
       error: "API rate limited",
     })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("Hello")
@@ -115,7 +133,7 @@ describe("useClaude", () => {
   })
 
   it("returns error for empty message content", async () => {
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     let response: LLMResponse
     await act(async () => {
@@ -134,7 +152,7 @@ describe("useClaude", () => {
       success: true,
     })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("  Hello world  ")
@@ -144,28 +162,7 @@ describe("useClaude", () => {
     expect(mockSendMessage).toHaveBeenCalledWith([], "Hello world")
   })
 
-  it("passes config options to provider", async () => {
-    mockSendMessage.mockResolvedValue({
-      content: "Response",
-      success: true,
-    })
-
-    const options = {
-      apiKey: "custom-key",
-      model: "claude-3-opus",
-      maxTokens: 2048,
-    }
-
-    renderHook(() => useClaude(options))
-
-    expect(mockCreateClaudeProvider).toHaveBeenCalledWith({
-      apiKey: "custom-key",
-      model: "claude-3-opus",
-      maxTokens: 2048,
-    })
-  })
-
-  it("passes existing messages to sendMessage", async () => {
+  it("passes existing messages to provider sendMessage", async () => {
     mockSendMessage.mockResolvedValue({
       content: "Response",
       success: true,
@@ -176,7 +173,7 @@ describe("useClaude", () => {
       { id: "2", role: "assistant", content: "Response 1", createdAt: 1001 },
     ]
 
-    const { result } = renderHook(() => useClaude({ ...defaultOptions, initialMessages }))
+    const { result } = renderHook(() => useLLM({ ...defaultOptions, initialMessages }))
 
     await act(async () => {
       await result.current.send("Second")
@@ -191,7 +188,7 @@ describe("useClaude", () => {
       success: true,
     })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("Hello")
@@ -209,7 +206,7 @@ describe("useClaude", () => {
   })
 
   it("allows setting messages directly", () => {
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     const newMessages: Message[] = [
       { id: "a", role: "user", content: "Loaded message", createdAt: 2000 },
@@ -234,7 +231,7 @@ describe("useClaude", () => {
         success: true,
       })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("First")
@@ -255,7 +252,7 @@ describe("useClaude", () => {
       .mockResolvedValueOnce({ content: "Response 1", success: true })
       .mockResolvedValueOnce({ content: "Response 2", success: true })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     await act(async () => {
       await result.current.send("First")
@@ -279,7 +276,7 @@ describe("useClaude", () => {
       return { content: "Response", success: true }
     })
 
-    const { result } = renderHook(() => useClaude(defaultOptions))
+    const { result } = renderHook(() => useLLM(defaultOptions))
 
     // Send two messages rapidly without waiting for the first to complete
     await act(async () => {
@@ -296,5 +293,17 @@ describe("useClaude", () => {
     // where the second call would otherwise see an empty messages array
     expect(callHistory[1].length).toBeGreaterThanOrEqual(1)
     expect(callHistory[1].some(m => m.content === "First message")).toBe(true)
+  })
+
+  it("throws error for unsupported provider", () => {
+    expect(() =>
+      renderHook(() =>
+        useLLM({
+          // @ts-expect-error - Testing invalid provider
+          provider: "unsupported",
+          apiKey: "test-key",
+        }),
+      ),
+    ).toThrow("Unknown provider: unsupported")
   })
 })
