@@ -32,6 +32,23 @@ const SYSTEM_PROMPT = `You are a thoughtful journaling assistant. Your role is t
 
 /**
  * Create an Anthropic client instance
+ *
+ * DESIGN DECISION: dangerouslyAllowBrowser is enabled intentionally.
+ *
+ * This is a local-first PWA where users provide their own API keys. All data
+ * (including the API key) is stored locally in the browser using IndexedDB.
+ * There is no backend server - API calls are made directly from the browser.
+ *
+ * Security considerations:
+ * - The API key is stored locally and never transmitted to any server except Anthropic
+ * - Users are warned in the Settings UI about client-side API key storage
+ * - Users are advised to use API keys with spending limits
+ * - The app runs entirely on the user's device
+ *
+ * This trade-off enables the app to work offline-first without requiring users
+ * to set up or pay for backend infrastructure.
+ *
+ * See also: SettingsView.tsx security warning displayed to users
  */
 function createClient(apiKey: string): Anthropic {
   return new Anthropic({
