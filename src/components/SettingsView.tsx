@@ -10,7 +10,6 @@ import { useJournal } from "../context/JournalContext"
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
   const [apiKey, setApiKey] = useState("")
-  const [showApiKey, setShowApiKey] = useState(true)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
 
   // Sync local state with document on mount
@@ -25,7 +24,7 @@ export function SettingsView() {
     if (!doc) return
 
     setSaveStatus("saving")
-    changeDoc((d) => {
+    changeDoc(d => {
       d.settings.claudeApiKey = apiKey.trim()
     })
 
@@ -39,7 +38,7 @@ export function SettingsView() {
     if (!doc) return
 
     setApiKey("")
-    changeDoc((d) => {
+    changeDoc(d => {
       d.settings.claudeApiKey = ""
     })
     setSaveStatus("idle")
@@ -51,15 +50,15 @@ export function SettingsView() {
       e.preventDefault()
       handleSaveApiKey()
     },
-    [handleSaveApiKey]
+    [handleSaveApiKey],
   )
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
+      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
+        <h2 className="text-foreground text-2xl font-semibold">Settings</h2>
         <div className="animate-pulse">
-          <div className="h-32 bg-muted rounded-md" />
+          <div className="bg-muted h-32 rounded-md" />
         </div>
       </div>
     )
@@ -68,7 +67,7 @@ export function SettingsView() {
   const hasUnsavedChanges = apiKey !== (doc?.settings?.claudeApiKey ?? "")
 
   return (
-    <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
       <div className="flex items-center gap-2">
         <a
           href="#/"
@@ -77,59 +76,53 @@ export function SettingsView() {
         >
           <BackIcon />
         </a>
-        <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
+        <h2 className="text-foreground text-2xl font-semibold">Settings</h2>
       </div>
 
       {/* Claude API Key Section */}
       <section className="flex flex-col gap-3">
-        <h3 className="text-lg font-medium text-foreground">Claude AI</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-foreground text-lg font-medium">Claude AI</h3>
+        <p className="text-muted-foreground text-sm">
           Enter your Anthropic API key to enable Claude AI features. You can get an API key from{" "}
           <a
             href="https://console.anthropic.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-foreground"
+            className="hover:text-foreground underline"
           >
             console.anthropic.com
           </a>
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="relative">
-            <input
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-..."
-              className="w-full p-3 pr-12 text-base border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              aria-label="Claude API key"
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={showApiKey ? "Hide API key" : "Show API key"}
-            >
-              {showApiKey ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
-          </div>
+          <input
+            type="text"
+            value={apiKey}
+            onChange={e => setApiKey(e.target.value)}
+            placeholder="sk-ant-..."
+            className="bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+            aria-label="Claude API key"
+            autoComplete="off"
+          />
 
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <button
               type="submit"
               disabled={!hasUnsavedChanges || saveStatus === "saving"}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save"}
+              {saveStatus === "saving" ?
+                "Saving..."
+              : saveStatus === "saved" ?
+                "Saved!"
+              : "Save"}
             </button>
 
             {apiKey && (
               <button
                 type="button"
                 onClick={handleClearApiKey}
-                className="px-4 py-2 text-muted-foreground hover:text-destructive border rounded-md hover:border-destructive transition-colors"
+                className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
               >
                 Clear
               </button>
@@ -144,7 +137,7 @@ export function SettingsView() {
         </form>
 
         {apiKey && !hasUnsavedChanges && (
-          <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+          <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
             <CheckIcon />
             API key configured
           </p>
@@ -153,20 +146,20 @@ export function SettingsView() {
 
       {/* Google Integration Section */}
       <section className="flex flex-col gap-3">
-        <h3 className="text-lg font-medium text-foreground">Google Integration</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-foreground text-lg font-medium">Google Integration</h3>
+        <p className="text-muted-foreground text-sm">
           Connect your Google account to import calendar events and more.
         </p>
 
         <button
           type="button"
           disabled
-          className="flex items-center justify-center gap-2 px-4 py-2 border rounded-md bg-muted text-muted-foreground cursor-not-allowed"
+          className="bg-muted text-muted-foreground flex cursor-not-allowed items-center justify-center gap-2 rounded-md border px-4 py-2"
           aria-label="Connect Google Account (coming soon)"
         >
           <GoogleIcon />
           Connect Google Account
-          <span className="text-xs bg-muted-foreground/20 px-2 py-0.5 rounded">Coming Soon</span>
+          <span className="bg-muted-foreground/20 rounded px-2 py-0.5 text-xs">Coming Soon</span>
         </button>
       </section>
     </div>
@@ -189,46 +182,6 @@ function BackIcon() {
     >
       <path d="m12 19-7-7 7-7" />
       <path d="M19 12H5" />
-    </svg>
-  )
-}
-
-function EyeIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
-
-function EyeOffIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-      <line x1="2" y1="2" x2="22" y2="22" />
     </svg>
   )
 }

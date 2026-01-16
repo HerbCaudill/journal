@@ -76,7 +76,7 @@ describe("SettingsView", () => {
     expect(screen.getByLabelText(/claude api key/i)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /console.anthropic.com/i })).toHaveAttribute(
       "href",
-      "https://console.anthropic.com/"
+      "https://console.anthropic.com/",
     )
   })
 
@@ -110,7 +110,7 @@ describe("SettingsView", () => {
     expect(backLink).toHaveAttribute("href", "#/")
   })
 
-  it("shows API key as text by default and toggles visibility", () => {
+  it("shows API key as visible text", () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -122,12 +122,6 @@ describe("SettingsView", () => {
 
     const input = screen.getByLabelText(/claude api key/i)
     expect(input).toHaveAttribute("type", "text")
-
-    const toggleButton = screen.getByRole("button", { name: /hide api key/i })
-    fireEvent.click(toggleButton)
-
-    expect(input).toHaveAttribute("type", "password")
-    expect(screen.getByRole("button", { name: /show api key/i })).toBeInTheDocument()
   })
 
   it("loads existing API key from document", () => {
