@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback } from "react"
 import { useSwipeNavigation } from "../hooks/useSwipeNavigation"
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
 import { addDays } from "../lib/dates"
 
 interface SwipeContainerProps {
@@ -40,6 +41,12 @@ export function SwipeContainer({ date, children }: SwipeContainerProps) {
   const swipeHandlers = useSwipeNavigation({
     onSwipeLeft: handleSwipeLeft,
     onSwipeRight: handleSwipeRight,
+  })
+
+  // Add keyboard navigation (← → arrow keys)
+  useKeyboardNavigation({
+    onPrevious: handleSwipeRight, // Left arrow = previous day (same as swipe right)
+    onNext: handleSwipeLeft, // Right arrow = next day (same as swipe left)
   })
 
   return (
