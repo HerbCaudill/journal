@@ -299,4 +299,244 @@ describe("ClaudeSection", () => {
     expect(screen.getByText("First response")).toBeInTheDocument()
     expect(screen.getByText("Second response")).toBeInTheDocument()
   })
+
+  describe("follow-up messages", () => {
+    it("shows follow-up input after initial conversation", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      expect(screen.getByRole("textbox", { name: /follow-up message/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /send follow-up/i })).toBeInTheDocument()
+    })
+
+    it("does not show follow-up input when there are no messages", () => {
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      expect(screen.queryByRole("textbox", { name: /follow-up message/i })).not.toBeInTheDocument()
+    })
+
+    it("does not show follow-up input without API key", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="" />)
+
+      expect(screen.queryByRole("textbox", { name: /follow-up message/i })).not.toBeInTheDocument()
+    })
+
+    it("disables follow-up input while loading", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      expect(screen.getByRole("textbox", { name: /follow-up message/i })).toBeDisabled()
+      expect(screen.getByRole("button", { name: /send follow-up/i })).toBeDisabled()
+    })
+
+    it("sends follow-up message when send button is clicked", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "What do you think?")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      expect(mockSend).toHaveBeenCalledWith("What do you think?")
+    })
+
+    it("sends follow-up message when Enter is pressed", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "What do you think?{enter}")
+
+      expect(mockSend).toHaveBeenCalledWith("What do you think?")
+    })
+
+    it("clears follow-up input after sending", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "What do you think?")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      await waitFor(() => {
+        expect(input).toHaveValue("")
+      })
+    })
+
+    it("disables send button when input is empty", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      expect(screen.getByRole("button", { name: /send follow-up/i })).toBeDisabled()
+    })
+
+    it("does not send follow-up when input is only whitespace", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "   ")
+
+      // Button should be disabled for whitespace-only input
+      expect(screen.getByRole("button", { name: /send follow-up/i })).toBeDisabled()
+    })
+
+    it("calls onMessagesChange with updated messages after follow-up", async () => {
+      const user = userEvent.setup()
+      const onMessagesChange = vi.fn()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: 1000 },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: 1001 },
+      ]
+
+      mockUseClaude.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(
+        <ClaudeSection
+          entryContent="Test entry"
+          apiKey="test-key"
+          onMessagesChange={onMessagesChange}
+        />,
+      )
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "Follow-up question")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      await waitFor(() => {
+        expect(onMessagesChange).toHaveBeenCalled()
+      })
+
+      const callArgs = onMessagesChange.mock.calls[0][0] as Message[]
+      expect(callArgs).toHaveLength(4)
+      expect(callArgs[2].role).toBe("user")
+      expect(callArgs[2].content).toBe("Follow-up question")
+      expect(callArgs[3].role).toBe("assistant")
+      expect(callArgs[3].content).toBe("Follow-up response")
+    })
+  })
 })

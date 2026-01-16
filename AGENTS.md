@@ -41,7 +41,7 @@ pnpm format           # Format code with Prettier
 
 - `src/lib/claude.ts` - Low-level Anthropic API wrapper
 - `src/hooks/useClaude.ts` - React hook for managing conversation state
-- `src/components/ClaudeSection.tsx` - UI component with submit button and response display
+- `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
 - API key stored in document settings, configured in Settings view
 
 **Utilities**

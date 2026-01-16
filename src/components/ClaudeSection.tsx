@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useClaude } from "../hooks/useClaude"
 import type { Message } from "../types/journal"
 
@@ -40,6 +40,8 @@ export function ClaudeSection({
   })
 
   const [localError, setLocalError] = useState<string | null>(null)
+  const [followUpInput, setFollowUpInput] = useState("")
+  const followUpInputRef = useRef<HTMLInputElement>(null)
 
   // Handle sending the journal entry to Claude
   const handleSubmit = useCallback(async () => {
@@ -76,6 +78,40 @@ export function ClaudeSection({
       ])
     }
   }, [apiKey, entryContent, send, messages, onMessagesChange])
+
+  // Handle sending a follow-up message
+  const handleFollowUp = useCallback(async () => {
+    if (!followUpInput.trim()) {
+      return
+    }
+
+    const messageContent = followUpInput.trim()
+    setFollowUpInput("") // Clear input immediately
+
+    const response = await send(messageContent)
+
+    if (response.success && onMessagesChange) {
+      // Update with the new user message and assistant response
+      onMessagesChange([
+        ...messages,
+        {
+          id: `user-${Date.now()}`,
+          role: "user",
+          content: messageContent,
+          createdAt: Date.now(),
+        },
+        {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: response.content,
+          createdAt: Date.now(),
+        },
+      ])
+    } else if (!response.success) {
+      // Restore the input if there was an error
+      setFollowUpInput(messageContent)
+    }
+  }, [followUpInput, send, messages, onMessagesChange])
 
   // Handle resetting the conversation
   const handleReset = useCallback(() => {
@@ -140,6 +176,35 @@ export function ClaudeSection({
               </span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Follow-up input - shown after initial conversation */}
+      {messages.length > 0 && apiKey && (
+        <div className="flex gap-2">
+          <input
+            ref={followUpInputRef}
+            type="text"
+            value={followUpInput}
+            onChange={e => setFollowUpInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !isLoading && followUpInput.trim()) {
+                handleFollowUp()
+              }
+            }}
+            placeholder="Ask a follow-up question..."
+            disabled={isLoading}
+            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring flex-1 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Follow-up message"
+          />
+          <button
+            onClick={handleFollowUp}
+            disabled={isLoading || !followUpInput.trim()}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Send follow-up"
+          >
+            {isLoading ? "..." : "Send"}
+          </button>
         </div>
       )}
 
