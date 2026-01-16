@@ -47,15 +47,6 @@ describe("DayView", () => {
     vi.clearAllMocks()
   })
 
-  it("renders the formatted date as a heading", () => {
-    render(<DayView date="2024-01-15" />)
-
-    // Should display the date in a readable format
-    const heading = screen.getByRole("heading", { level: 2 })
-    expect(heading).toBeInTheDocument()
-    expect(heading).toHaveTextContent("Monday, January 15, 2024")
-  })
-
   it("renders the EntryEditor for the given date", () => {
     render(<DayView date="2024-01-15" />)
 

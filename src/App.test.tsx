@@ -44,8 +44,8 @@ describe("App", () => {
 
   it("renders day view at root", () => {
     render(<App />)
-    // Should show today's date in the DayView heading
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+    // Should show today's date in the Header's h1
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Thursday, January 16, 2025",
     )
   })
@@ -53,7 +53,7 @@ describe("App", () => {
   it("renders day view for specific date", () => {
     window.location.hash = "#/day/2025-03-15"
     render(<App />)
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Saturday, March 15, 2025")
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Saturday, March 15, 2025")
   })
 
   it("renders settings view", () => {
@@ -65,8 +65,8 @@ describe("App", () => {
   it("navigates between routes on hash change", async () => {
     render(<App />)
 
-    // Initially shows today's day view
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+    // Initially shows today's day view (date in Header h1)
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Thursday, January 16, 2025",
     )
 
@@ -82,13 +82,13 @@ describe("App", () => {
       window.location.hash = "#/day/2025-06-20"
       window.dispatchEvent(new HashChangeEvent("hashchange"))
     })
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Friday, June 20, 2025")
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Friday, June 20, 2025")
   })
 
   it("defaults to today for invalid routes", () => {
     window.location.hash = "#/invalid/route"
     render(<App />)
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Thursday, January 16, 2025",
     )
   })

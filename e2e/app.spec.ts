@@ -7,8 +7,8 @@ test("displays today's date by default", async ({ page }) => {
   const header = page.locator("header")
   await expect(header).toBeVisible()
 
-  // Should show the day view with a date heading
-  const dayHeading = page.getByRole("heading", { level: 2 })
+  // Should show today's date in the h1 header
+  const dayHeading = page.getByRole("heading", { level: 1 })
   await expect(dayHeading).toBeVisible()
 })
 
@@ -22,6 +22,6 @@ test("navigates to settings page", async ({ page }) => {
 test("navigates to specific day", async ({ page }) => {
   await page.goto("/#/day/2025-03-15")
 
-  // Should show the date in the h2 heading (DayView)
-  await expect(page.getByRole("heading", { level: 2, name: /March 15, 2025/ })).toBeVisible()
+  // Should show the date in the h1 header
+  await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 })
