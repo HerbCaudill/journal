@@ -313,4 +313,26 @@ describe("useGeolocation", () => {
 
     expect(result.current.permission).toBe("granted")
   })
+
+  it("supports optional locality field in GeoPosition interface", () => {
+    // Test that the GeoPosition interface accepts locality
+    const positionWithLocality: GeoPosition = {
+      latitude: 41.8914,
+      longitude: 3.2079,
+      accuracy: 50,
+      timestamp: 1700000000000,
+      locality: "Tamariu",
+    }
+
+    expect(positionWithLocality.locality).toBe("Tamariu")
+
+    // Position without locality should also be valid
+    const positionWithoutLocality: GeoPosition = {
+      latitude: 40.7128,
+      longitude: -74.006,
+      timestamp: 1700000000000,
+    }
+
+    expect(positionWithoutLocality.locality).toBeUndefined()
+  })
 })

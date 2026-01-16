@@ -12,6 +12,8 @@ export interface GeoPosition {
   accuracy?: number
   /** Timestamp when the position was captured */
   timestamp: number
+  /** Human-readable locality name (e.g. 'Tamariu', 'Brooklyn') */
+  locality?: string
 }
 
 /**
