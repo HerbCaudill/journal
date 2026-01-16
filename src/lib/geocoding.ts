@@ -49,6 +49,9 @@ const cache = new Map<string, CacheEntry>()
 // Cache expiration time: 24 hours
 const CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000
 
+// Maximum cache size to prevent unbounded memory growth
+const MAX_CACHE_SIZE = 100
+
 // Nominatim API endpoint
 const NOMINATIM_API = "https://nominatim.openstreetmap.org/reverse"
 
@@ -91,10 +94,36 @@ export function getCachedResult(latitude: number, longitude: number): GeocodingR
 }
 
 /**
+ * Evict the oldest entry from the cache (LRU eviction)
+ */
+function evictOldestEntry(): void {
+  let oldestKey: string | null = null
+  let oldestTime = Infinity
+
+  for (const [key, entry] of cache) {
+    if (entry.timestamp < oldestTime) {
+      oldestTime = entry.timestamp
+      oldestKey = key
+    }
+  }
+
+  if (oldestKey) {
+    cache.delete(oldestKey)
+  }
+}
+
+/**
  * Store a result in the cache
+ * Implements LRU eviction when cache exceeds MAX_CACHE_SIZE
  */
 function cacheResult(latitude: number, longitude: number, result: GeocodingResult): void {
   const key = getCacheKey(latitude, longitude)
+
+  // Evict oldest entry if cache is at max size and this is a new key
+  if (cache.size >= MAX_CACHE_SIZE && !cache.has(key)) {
+    evictOldestEntry()
+  }
+
   cache.set(key, {
     result,
     timestamp: Date.now(),
@@ -246,4 +275,12 @@ export function getCacheSize(): number {
  */
 export function resetRateLimiter(): void {
   lastRequestTime = 0
+}
+
+/**
+ * Get the maximum cache size
+ * Useful for testing
+ */
+export function getMaxCacheSize(): number {
+  return MAX_CACHE_SIZE
 }

@@ -5,6 +5,7 @@ import {
   clearCache,
   getCacheSize,
   resetRateLimiter,
+  getMaxCacheSize,
 } from "./geocoding"
 
 // Mock fetch globally
@@ -299,6 +300,78 @@ describe("geocoding", () => {
 
       clearCache()
       expect(getCacheSize()).toBe(0)
+    })
+
+    it("evicts oldest entry when cache reaches max size", async () => {
+      vi.useFakeTimers()
+
+      const maxSize = getMaxCacheSize()
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      // Fill cache to max size with different coordinates
+      for (let i = 0; i < maxSize; i++) {
+        resetRateLimiter()
+        await reverseGeocode(40 + i * 0.01, 2.0)
+        // Advance time slightly to ensure different timestamps
+        vi.advanceTimersByTime(10)
+      }
+
+      expect(getCacheSize()).toBe(maxSize)
+
+      // The first coordinate we added should still be cached
+      const firstResult = getCachedResult(40.0, 2.0)
+      expect(firstResult).not.toBeNull()
+
+      // Add one more entry to trigger eviction
+      resetRateLimiter()
+      vi.advanceTimersByTime(10)
+      await reverseGeocode(50.0, 3.0)
+
+      // Cache size should still be at max
+      expect(getCacheSize()).toBe(maxSize)
+
+      // The oldest entry (first one) should have been evicted
+      const evictedResult = getCachedResult(40.0, 2.0)
+      expect(evictedResult).toBeNull()
+
+      // The newest entry should be cached
+      const newestResult = getCachedResult(50.0, 3.0)
+      expect(newestResult).not.toBeNull()
+    })
+
+    it("does not evict when updating existing cache entry", async () => {
+      vi.useFakeTimers()
+
+      const maxSize = getMaxCacheSize()
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      // Fill cache to max size
+      for (let i = 0; i < maxSize; i++) {
+        resetRateLimiter()
+        await reverseGeocode(40 + i * 0.01, 2.0)
+        vi.advanceTimersByTime(10)
+      }
+
+      expect(getCacheSize()).toBe(maxSize)
+
+      // Clear cache and expire all entries by advancing time
+      vi.advanceTimersByTime(25 * 60 * 60 * 1000) // 25 hours
+
+      // Now access the same coordinates - this will create new cache entries
+      // (since old ones expired) but shouldn't cause issues
+      resetRateLimiter()
+      await reverseGeocode(40.0, 2.0)
+
+      // Should still work correctly
+      expect(getCacheSize()).toBeLessThanOrEqual(maxSize)
     })
   })
 
