@@ -52,16 +52,18 @@ describe("App", () => {
 
   it("renders day view at root", () => {
     render(<App />)
-    // Should show today's date in the Header's h1
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Thursday, January 16, 2025",
-    )
+    // Should show today's date in the Header's h1 (with day of week and month/day on separate lines)
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("January 16, 2025")
   })
 
   it("renders day view for specific date", () => {
     window.location.hash = "#/day/2025-03-15"
     render(<App />)
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Saturday, March 15, 2025")
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Saturday")
+    expect(heading).toHaveTextContent("March 15, 2025")
   })
 
   it("renders settings view", () => {
@@ -73,10 +75,10 @@ describe("App", () => {
   it("navigates between routes on hash change", async () => {
     render(<App />)
 
-    // Initially shows today's day view (date in Header h1)
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Thursday, January 16, 2025",
-    )
+    // Initially shows today's day view (date in Header h1 with day of week and month/day)
+    let heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("January 16, 2025")
 
     // Navigate to settings
     act(() => {
@@ -90,15 +92,17 @@ describe("App", () => {
       window.location.hash = "#/day/2025-06-20"
       window.dispatchEvent(new HashChangeEvent("hashchange"))
     })
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Friday, June 20, 2025")
+    heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Friday")
+    expect(heading).toHaveTextContent("June 20, 2025")
   })
 
   it("defaults to today for invalid routes", () => {
     window.location.hash = "#/invalid/route"
     render(<App />)
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Thursday, January 16, 2025",
-    )
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("January 16, 2025")
   })
 
   describe("OAuth callback", () => {
@@ -136,9 +140,9 @@ describe("App", () => {
       render(<App />)
 
       // Should show the normal day view since params are missing
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "Thursday, January 16, 2025",
-      )
+      const heading = screen.getByRole("heading", { level: 1 })
+      expect(heading).toHaveTextContent("Thursday")
+      expect(heading).toHaveTextContent("January 16, 2025")
     })
 
     it("shows error state when OAuth state validation fails", async () => {

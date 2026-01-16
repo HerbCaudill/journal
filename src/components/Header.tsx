@@ -8,17 +8,37 @@ interface HeaderProps {
 }
 
 /**
- * Formats a date for display in the header
- * e.g., "Thursday, January 16, 2025"
+ * Gets the day of week for display in the header
+ * e.g., "Thursday"
  */
-function formatDisplayDate(dateString: string): string {
+function getDayOfWeek(dateString: string): string {
   const date = parseDate(dateString)
   return date.toLocaleDateString("en-US", {
     weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
   })
+}
+
+/**
+ * Gets the month and day for display in the header
+ * e.g., "January 16" or "January 16, 2024" if not current year
+ */
+function getMonthDay(dateString: string): string {
+  const date = parseDate(dateString)
+  const currentYear = new Date().getFullYear()
+  const dateYear = date.getFullYear()
+
+  if (dateYear === currentYear) {
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    })
+  } else {
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
 }
 
 /**
@@ -78,13 +98,16 @@ export function Header({ date }: HeaderProps) {
         <button
           ref={buttonRef}
           onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-          className="text-foreground hover:text-primary flex items-center gap-2 text-xl font-semibold transition-colors"
+          className="text-foreground hover:text-primary flex items-start gap-2 transition-colors"
           aria-expanded={isDatePickerOpen}
           aria-haspopup="dialog"
         >
-          <h1>{formatDisplayDate(date)}</h1>
+          <h1 className="flex flex-col text-left">
+            <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
+            <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+          </h1>
           <ChevronDownIcon
-            className={`transition-transform ${isDatePickerOpen ? "rotate-180" : ""}`}
+            className={`mt-1.5 transition-transform ${isDatePickerOpen ? "rotate-180" : ""}`}
           />
         </button>
         {isDatePickerOpen && (

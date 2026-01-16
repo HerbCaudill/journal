@@ -25,12 +25,13 @@ describe("Header", () => {
     window.location.hash = ""
   })
 
-  it("renders the formatted date", () => {
+  it("renders the formatted date with day of week and month/day", () => {
     render(<Header date="2024-01-15" />)
 
     const heading = screen.getByRole("heading", { level: 1 })
     expect(heading).toBeInTheDocument()
-    expect(heading).toHaveTextContent("Monday, January 15, 2024")
+    expect(heading).toHaveTextContent("Monday")
+    expect(heading).toHaveTextContent("January 15, 2024")
   })
 
   it("renders a settings link", () => {
@@ -45,7 +46,17 @@ describe("Header", () => {
     render(<Header date="2024-06-20" />)
 
     const heading = screen.getByRole("heading", { level: 1 })
-    expect(heading).toHaveTextContent("Thursday, June 20, 2024")
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("June 20, 2024")
+  })
+
+  it("omits year for current year dates", () => {
+    const currentYear = new Date().getFullYear()
+    render(<Header date={`${currentYear}-03-15`} />)
+
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("March 15")
+    expect(heading).not.toHaveTextContent(`${currentYear}`)
   })
 
   it("renders a clickable date button that opens date picker", () => {
