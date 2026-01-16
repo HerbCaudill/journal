@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useJournal } from "../context/JournalContext"
 import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
+import type { LLMProviderType } from "../types/journal"
 
 /**
  * Settings view component for managing app configuration.
@@ -10,50 +11,107 @@ import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
  */
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
-  const [apiKey, setApiKey] = useState("")
+  const [llmProvider, setLlmProvider] = useState<LLMProviderType>("claude")
+  const [claudeApiKey, setClaudeApiKey] = useState("")
+  const [openaiApiKey, setOpenaiApiKey] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [showClaudeApiKey, setShowClaudeApiKey] = useState(false)
+  const [showOpenaiApiKey, setShowOpenaiApiKey] = useState(false)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
 
   // Sync local state with document on mount
   useEffect(() => {
-    if (doc?.settings?.claudeApiKey) {
-      setApiKey(doc.settings.claudeApiKey)
+    if (doc?.settings) {
+      if (doc.settings.llmProvider) {
+        setLlmProvider(doc.settings.llmProvider)
+      }
+      if (doc.settings.claudeApiKey) {
+        setClaudeApiKey(doc.settings.claudeApiKey)
+      }
+      if (doc.settings.openaiApiKey) {
+        setOpenaiApiKey(doc.settings.openaiApiKey)
+      }
     }
-  }, [doc?.settings?.claudeApiKey])
+  }, [doc?.settings?.llmProvider, doc?.settings?.claudeApiKey, doc?.settings?.openaiApiKey])
 
-  // Save API key to document
-  const handleSaveApiKey = useCallback(() => {
+  // Handle LLM provider change
+  const handleProviderChange = useCallback(
+    (newProvider: LLMProviderType) => {
+      if (!doc) return
+      setLlmProvider(newProvider)
+      changeDoc(d => {
+        d.settings.llmProvider = newProvider
+      })
+    },
+    [doc, changeDoc],
+  )
+
+  // Save Claude API key to document
+  const handleSaveClaudeApiKey = useCallback(() => {
     if (!doc) return
 
     setSaveStatus("saving")
     changeDoc(d => {
-      d.settings.claudeApiKey = apiKey.trim()
+      d.settings.claudeApiKey = claudeApiKey.trim()
     })
 
     // Show saved confirmation briefly
     setSaveStatus("saved")
     setTimeout(() => setSaveStatus("idle"), 2000)
-  }, [doc, changeDoc, apiKey])
+  }, [doc, changeDoc, claudeApiKey])
 
-  // Clear API key
-  const handleClearApiKey = useCallback(() => {
+  // Save OpenAI API key to document
+  const handleSaveOpenaiApiKey = useCallback(() => {
     if (!doc) return
 
-    setApiKey("")
+    setSaveStatus("saving")
+    changeDoc(d => {
+      d.settings.openaiApiKey = openaiApiKey.trim()
+    })
+
+    // Show saved confirmation briefly
+    setSaveStatus("saved")
+    setTimeout(() => setSaveStatus("idle"), 2000)
+  }, [doc, changeDoc, openaiApiKey])
+
+  // Clear Claude API key
+  const handleClearClaudeApiKey = useCallback(() => {
+    if (!doc) return
+
+    setClaudeApiKey("")
     changeDoc(d => {
       d.settings.claudeApiKey = ""
     })
     setSaveStatus("idle")
   }, [doc, changeDoc])
 
-  // Handle form submission
-  const handleSubmit = useCallback(
+  // Clear OpenAI API key
+  const handleClearOpenaiApiKey = useCallback(() => {
+    if (!doc) return
+
+    setOpenaiApiKey("")
+    changeDoc(d => {
+      d.settings.openaiApiKey = ""
+    })
+    setSaveStatus("idle")
+  }, [doc, changeDoc])
+
+  // Handle Claude form submission
+  const handleClaudeSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      handleSaveApiKey()
+      handleSaveClaudeApiKey()
     },
-    [handleSaveApiKey],
+    [handleSaveClaudeApiKey],
+  )
+
+  // Handle OpenAI form submission
+  const handleOpenaiSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      handleSaveOpenaiApiKey()
+    },
+    [handleSaveOpenaiApiKey],
   )
 
   if (isLoading) {
@@ -67,7 +125,8 @@ export function SettingsView() {
     )
   }
 
-  const hasUnsavedChanges = apiKey !== (doc?.settings?.claudeApiKey ?? "")
+  const hasClaudeUnsavedChanges = claudeApiKey !== (doc?.settings?.claudeApiKey ?? "")
+  const hasOpenaiUnsavedChanges = openaiApiKey !== (doc?.settings?.openaiApiKey ?? "")
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
@@ -81,6 +140,41 @@ export function SettingsView() {
         </a>
         <h2 className="text-foreground text-2xl font-semibold">Settings</h2>
       </div>
+
+      {/* LLM Provider Selection */}
+      <section className="flex flex-col gap-3">
+        <h3 className="text-foreground text-lg font-medium">AI Provider</h3>
+        <p className="text-muted-foreground text-sm">
+          Select which AI provider to use for journal reflections and assistance.
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleProviderChange("claude")}
+            className={`rounded-md border px-4 py-2 transition-colors ${
+              llmProvider === "claude" ?
+                "bg-primary text-primary-foreground border-primary"
+              : "bg-background text-foreground hover:bg-muted"
+            }`}
+            aria-pressed={llmProvider === "claude"}
+          >
+            Claude
+          </button>
+          <button
+            type="button"
+            onClick={() => handleProviderChange("openai")}
+            className={`rounded-md border px-4 py-2 transition-colors ${
+              llmProvider === "openai" ?
+                "bg-primary text-primary-foreground border-primary"
+              : "bg-background text-foreground hover:bg-muted"
+            }`}
+            aria-pressed={llmProvider === "openai"}
+          >
+            OpenAI
+          </button>
+        </div>
+      </section>
 
       {/* Claude API Key Section */}
       <section className="flex flex-col gap-3">
@@ -97,25 +191,25 @@ export function SettingsView() {
           </a>
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form onSubmit={handleClaudeSubmit} className="flex flex-col gap-3">
           <div className="relative">
             <input
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
+              type={showClaudeApiKey ? "text" : "password"}
+              value={claudeApiKey}
+              onChange={e => setClaudeApiKey(e.target.value)}
               placeholder="sk-ant-..."
               className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
               aria-label="Claude API key"
               autoComplete="off"
             />
-            {apiKey && (
+            {claudeApiKey && (
               <button
                 type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
+                onClick={() => setShowClaudeApiKey(!showClaudeApiKey)}
                 className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                aria-label={showClaudeApiKey ? "Hide API key" : "Show API key"}
               >
-                {showApiKey ?
+                {showClaudeApiKey ?
                   <EyeOffIcon />
                 : <EyeIcon />}
               </button>
@@ -125,7 +219,7 @@ export function SettingsView() {
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              disabled={!hasUnsavedChanges || saveStatus === "saving"}
+              disabled={!hasClaudeUnsavedChanges || saveStatus === "saving"}
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saveStatus === "saving" ?
@@ -135,10 +229,10 @@ export function SettingsView() {
               : "Save"}
             </button>
 
-            {apiKey && (
+            {claudeApiKey && (
               <button
                 type="button"
-                onClick={handleClearApiKey}
+                onClick={handleClearClaudeApiKey}
                 className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
               >
                 Clear
@@ -153,20 +247,101 @@ export function SettingsView() {
           </div>
         </form>
 
-        {apiKey && !hasUnsavedChanges && (
+        {claudeApiKey && !hasClaudeUnsavedChanges && (
           <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
             <CheckIcon />
-            API key configured
+            Claude API key configured
           </p>
         )}
+      </section>
 
-        {/* Security warning */}
+      {/* OpenAI API Key Section */}
+      <section className="flex flex-col gap-3">
+        <h3 className="text-foreground text-lg font-medium">OpenAI</h3>
+        <p className="text-muted-foreground text-sm">
+          Enter your OpenAI API key to enable OpenAI features. You can get an API key from{" "}
+          <a
+            href="https://platform.openai.com/api-keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground underline"
+          >
+            platform.openai.com
+          </a>
+        </p>
+
+        <form onSubmit={handleOpenaiSubmit} className="flex flex-col gap-3">
+          <div className="relative">
+            <input
+              type={showOpenaiApiKey ? "text" : "password"}
+              value={openaiApiKey}
+              onChange={e => setOpenaiApiKey(e.target.value)}
+              placeholder="sk-..."
+              className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+              aria-label="OpenAI API key"
+              autoComplete="off"
+            />
+            {openaiApiKey && (
+              <button
+                type="button"
+                onClick={() => setShowOpenaiApiKey(!showOpenaiApiKey)}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
+                aria-label={showOpenaiApiKey ? "Hide API key" : "Show API key"}
+              >
+                {showOpenaiApiKey ?
+                  <EyeOffIcon />
+                : <EyeIcon />}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={!hasOpenaiUnsavedChanges || saveStatus === "saving"}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saveStatus === "saving" ?
+                "Saving..."
+              : saveStatus === "saved" ?
+                "Saved!"
+              : "Save"}
+            </button>
+
+            {openaiApiKey && (
+              <button
+                type="button"
+                onClick={handleClearOpenaiApiKey}
+                className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+
+            {saveStatus === "saved" && (
+              <span className="text-sm text-green-600 dark:text-green-400">
+                API key saved successfully
+              </span>
+            )}
+          </div>
+        </form>
+
+        {openaiApiKey && !hasOpenaiUnsavedChanges && (
+          <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+            <CheckIcon />
+            OpenAI API key configured
+          </p>
+        )}
+      </section>
+
+      {/* Security warning */}
+      <section className="flex flex-col gap-3">
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
           <WarningIcon className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
           <div className="text-sm text-amber-800 dark:text-amber-200">
             <p className="font-medium">Security Notice</p>
             <p className="mt-1 opacity-90">
-              Your API key is stored locally in your browser. While this app runs entirely on your
+              Your API keys are stored locally in your browser. While this app runs entirely on your
               device, API keys could be exposed to malicious browser extensions or XSS attacks.
               Consider using API keys with spending limits.
             </p>

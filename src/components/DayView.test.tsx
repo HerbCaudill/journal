@@ -102,6 +102,7 @@ describe("DayView", () => {
         displayName: "",
         timezone: "UTC",
         theme: "system" as const,
+        llmProvider: "claude" as const,
       },
     } as Doc<JournalDoc>
 
@@ -146,6 +147,7 @@ describe("DayView", () => {
           displayName: "",
           timezone: "UTC",
           theme: "system" as const,
+          llmProvider: "claude" as const,
           claudeApiKey: "sk-ant-test123",
         },
       } as Doc<JournalDoc>
@@ -208,6 +210,7 @@ describe("DayView", () => {
           displayName: "",
           timezone: "UTC",
           theme: "system" as const,
+          llmProvider: "claude" as const,
           claudeApiKey: "sk-ant-test123",
         },
       } as Doc<JournalDoc>

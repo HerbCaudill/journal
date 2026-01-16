@@ -35,10 +35,12 @@ describe("Journal types", () => {
       displayName: "Test User",
       timezone: "America/New_York",
       theme: "system",
+      llmProvider: "claude",
     }
 
     expect(settings.displayName).toBe("Test User")
     expect(settings.theme).toBe("system")
+    expect(settings.llmProvider).toBe("claude")
   })
 
   it("should allow creating a valid JournalDoc", () => {
@@ -48,6 +50,7 @@ describe("Journal types", () => {
         displayName: "Test User",
         timezone: "UTC",
         theme: "light",
+        llmProvider: "claude",
       },
     }
 

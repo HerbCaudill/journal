@@ -54,8 +54,9 @@ Copy `.env.example` to `.env` and configure:
 - `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude")
 - `src/lib/claude.ts` - Legacy Anthropic API wrapper (deprecated, use Claude provider instead)
 - `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
-- API key stored in document settings, configured in Settings view
-- Settings UI masks API key (password field with show/hide toggle) and displays security warning about client-side storage
+- `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
+- Settings view allows selecting LLM provider and configuring API keys for each provider
+- API keys stored in document settings, masked (password field with show/hide toggle) with security warning
 
 **Google Calendar Integration**
 

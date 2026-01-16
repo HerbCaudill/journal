@@ -16,6 +16,7 @@ const createInitialDoc = (): JournalDoc => ({
     displayName: "",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     theme: "system",
+    llmProvider: "claude",
   },
 })
 

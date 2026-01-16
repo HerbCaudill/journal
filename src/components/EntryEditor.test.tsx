@@ -123,6 +123,7 @@ describe("EntryEditor", () => {
         displayName: "",
         timezone: "UTC",
         theme: "system" as const,
+        llmProvider: "claude" as const,
       },
     } as Doc<JournalDoc>
 

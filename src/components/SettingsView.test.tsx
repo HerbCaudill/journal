@@ -21,13 +21,17 @@ const mockAuthenticate = vi.fn()
 const mockSignOut = vi.fn()
 const mockClearError = vi.fn()
 
-const createMockDoc = (claudeApiKey = ""): Doc<JournalDoc> =>
+const createMockDoc = (
+  claudeApiKey = "",
+  llmProvider: "claude" | "openai" = "claude",
+): Doc<JournalDoc> =>
   ({
     entries: {},
     settings: {
       displayName: "",
       timezone: "America/New_York",
       theme: "system",
+      llmProvider,
       claudeApiKey,
     },
   }) as Doc<JournalDoc>
@@ -300,7 +304,9 @@ describe("SettingsView", () => {
     render(<SettingsView />)
 
     expect(screen.getByText(/security notice/i)).toBeInTheDocument()
-    expect(screen.getByText(/your api key is stored locally in your browser/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/your api keys are stored locally in your browser/i),
+    ).toBeInTheDocument()
   })
 
   it("loads existing API key from document", () => {
@@ -331,8 +337,9 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
 
-    const saveButton = screen.getByRole("button", { name: /save/i })
-    fireEvent.click(saveButton)
+    // Get the first save button (Claude section)
+    const saveButtons = screen.getAllByRole("button", { name: /save/i })
+    fireEvent.click(saveButtons[0])
 
     expect(mockChangeDoc).toHaveBeenCalledTimes(1)
   })
@@ -347,8 +354,9 @@ describe("SettingsView", () => {
 
     render(<SettingsView />)
 
-    const saveButton = screen.getByRole("button", { name: /save/i })
-    expect(saveButton).toBeDisabled()
+    // Get the first save button (Claude section)
+    const saveButtons = screen.getAllByRole("button", { name: /save/i })
+    expect(saveButtons[0]).toBeDisabled()
   })
 
   it("enables save button when API key is changed", () => {
@@ -364,8 +372,9 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
 
-    const saveButton = screen.getByRole("button", { name: /save/i })
-    expect(saveButton).not.toBeDisabled()
+    // Get the first save button (Claude section)
+    const saveButtons = screen.getAllByRole("button", { name: /save/i })
+    expect(saveButtons[0]).not.toBeDisabled()
   })
 
   it("shows clear button when API key exists", () => {
@@ -415,15 +424,123 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
 
-    const saveButton = screen.getByRole("button", { name: /save/i })
-    fireEvent.click(saveButton)
+    // Get the first save button (Claude section)
+    const saveButtons = screen.getAllByRole("button", { name: /save/i })
+    fireEvent.click(saveButtons[0])
 
-    expect(screen.getByText(/api key saved successfully/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/api key saved successfully/i)[0]).toBeInTheDocument()
 
     // Confirmation should disappear after timeout
     await act(async () => {
       vi.advanceTimersByTime(2000)
     })
     expect(screen.queryByText(/api key saved successfully/i)).not.toBeInTheDocument()
+  })
+
+  describe("LLM Provider selection", () => {
+    it("renders AI Provider section", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      expect(screen.getByRole("heading", { name: /ai provider/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /claude/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /openai/i })).toBeInTheDocument()
+    })
+
+    it("shows Claude as selected by default", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const claudeButton = screen.getByRole("button", { name: /claude/i })
+      expect(claudeButton).toHaveAttribute("aria-pressed", "true")
+
+      const openaiButton = screen.getByRole("button", { name: /openai/i })
+      expect(openaiButton).toHaveAttribute("aria-pressed", "false")
+    })
+
+    it("changes provider when OpenAI button is clicked", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const openaiButton = screen.getByRole("button", { name: /openai/i })
+      fireEvent.click(openaiButton)
+
+      expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+    })
+
+    it("shows OpenAI as selected when llmProvider is openai", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc("", "openai"),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const claudeButton = screen.getByRole("button", { name: /claude/i })
+      expect(claudeButton).toHaveAttribute("aria-pressed", "false")
+
+      const openaiButton = screen.getByRole("button", { name: /openai/i })
+      expect(openaiButton).toHaveAttribute("aria-pressed", "true")
+    })
+  })
+
+  describe("OpenAI API key section", () => {
+    it("renders OpenAI API key section", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      expect(screen.getByRole("heading", { name: /openai$/i })).toBeInTheDocument()
+      expect(screen.getByLabelText(/openai api key/i)).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: /platform.openai.com/i })).toHaveAttribute(
+        "href",
+        "https://platform.openai.com/api-keys",
+      )
+    })
+
+    it("saves OpenAI API key when form is submitted", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const input = screen.getByLabelText(/openai api key/i)
+      fireEvent.change(input, { target: { value: "sk-openai-key" } })
+
+      // Find the save button in the OpenAI section (second save button)
+      const saveButtons = screen.getAllByRole("button", { name: /save/i })
+      fireEvent.click(saveButtons[1]) // Second save button is for OpenAI
+
+      expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+    })
   })
 })

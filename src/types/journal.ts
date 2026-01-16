@@ -33,6 +33,11 @@ export interface JournalEntry {
 }
 
 /**
+ * Supported LLM provider types for AI integration
+ */
+export type LLMProviderType = "claude" | "openai"
+
+/**
  * User settings for the journal app
  */
 export interface Settings {
@@ -42,8 +47,12 @@ export interface Settings {
   timezone: string
   /** Theme preference */
   theme: "light" | "dark" | "system"
+  /** Selected LLM provider for AI integration */
+  llmProvider: LLMProviderType
   /** Claude API key for AI integration */
   claudeApiKey?: string
+  /** OpenAI API key for AI integration */
+  openaiApiKey?: string
 }
 
 /**
