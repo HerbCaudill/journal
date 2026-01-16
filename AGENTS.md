@@ -48,6 +48,7 @@ pnpm format           # Format code with Prettier
 
 - `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout
 - `src/lib/utils.ts` - `cn()` function for Tailwind class merging
+- `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching and rate limiting
 
 ## Code Conventions
 
