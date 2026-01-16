@@ -124,9 +124,6 @@ export function ClaudeSection({
 
   const displayError = localError || error
 
-  // Filter to only show assistant messages in the response area
-  const assistantMessages = messages.filter(m => m.role === "assistant")
-
   return (
     <div className="flex flex-col gap-4">
       {/* Submit button */}
@@ -164,12 +161,18 @@ export function ClaudeSection({
         </div>
       )}
 
-      {/* Response display */}
-      {assistantMessages.length > 0 && (
+      {/* Conversation display */}
+      {messages.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium">Claude's Response</h3>
-          {assistantMessages.map(message => (
-            <div key={message.id} className="bg-muted rounded-md p-4" data-testid="claude-response">
+          <h3 className="text-muted-foreground text-sm font-medium">Conversation</h3>
+          {messages.map(message => (
+            <div
+              key={message.id}
+              className={`rounded-md p-4 ${
+                message.role === "user" ? "bg-primary/10 ml-8 text-right" : "bg-muted mr-8"
+              }`}
+              data-testid={message.role === "user" ? "user-message" : "claude-response"}
+            >
               <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
               <span className="text-muted-foreground mt-2 block text-xs">
                 {formatTime(message.createdAt)}

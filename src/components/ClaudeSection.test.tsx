@@ -112,11 +112,11 @@ describe("ClaudeSection", () => {
 
     render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
 
-    expect(screen.getByText("Claude's Response")).toBeInTheDocument()
+    expect(screen.getByText("Conversation")).toBeInTheDocument()
     expect(screen.getByText("Hi there! How can I help?")).toBeInTheDocument()
   })
 
-  it("only displays assistant messages, not user messages", () => {
+  it("displays both user and assistant messages", () => {
     const messages: Message[] = [
       { id: "1", role: "user", content: "User message", createdAt: Date.now() },
       { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
@@ -133,8 +133,33 @@ describe("ClaudeSection", () => {
 
     render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
 
-    expect(screen.queryByText("User message")).not.toBeInTheDocument()
+    expect(screen.getByText("User message")).toBeInTheDocument()
     expect(screen.getByText("Assistant message")).toBeInTheDocument()
+  })
+
+  it("styles user messages differently from assistant messages", () => {
+    const messages: Message[] = [
+      { id: "1", role: "user", content: "User message", createdAt: Date.now() },
+      { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
+    ]
+
+    mockUseClaude.mockReturnValue({
+      messages,
+      isLoading: false,
+      error: null,
+      send: mockSend,
+      reset: mockReset,
+      setMessages: mockSetMessages,
+    })
+
+    render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
+
+    const userMessage = screen.getByTestId("user-message")
+    const assistantMessage = screen.getByTestId("claude-response")
+
+    expect(userMessage).toHaveClass("text-right")
+    expect(userMessage).toHaveClass("ml-8")
+    expect(assistantMessage).toHaveClass("mr-8")
   })
 
   it("shows Clear button when there are messages", () => {
@@ -275,7 +300,7 @@ describe("ClaudeSection", () => {
     })
   })
 
-  it("displays multiple assistant responses", () => {
+  it("displays full conversation with multiple messages", () => {
     const messages: Message[] = [
       { id: "1", role: "user", content: "First question", createdAt: 1000 },
       { id: "2", role: "assistant", content: "First response", createdAt: 1001 },
@@ -294,9 +319,13 @@ describe("ClaudeSection", () => {
 
     render(<ClaudeSection entryContent="Test entry" apiKey="test-key" />)
 
-    const responses = screen.getAllByTestId("claude-response")
-    expect(responses).toHaveLength(2)
+    const userMessages = screen.getAllByTestId("user-message")
+    const assistantMessages = screen.getAllByTestId("claude-response")
+    expect(userMessages).toHaveLength(2)
+    expect(assistantMessages).toHaveLength(2)
+    expect(screen.getByText("First question")).toBeInTheDocument()
     expect(screen.getByText("First response")).toBeInTheDocument()
+    expect(screen.getByText("Second question")).toBeInTheDocument()
     expect(screen.getByText("Second response")).toBeInTheDocument()
   })
 

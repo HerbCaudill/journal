@@ -34,7 +34,7 @@ pnpm format           # Format code with Prettier
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
 - `DayView` - Main view displaying the entry editor and Claude section for a specific date
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
-- `ClaudeSection` - Submit button to ask Claude about journal entry, displays conversation
+- `ClaudeSection` - Submit button to ask Claude about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 
 **Claude Integration**
