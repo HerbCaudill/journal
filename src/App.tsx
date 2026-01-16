@@ -2,12 +2,11 @@ import { useEffect, useState, useCallback } from "react"
 import { Header } from "./components/Header"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
+import { SwipeContainer } from "./components/SwipeContainer"
 import { JournalProvider } from "./context/JournalContext"
 import { getToday } from "./lib/dates"
 
-type Route =
-  | { type: "day"; date: string }
-  | { type: "settings" }
+type Route = { type: "day"; date: string } | { type: "settings" }
 
 /**
  * Parses the current hash to determine the active route
@@ -50,7 +49,6 @@ function useHashRoute(): Route {
   return route
 }
 
-
 export function App() {
   const route = useHashRoute()
 
@@ -59,10 +57,14 @@ export function App() {
 
   return (
     <JournalProvider>
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="bg-background text-foreground min-h-screen">
         <Header date={currentDate} />
         <main>
-          {route.type === "day" && <DayView date={route.date} />}
+          {route.type === "day" && (
+            <SwipeContainer date={route.date}>
+              <DayView date={route.date} />
+            </SwipeContainer>
+          )}
           {route.type === "settings" && <SettingsView />}
         </main>
       </div>
