@@ -33,7 +33,11 @@ const createMockDoc = (claudeApiKey = ""): Doc<JournalDoc> =>
   }) as Doc<JournalDoc>
 
 const createMockGoogleCalendar = (
-  authState: "unconfigured" | "unauthenticated" | "authenticating" | "authenticated" = "unconfigured",
+  authState:
+    | "unconfigured"
+    | "unauthenticated"
+    | "authenticating"
+    | "authenticated" = "unconfigured",
   error: string | null = null,
 ) => ({
   authState,
