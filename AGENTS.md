@@ -43,6 +43,7 @@ pnpm format           # Format code with Prettier
 - `src/hooks/useClaude.ts` - React hook for managing conversation state
 - `src/components/ClaudeSection.tsx` - UI component with submit button, follow-up input, and response display
 - API key stored in document settings, configured in Settings view
+- Settings UI masks API key (password field with show/hide toggle) and displays security warning about client-side storage
 
 **Google Calendar Integration**
 

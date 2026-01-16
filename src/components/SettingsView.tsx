@@ -12,6 +12,7 @@ export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
   const [apiKey, setApiKey] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const [showApiKey, setShowApiKey] = useState(false)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
 
   // Sync local state with document on mount
@@ -97,15 +98,29 @@ export function SettingsView() {
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
-            placeholder="sk-ant-..."
-            className="bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
-            aria-label="Claude API key"
-            autoComplete="off"
-          />
+          <div className="relative">
+            <input
+              type={showApiKey ? "text" : "password"}
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              placeholder="sk-ant-..."
+              className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+              aria-label="Claude API key"
+              autoComplete="off"
+            />
+            {apiKey && (
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
+                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+              >
+                {showApiKey ?
+                  <EyeOffIcon />
+                : <EyeIcon />}
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -144,6 +159,19 @@ export function SettingsView() {
             API key configured
           </p>
         )}
+
+        {/* Security warning */}
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+          <WarningIcon className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="font-medium">Security Notice</p>
+            <p className="mt-1 opacity-90">
+              Your API key is stored locally in your browser. While this app runs entirely on your
+              device, API keys could be exposed to malicious browser extensions or XSS attacks.
+              Consider using API keys with spending limits.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Google Integration Section */}
@@ -275,6 +303,67 @@ function GoogleIcon() {
         fill="currentColor"
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
+    </svg>
+  )
+}
+
+function EyeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" x2="22" y1="2" y2="22" />
+    </svg>
+  )
+}
+
+function WarningIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" x2="12" y1="9" y2="13" />
+      <line x1="12" x2="12.01" y1="17" y2="17" />
     </svg>
   )
 }
