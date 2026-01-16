@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A local-first PWA journal app built with React 19, TypeScript, and Automerge for offline-capable data persistence. One screen per day with planned Claude AI integration.
+A local-first PWA journal app built with React 19, TypeScript, and Automerge for offline-capable data persistence. One screen per day with Claude AI integration for journaling assistance.
 
 ## Commands
 
@@ -32,9 +32,17 @@ pnpm format           # Format code with Prettier
 
 - `Header` - App header with clickable date that opens a DatePicker popover for navigation
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
-- `DayView` - Main view displaying the entry editor for a specific date
+- `DayView` - Main view displaying the entry editor and Claude section for a specific date
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
+- `ClaudeSection` - Submit button to ask Claude about journal entry, displays conversation
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
+
+**Claude Integration**
+
+- `src/lib/claude.ts` - Low-level Anthropic API wrapper
+- `src/hooks/useClaude.ts` - React hook for managing conversation state
+- `src/components/ClaudeSection.tsx` - UI component with submit button and response display
+- API key stored in document settings, configured in Settings view
 
 **Utilities**
 
