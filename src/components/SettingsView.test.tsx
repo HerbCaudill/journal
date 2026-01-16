@@ -110,7 +110,7 @@ describe("SettingsView", () => {
     expect(backLink).toHaveAttribute("href", "#/")
   })
 
-  it("shows password input by default and toggles visibility", () => {
+  it("shows API key as text by default and toggles visibility", () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -121,13 +121,13 @@ describe("SettingsView", () => {
     render(<SettingsView />)
 
     const input = screen.getByLabelText(/claude api key/i)
-    expect(input).toHaveAttribute("type", "password")
+    expect(input).toHaveAttribute("type", "text")
 
-    const toggleButton = screen.getByRole("button", { name: /show api key/i })
+    const toggleButton = screen.getByRole("button", { name: /hide api key/i })
     fireEvent.click(toggleButton)
 
-    expect(input).toHaveAttribute("type", "text")
-    expect(screen.getByRole("button", { name: /hide api key/i })).toBeInTheDocument()
+    expect(input).toHaveAttribute("type", "password")
+    expect(screen.getByRole("button", { name: /show api key/i })).toBeInTheDocument()
   })
 
   it("loads existing API key from document", () => {

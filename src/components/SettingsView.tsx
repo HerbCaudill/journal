@@ -10,7 +10,7 @@ import { useJournal } from "../context/JournalContext"
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
   const [apiKey, setApiKey] = useState("")
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(true)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
 
   // Sync local state with document on mount
