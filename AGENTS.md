@@ -55,7 +55,7 @@ Copy `.env.example` to `.env` and configure:
 - `src/lib/claude.ts` - Legacy Anthropic API wrapper (deprecated, use Claude provider instead)
 - `src/components/LLMSection.tsx` - Provider-agnostic UI component with submit button, follow-up input, and response display
 - `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
-- Settings view allows selecting LLM provider and configuring API keys for each provider
+- Settings view allows selecting LLM provider; only shows API key field for the selected provider
 - API keys stored in document settings, masked (password field with show/hide toggle) with security warning
 
 **Google Calendar Integration**

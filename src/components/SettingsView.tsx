@@ -176,163 +176,167 @@ export function SettingsView() {
         </div>
       </section>
 
-      {/* Claude API Key Section */}
-      <section className="flex flex-col gap-3">
-        <h3 className="text-foreground text-lg font-medium">Claude AI</h3>
-        <p className="text-muted-foreground text-sm">
-          Enter your Anthropic API key to enable Claude AI features. You can get an API key from{" "}
-          <a
-            href="https://console.anthropic.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground underline"
-          >
-            console.anthropic.com
-          </a>
-        </p>
-
-        <form onSubmit={handleClaudeSubmit} className="flex flex-col gap-3">
-          <div className="relative">
-            <input
-              type={showClaudeApiKey ? "text" : "password"}
-              value={claudeApiKey}
-              onChange={e => setClaudeApiKey(e.target.value)}
-              placeholder="sk-ant-..."
-              className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
-              aria-label="Claude API key"
-              autoComplete="off"
-            />
-            {claudeApiKey && (
-              <button
-                type="button"
-                onClick={() => setShowClaudeApiKey(!showClaudeApiKey)}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
-                aria-label={showClaudeApiKey ? "Hide API key" : "Show API key"}
-              >
-                {showClaudeApiKey ?
-                  <EyeOffIcon />
-                : <EyeIcon />}
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={!hasClaudeUnsavedChanges || saveStatus === "saving"}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+      {/* Claude API Key Section - only shown when Claude is selected */}
+      {llmProvider === "claude" && (
+        <section className="flex flex-col gap-3">
+          <h3 className="text-foreground text-lg font-medium">Claude AI</h3>
+          <p className="text-muted-foreground text-sm">
+            Enter your Anthropic API key to enable Claude AI features. You can get an API key from{" "}
+            <a
+              href="https://console.anthropic.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground underline"
             >
-              {saveStatus === "saving" ?
-                "Saving..."
-              : saveStatus === "saved" ?
-                "Saved!"
-              : "Save"}
-            </button>
-
-            {claudeApiKey && (
-              <button
-                type="button"
-                onClick={handleClearClaudeApiKey}
-                className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
-              >
-                Clear
-              </button>
-            )}
-
-            {saveStatus === "saved" && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                API key saved successfully
-              </span>
-            )}
-          </div>
-        </form>
-
-        {claudeApiKey && !hasClaudeUnsavedChanges && (
-          <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-            <CheckIcon />
-            Claude API key configured
+              console.anthropic.com
+            </a>
           </p>
-        )}
-      </section>
 
-      {/* OpenAI API Key Section */}
-      <section className="flex flex-col gap-3">
-        <h3 className="text-foreground text-lg font-medium">OpenAI</h3>
-        <p className="text-muted-foreground text-sm">
-          Enter your OpenAI API key to enable OpenAI features. You can get an API key from{" "}
-          <a
-            href="https://platform.openai.com/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground underline"
-          >
-            platform.openai.com
-          </a>
-        </p>
+          <form onSubmit={handleClaudeSubmit} className="flex flex-col gap-3">
+            <div className="relative">
+              <input
+                type={showClaudeApiKey ? "text" : "password"}
+                value={claudeApiKey}
+                onChange={e => setClaudeApiKey(e.target.value)}
+                placeholder="sk-ant-..."
+                className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                aria-label="Claude API key"
+                autoComplete="off"
+              />
+              {claudeApiKey && (
+                <button
+                  type="button"
+                  onClick={() => setShowClaudeApiKey(!showClaudeApiKey)}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
+                  aria-label={showClaudeApiKey ? "Hide API key" : "Show API key"}
+                >
+                  {showClaudeApiKey ?
+                    <EyeOffIcon />
+                  : <EyeIcon />}
+                </button>
+              )}
+            </div>
 
-        <form onSubmit={handleOpenaiSubmit} className="flex flex-col gap-3">
-          <div className="relative">
-            <input
-              type={showOpenaiApiKey ? "text" : "password"}
-              value={openaiApiKey}
-              onChange={e => setOpenaiApiKey(e.target.value)}
-              placeholder="sk-..."
-              className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
-              aria-label="OpenAI API key"
-              autoComplete="off"
-            />
-            {openaiApiKey && (
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={() => setShowOpenaiApiKey(!showOpenaiApiKey)}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
-                aria-label={showOpenaiApiKey ? "Hide API key" : "Show API key"}
+                type="submit"
+                disabled={!hasClaudeUnsavedChanges || saveStatus === "saving"}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {showOpenaiApiKey ?
-                  <EyeOffIcon />
-                : <EyeIcon />}
+                {saveStatus === "saving" ?
+                  "Saving..."
+                : saveStatus === "saved" ?
+                  "Saved!"
+                : "Save"}
               </button>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={!hasOpenaiUnsavedChanges || saveStatus === "saving"}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              {claudeApiKey && (
+                <button
+                  type="button"
+                  onClick={handleClearClaudeApiKey}
+                  className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+
+              {saveStatus === "saved" && (
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  API key saved successfully
+                </span>
+              )}
+            </div>
+          </form>
+
+          {claudeApiKey && !hasClaudeUnsavedChanges && (
+            <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+              <CheckIcon />
+              Claude API key configured
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* OpenAI API Key Section - only shown when OpenAI is selected */}
+      {llmProvider === "openai" && (
+        <section className="flex flex-col gap-3">
+          <h3 className="text-foreground text-lg font-medium">OpenAI</h3>
+          <p className="text-muted-foreground text-sm">
+            Enter your OpenAI API key to enable OpenAI features. You can get an API key from{" "}
+            <a
+              href="https://platform.openai.com/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground underline"
             >
-              {saveStatus === "saving" ?
-                "Saving..."
-              : saveStatus === "saved" ?
-                "Saved!"
-              : "Save"}
-            </button>
-
-            {openaiApiKey && (
-              <button
-                type="button"
-                onClick={handleClearOpenaiApiKey}
-                className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
-              >
-                Clear
-              </button>
-            )}
-
-            {saveStatus === "saved" && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                API key saved successfully
-              </span>
-            )}
-          </div>
-        </form>
-
-        {openaiApiKey && !hasOpenaiUnsavedChanges && (
-          <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-            <CheckIcon />
-            OpenAI API key configured
+              platform.openai.com
+            </a>
           </p>
-        )}
-      </section>
+
+          <form onSubmit={handleOpenaiSubmit} className="flex flex-col gap-3">
+            <div className="relative">
+              <input
+                type={showOpenaiApiKey ? "text" : "password"}
+                value={openaiApiKey}
+                onChange={e => setOpenaiApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                aria-label="OpenAI API key"
+                autoComplete="off"
+              />
+              {openaiApiKey && (
+                <button
+                  type="button"
+                  onClick={() => setShowOpenaiApiKey(!showOpenaiApiKey)}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
+                  aria-label={showOpenaiApiKey ? "Hide API key" : "Show API key"}
+                >
+                  {showOpenaiApiKey ?
+                    <EyeOffIcon />
+                  : <EyeIcon />}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={!hasOpenaiUnsavedChanges || saveStatus === "saving"}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saveStatus === "saving" ?
+                  "Saving..."
+                : saveStatus === "saved" ?
+                  "Saved!"
+                : "Save"}
+              </button>
+
+              {openaiApiKey && (
+                <button
+                  type="button"
+                  onClick={handleClearOpenaiApiKey}
+                  className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+
+              {saveStatus === "saved" && (
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  API key saved successfully
+                </span>
+              )}
+            </div>
+          </form>
+
+          {openaiApiKey && !hasOpenaiUnsavedChanges && (
+            <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+              <CheckIcon />
+              OpenAI API key configured
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Security warning */}
       <section className="flex flex-col gap-3">

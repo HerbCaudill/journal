@@ -96,7 +96,7 @@ describe("SettingsView", () => {
     expect(loadingElement).toBeInTheDocument()
   })
 
-  it("renders Claude API key section", () => {
+  it("renders Claude API key section when Claude is selected", () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -112,6 +112,9 @@ describe("SettingsView", () => {
       "href",
       "https://console.anthropic.com/",
     )
+    // OpenAI section should not be visible when Claude is selected
+    expect(screen.queryByRole("heading", { name: /openai$/i })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/openai api key/i)).not.toBeInTheDocument()
   })
 
   it("renders Google integration section with unconfigured message when not configured", () => {
@@ -505,9 +508,9 @@ describe("SettingsView", () => {
   })
 
   describe("OpenAI API key section", () => {
-    it("renders OpenAI API key section", () => {
+    it("renders OpenAI API key section when OpenAI is selected", () => {
       vi.mocked(JournalContext.useJournal).mockReturnValue({
-        doc: createMockDoc(),
+        doc: createMockDoc("", "openai"),
         changeDoc: mockChangeDoc,
         handle: undefined,
         isLoading: false,
@@ -521,11 +524,14 @@ describe("SettingsView", () => {
         "href",
         "https://platform.openai.com/api-keys",
       )
+      // Claude section should not be visible when OpenAI is selected
+      expect(screen.queryByRole("heading", { name: /claude ai/i })).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/claude api key/i)).not.toBeInTheDocument()
     })
 
     it("saves OpenAI API key when form is submitted", () => {
       vi.mocked(JournalContext.useJournal).mockReturnValue({
-        doc: createMockDoc(),
+        doc: createMockDoc("", "openai"),
         changeDoc: mockChangeDoc,
         handle: undefined,
         isLoading: false,
@@ -536,9 +542,9 @@ describe("SettingsView", () => {
       const input = screen.getByLabelText(/openai api key/i)
       fireEvent.change(input, { target: { value: "sk-openai-key" } })
 
-      // Find the save button in the OpenAI section (second save button)
-      const saveButtons = screen.getAllByRole("button", { name: /save/i })
-      fireEvent.click(saveButtons[1]) // Second save button is for OpenAI
+      // There's only one save button now (for OpenAI)
+      const saveButton = screen.getByRole("button", { name: /save/i })
+      fireEvent.click(saveButton)
 
       expect(mockChangeDoc).toHaveBeenCalledTimes(1)
     })
