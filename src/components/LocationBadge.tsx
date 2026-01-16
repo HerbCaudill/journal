@@ -1,4 +1,5 @@
 import type { GeoPosition } from "../hooks/useGeolocation"
+import { useReverseGeocode } from "../hooks/useReverseGeocode"
 
 interface LocationBadgeProps {
   /** The geographic position to display */
@@ -23,34 +24,45 @@ function formatCoordinate(value: number, isLatitude: boolean): string {
 }
 
 /**
- * Formats accuracy in a human-readable way
- */
-function formatAccuracy(accuracy: number): string {
-  if (accuracy < 1000) {
-    return `±${Math.round(accuracy)}m`
-  }
-  return `±${(accuracy / 1000).toFixed(1)}km`
-}
-
-/**
- * A compact badge component that displays captured location coordinates.
- * Shows latitude, longitude, and optionally accuracy.
+ * A compact badge component that displays captured location.
+ * Shows locality name (e.g., "Tamariu") when available, with coordinates on hover.
+ * Falls back to coordinates if locality cannot be determined.
  */
 export function LocationBadge({ position, onClick }: LocationBadgeProps) {
-  const { latitude, longitude, accuracy } = position
+  const { latitude, longitude, locality: storedLocality } = position
+
+  // Use reverse geocoding to fetch locality if not already stored in position
+  const {
+    locality: fetchedLocality,
+    displayName,
+    isLoading,
+  } = useReverseGeocode({
+    latitude,
+    longitude,
+    // Skip fetching if locality is already stored in the position
+    enabled: !storedLocality,
+  })
+
+  // Use stored locality first, then fetched locality
+  const locality = storedLocality ?? fetchedLocality
 
   const formattedLat = formatCoordinate(latitude, true)
   const formattedLng = formatCoordinate(longitude, false)
+  const coordinates = `${formattedLat}, ${formattedLng}`
+
+  // Determine what to display
+  const displayText = isLoading ? "Loading..." : (locality ?? coordinates)
+
+  // Tooltip shows full details: displayName if available, otherwise coordinates
+  const tooltipText = displayName ?? coordinates
+
+  // Aria label includes both locality (if available) and coordinates
+  const ariaLabel = locality ? `Location: ${locality} (${coordinates})` : `Location: ${coordinates}`
 
   const content = (
     <>
       <LocationIcon />
-      <span className="text-xs">
-        {formattedLat}, {formattedLng}
-        {accuracy !== undefined && (
-          <span className="text-muted-foreground ml-1">({formatAccuracy(accuracy)})</span>
-        )}
-      </span>
+      <span className="text-xs">{displayText}</span>
     </>
   )
 
@@ -62,7 +74,8 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
       <button
         onClick={onClick}
         className={`${className} hover:bg-muted/80 cursor-pointer transition-colors`}
-        aria-label={`Location: ${formattedLat}, ${formattedLng}`}
+        aria-label={ariaLabel}
+        title={tooltipText}
       >
         {content}
       </button>
@@ -70,7 +83,7 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
   }
 
   return (
-    <span className={className} aria-label={`Location: ${formattedLat}, ${formattedLng}`}>
+    <span className={className} aria-label={ariaLabel} title={tooltipText}>
       {content}
     </span>
   )

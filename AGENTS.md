@@ -49,7 +49,7 @@ pnpm format           # Format code with Prettier
 - `src/hooks/useGeolocation.ts` - React hook for accessing device geolocation with permission management
 - `src/hooks/useReverseGeocode.ts` - React hook for converting coordinates to locality names (uses geocoding library)
 - `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching and rate limiting
-- `src/components/LocationBadge.tsx` - Compact badge component displaying location information
+- `src/components/LocationBadge.tsx` - Compact badge displaying locality name (e.g., "Tamariu") with coordinates shown on hover
 
 **Utilities**
 
