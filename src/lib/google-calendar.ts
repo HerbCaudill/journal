@@ -510,9 +510,10 @@ export async function fetchAllEventsForDate(
 
 /**
  * Check if Google Calendar is configured
+ * @param clientId - Optional client ID to check (in addition to env var)
  */
-export function isGoogleCalendarConfigured(): boolean {
-  return Boolean(GOOGLE_CLIENT_ID)
+export function isGoogleCalendarConfigured(clientId?: string): boolean {
+  return Boolean(clientId ?? GOOGLE_CLIENT_ID)
 }
 
 /**

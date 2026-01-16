@@ -108,7 +108,11 @@ describe("useGoogleCalendar", () => {
     })
 
     it("uses provided clientId to override configuration check", async () => {
-      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(false)
+      // When no clientId is passed, return false (unconfigured)
+      // When clientId is passed, return true (configured)
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockImplementation((clientId?: string) =>
+        Boolean(clientId),
+      )
       vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
 

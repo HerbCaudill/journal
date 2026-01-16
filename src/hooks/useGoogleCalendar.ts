@@ -90,7 +90,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
   }
 
   const [authState, setAuthState] = useState<GoogleCalendarAuthState>(() => {
-    if (!isGoogleCalendarConfigured() && !options.clientId) {
+    if (!isGoogleCalendarConfigured(options.clientId)) {
       return "unconfigured"
     }
     return checkIsAuthenticated() ? "authenticated" : "unauthenticated"
@@ -107,7 +107,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
 
   // Check authentication status on mount and when config changes
   useEffect(() => {
-    if (!isGoogleCalendarConfigured() && !options.clientId) {
+    if (!isGoogleCalendarConfigured(options.clientId)) {
       setAuthState("unconfigured")
       return
     }
