@@ -3,7 +3,6 @@ import { Header } from "./components/Header"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
 import { SwipeContainer } from "./components/SwipeContainer"
-import { JournalProvider } from "./context/JournalContext"
 import { getToday } from "./lib/dates"
 
 type Route = { type: "day"; date: string } | { type: "settings" }
@@ -56,18 +55,16 @@ export function App() {
   const currentDate = route.type === "day" ? route.date : getToday()
 
   return (
-    <JournalProvider>
-      <div className="bg-background text-foreground min-h-screen">
-        <Header date={currentDate} />
-        <main>
-          {route.type === "day" && (
-            <SwipeContainer date={route.date}>
-              <DayView date={route.date} />
-            </SwipeContainer>
-          )}
-          {route.type === "settings" && <SettingsView />}
-        </main>
-      </div>
-    </JournalProvider>
+    <div className="bg-background text-foreground min-h-screen">
+      <Header date={currentDate} />
+      <main>
+        {route.type === "day" && (
+          <SwipeContainer date={route.date}>
+            <DayView date={route.date} />
+          </SwipeContainer>
+        )}
+        {route.type === "settings" && <SettingsView />}
+      </main>
+    </div>
   )
 }
