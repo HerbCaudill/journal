@@ -8,7 +8,7 @@ If there are no open issues, immediately output <promise>COMPLETE</promise> and 
 
 Otherwise, find the highest-priority issue to work on and work only on that task.
 
-Only work on a single issue in a single turn. If the issue you choose is complex, then your task is to break it into sub-issues and then end your turn.
+Only work on a single issue in a single turn. If the issue you choose is complex, your task is to break it into sub-issues and then end your turn.
 
 When you complete a task:
 
@@ -16,5 +16,5 @@ When you complete a task:
 - Update AGENTS.md with any relevant changes
 - Run `pnpm build && pnpm test:all`
 - Run `ppnpm format`
-- Commit your work
+- Commit and push your work
 - End your turn
