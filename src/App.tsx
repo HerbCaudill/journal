@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Header } from "./components/Header"
 import { DayView } from "./components/DayView"
+import { SettingsView } from "./components/SettingsView"
 import { JournalProvider } from "./context/JournalContext"
 import { getToday } from "./lib/dates"
 
@@ -49,17 +50,6 @@ function useHashRoute(): Route {
   return route
 }
 
-/**
- * Placeholder settings component
- */
-function SettingsView() {
-  return (
-    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
-      <p className="text-muted-foreground">Settings page coming soon.</p>
-    </div>
-  )
-}
 
 export function App() {
   const route = useHashRoute()

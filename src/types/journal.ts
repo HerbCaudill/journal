@@ -42,6 +42,8 @@ export interface Settings {
   timezone: string
   /** Theme preference */
   theme: "light" | "dark" | "system"
+  /** Claude API key for AI integration */
+  claudeApiKey?: string
 }
 
 /**
