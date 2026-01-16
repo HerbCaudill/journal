@@ -163,7 +163,7 @@ export function App() {
 
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <Header date={currentDate} />
+      <Header date={currentDate} showNavigation={route.type === "day"} />
       <main>
         {route.type === "day" && (
           <SwipeContainer date={route.date}>

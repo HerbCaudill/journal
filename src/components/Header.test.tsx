@@ -59,72 +59,108 @@ describe("Header", () => {
     expect(heading).not.toHaveTextContent(`${currentYear}`)
   })
 
-  it("renders a clickable date button that opens date picker", () => {
-    render(<Header date="2024-01-15" />)
+  describe("navigation controls", () => {
+    it("renders navigation buttons when showNavigation is true (default)", () => {
+      render(<Header date="2024-01-15" />)
 
-    const dateButton = screen.getByRole("button", { expanded: false })
-    expect(dateButton).toBeInTheDocument()
-    expect(dateButton).toHaveAttribute("aria-haspopup", "dialog")
-  })
+      expect(screen.getByRole("button", { name: /previous day/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /open calendar/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /next day/i })).toBeInTheDocument()
+    })
 
-  it("opens date picker when date button is clicked", () => {
-    render(<Header date="2024-01-15" />)
+    it("does not render navigation buttons when showNavigation is false", () => {
+      render(<Header date="2024-01-15" showNavigation={false} />)
 
-    const dateButton = screen.getByRole("button", { expanded: false })
-    fireEvent.click(dateButton)
+      expect(screen.queryByRole("button", { name: /previous day/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: /open calendar/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: /next day/i })).not.toBeInTheDocument()
+    })
 
-    // Date picker should now be visible - look for month navigation
-    expect(screen.getByLabelText("Previous month")).toBeInTheDocument()
-    expect(screen.getByLabelText("Next month")).toBeInTheDocument()
-    expect(screen.getByText("Go to Today")).toBeInTheDocument()
-  })
+    it("navigates to previous day when previous button is clicked", () => {
+      render(<Header date="2024-01-15" />)
 
-  it("closes date picker when clicking outside", () => {
-    render(<Header date="2024-01-15" />)
+      const prevButton = screen.getByRole("button", { name: /previous day/i })
+      fireEvent.click(prevButton)
 
-    const dateButton = screen.getByRole("button", { expanded: false })
-    fireEvent.click(dateButton)
+      expect(window.location.hash).toBe("#/day/2024-01-14")
+    })
 
-    // Verify date picker is open
-    expect(screen.getByText("Go to Today")).toBeInTheDocument()
+    it("navigates to next day when next button is clicked", () => {
+      render(<Header date="2024-01-15" />)
 
-    // Click outside (on the document body)
-    fireEvent.mouseDown(document.body)
+      const nextButton = screen.getByRole("button", { name: /next day/i })
+      fireEvent.click(nextButton)
 
-    // Date picker should be closed
-    expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
-  })
+      expect(window.location.hash).toBe("#/day/2024-01-16")
+    })
 
-  it("closes date picker when pressing Escape", () => {
-    render(<Header date="2024-01-15" />)
+    it("renders a clickable calendar button that opens date picker", () => {
+      render(<Header date="2024-01-15" />)
 
-    const dateButton = screen.getByRole("button", { expanded: false })
-    fireEvent.click(dateButton)
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      expect(calendarButton).toBeInTheDocument()
+      expect(calendarButton).toHaveAttribute("aria-haspopup", "dialog")
+    })
 
-    // Verify date picker is open
-    expect(screen.getByText("Go to Today")).toBeInTheDocument()
+    it("opens date picker when calendar button is clicked", () => {
+      render(<Header date="2024-01-15" />)
 
-    // Press Escape
-    fireEvent.keyDown(document, { key: "Escape" })
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      fireEvent.click(calendarButton)
 
-    // Date picker should be closed
-    expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
-  })
+      // Date picker should now be visible - look for month navigation
+      expect(screen.getByLabelText("Previous month")).toBeInTheDocument()
+      expect(screen.getByLabelText("Next month")).toBeInTheDocument()
+      expect(screen.getByText("Go to Today")).toBeInTheDocument()
+    })
 
-  it("navigates to selected date when a date is clicked in the picker", () => {
-    render(<Header date="2024-01-15" />)
+    it("closes date picker when clicking outside", () => {
+      render(<Header date="2024-01-15" />)
 
-    const dateButton = screen.getByRole("button", { expanded: false })
-    fireEvent.click(dateButton)
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      fireEvent.click(calendarButton)
 
-    // Click on a date (January 20, 2024)
-    const day20 = screen.getByRole("button", { name: "2024-01-20" })
-    fireEvent.click(day20)
+      // Verify date picker is open
+      expect(screen.getByText("Go to Today")).toBeInTheDocument()
 
-    // Should navigate to the selected date
-    expect(window.location.hash).toBe("#/day/2024-01-20")
+      // Click outside (on the document body)
+      fireEvent.mouseDown(document.body)
 
-    // Date picker should be closed
-    expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
+      // Date picker should be closed
+      expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
+    })
+
+    it("closes date picker when pressing Escape", () => {
+      render(<Header date="2024-01-15" />)
+
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      fireEvent.click(calendarButton)
+
+      // Verify date picker is open
+      expect(screen.getByText("Go to Today")).toBeInTheDocument()
+
+      // Press Escape
+      fireEvent.keyDown(document, { key: "Escape" })
+
+      // Date picker should be closed
+      expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
+    })
+
+    it("navigates to selected date when a date is clicked in the picker", () => {
+      render(<Header date="2024-01-15" />)
+
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      fireEvent.click(calendarButton)
+
+      // Click on a date (January 20, 2024)
+      const day20 = screen.getByRole("button", { name: "2024-01-20" })
+      fireEvent.click(day20)
+
+      // Should navigate to the selected date
+      expect(window.location.hash).toBe("#/day/2024-01-20")
+
+      // Date picker should be closed
+      expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
+    })
   })
 })

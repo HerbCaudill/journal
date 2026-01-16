@@ -30,7 +30,7 @@ pnpm format           # Format code with Prettier
 
 **Components**
 
-- `Header` - App header with clickable date that opens a DatePicker popover for navigation
+- `Header` - App header with day/date on left, back/calendar/forward navigation in center, and settings on right
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
 - `DayView` - Main view displaying the entry editor and Claude section for a specific date
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge

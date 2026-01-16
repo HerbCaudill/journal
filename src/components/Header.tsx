@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react"
-import { parseDate } from "../lib/dates"
+import { parseDate, addDays } from "../lib/dates"
 import { DatePicker } from "./DatePicker"
 
 interface HeaderProps {
   /** The current date in YYYY-MM-DD format */
   date: string
+  /** Whether to show navigation controls (only shown on day view, not settings) */
+  showNavigation?: boolean
 }
 
 /**
@@ -44,16 +46,27 @@ function getMonthDay(dateString: string): string {
 /**
  * Header component displaying the current date and a settings link.
  * Clicking on the date opens a date picker for navigation.
+ * Layout: day/date on left, back/calendar/forward in center, settings on right.
  */
-export function Header({ date }: HeaderProps) {
+export function Header({ date, showNavigation = true }: HeaderProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const datePickerRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const calendarButtonRef = useRef<HTMLButtonElement>(null)
 
   const handleDateSelect = useCallback((newDate: string) => {
     window.location.hash = `#/day/${newDate}`
     setIsDatePickerOpen(false)
   }, [])
+
+  const handlePreviousDay = useCallback(() => {
+    const prevDay = addDays(date, -1)
+    window.location.hash = `#/day/${prevDay}`
+  }, [date])
+
+  const handleNextDay = useCallback(() => {
+    const nextDay = addDays(date, 1)
+    window.location.hash = `#/day/${nextDay}`
+  }, [date])
 
   const handleClose = useCallback(() => {
     setIsDatePickerOpen(false)
@@ -65,8 +78,8 @@ export function Header({ date }: HeaderProps) {
       if (
         datePickerRef.current &&
         !datePickerRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        calendarButtonRef.current &&
+        !calendarButtonRef.current.contains(event.target as Node)
       ) {
         setIsDatePickerOpen(false)
       }
@@ -94,54 +107,123 @@ export function Header({ date }: HeaderProps) {
 
   return (
     <header className="border-border flex items-center justify-between border-b p-4">
-      <div className="relative">
-        <button
-          ref={buttonRef}
-          onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-          className="text-foreground hover:text-primary flex items-start gap-2 transition-colors"
-          aria-expanded={isDatePickerOpen}
-          aria-haspopup="dialog"
-        >
-          <h1 className="flex flex-col text-left">
-            <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
-            <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
-          </h1>
-          <ChevronDownIcon
-            className={`mt-1.5 transition-transform ${isDatePickerOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-        {isDatePickerOpen && (
-          <div ref={datePickerRef} className="absolute top-full left-0 z-50 mt-2">
-            <DatePicker selectedDate={date} onDateSelect={handleDateSelect} onClose={handleClose} />
-          </div>
-        )}
+      {/* Left: Day/date */}
+      <div className="min-w-0 flex-1">
+        <h1 className="flex flex-col text-left">
+          <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
+          <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+        </h1>
       </div>
-      <a
-        href="#/settings"
-        className="text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Settings"
-      >
-        <SettingsIcon />
-      </a>
+
+      {/* Center: Back/calendar/forward navigation */}
+      {showNavigation && (
+        <div className="relative flex items-center gap-1">
+          <button
+            onClick={handlePreviousDay}
+            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon />
+          </button>
+          <button
+            ref={calendarButtonRef}
+            onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-expanded={isDatePickerOpen}
+            aria-haspopup="dialog"
+            aria-label="Open calendar"
+          >
+            <CalendarIcon />
+          </button>
+          <button
+            onClick={handleNextDay}
+            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Next day"
+          >
+            <ChevronRightIcon />
+          </button>
+          {isDatePickerOpen && (
+            <div
+              ref={datePickerRef}
+              className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2"
+            >
+              <DatePicker
+                selectedDate={date}
+                onDateSelect={handleDateSelect}
+                onClose={handleClose}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Right: Settings */}
+      <div className="flex flex-1 justify-end">
+        <a
+          href="#/settings"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Settings"
+        >
+          <SettingsIcon />
+        </a>
+      </div>
     </header>
   )
 }
 
-function ChevronDownIcon({ className }: { className?: string }) {
+function ChevronLeftIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
     >
-      <path d="M6 9l6 6 6-6" />
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
   )
 }
