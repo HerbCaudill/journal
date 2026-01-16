@@ -106,7 +106,7 @@ describe("App", () => {
   })
 
   describe("OAuth callback", () => {
-    it("shows processing state when on OAuth callback route", () => {
+    it("shows processing state when on OAuth callback route", async () => {
       // Mock location for OAuth callback
       Object.defineProperty(window, "location", {
         value: {
@@ -121,6 +121,14 @@ describe("App", () => {
 
       render(<App />)
       expect(screen.getByText("Completing authentication...")).toBeInTheDocument()
+
+      // Wait for async operations to complete to avoid act() warnings
+      await waitFor(() => {
+        // The component will transition to error state since sessionStorage doesn't have the OAuth state
+        expect(
+          screen.getByText(/Failed to complete authentication|Invalid OAuth/),
+        ).toBeInTheDocument()
+      })
     })
 
     it("falls back to day view when OAuth callback has missing parameters", () => {

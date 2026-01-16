@@ -95,13 +95,16 @@ describe("useGoogleCalendar", () => {
       expect(result.current.authState).toBe("unauthenticated")
     })
 
-    it("initializes with authenticated state when authenticated", () => {
+    it("initializes with authenticated state when authenticated", async () => {
       vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
       vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
 
       const { result } = renderHook(() => useGoogleCalendar())
 
-      expect(result.current.authState).toBe("authenticated")
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
     })
 
     it("uses provided clientId to override configuration check", async () => {
