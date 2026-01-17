@@ -12,17 +12,17 @@ export interface UseLLMOptions {
   /** API key for the provider */
   apiKey: string
   /** Model to use (provider-specific, optional) */
-  model?: string
+  model?: string | undefined
   /** Maximum tokens in the response */
-  maxTokens?: number
+  maxTokens?: number | undefined
   /** Initial messages to start the conversation with */
   initialMessages?: Message[]
   /** User's bio - helps the AI understand context about the user */
-  bio?: string
+  bio?: string | undefined
   /** Additional instructions for customizing AI behavior */
-  additionalInstructions?: string
+  additionalInstructions?: string | undefined
   /** Unique key to identify the conversation context (e.g., date). When this changes, messages reset. */
-  conversationKey?: string
+  conversationKey?: string | undefined
 }
 
 /**

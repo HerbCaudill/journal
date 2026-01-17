@@ -7,7 +7,7 @@ interface LocationBadgeProps {
   /** The geographic position to display */
   position: GeoPosition
   /** Optional click handler for additional interactions */
-  onClick?: () => void
+  onClick?: (() => void) | undefined
 }
 
 /**

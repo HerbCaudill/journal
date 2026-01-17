@@ -118,9 +118,9 @@ export interface CalendarEventsResponse {
  */
 export interface GoogleCalendarConfig {
   /** Google OAuth client ID */
-  clientId?: string
+  clientId?: string | undefined
   /** OAuth redirect URI */
-  redirectUri?: string
+  redirectUri?: string | undefined
 }
 
 /**

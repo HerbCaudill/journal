@@ -38,7 +38,7 @@ export interface RateLimitedResult<T> {
   /** The result value if successful */
   value?: T
   /** Error if the operation failed after all retries */
-  error?: Error
+  error?: Error | undefined
   /** Whether the operation succeeded */
   success: boolean
   /** Number of retry attempts made */
@@ -50,7 +50,7 @@ export interface RateLimitedResult<T> {
  */
 export class RateLimitError extends Error {
   public readonly statusCode: number
-  public readonly retryAfter?: number
+  public readonly retryAfter: number | undefined
 
   constructor(message: string, statusCode: number, retryAfter?: number) {
     super(message)

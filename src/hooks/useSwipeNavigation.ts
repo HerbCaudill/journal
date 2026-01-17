@@ -2,9 +2,9 @@ import { useCallback, useRef } from "react"
 
 export interface SwipeNavigationOptions {
   /** Callback when user swipes left (next day) */
-  onSwipeLeft?: () => void
+  onSwipeLeft?: (() => void) | undefined
   /** Callback when user swipes right (previous day) */
-  onSwipeRight?: () => void
+  onSwipeRight?: (() => void) | undefined
   /** Minimum horizontal distance in pixels to trigger a swipe (default: 50) */
   threshold?: number
   /** Maximum vertical movement allowed relative to horizontal (default: 0.5) */

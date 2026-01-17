@@ -129,6 +129,7 @@ function OAuthCallbackHandler() {
       }, 1000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [status])
 
   return (
@@ -204,9 +205,13 @@ export function App() {
       const existingEntry = d.entries[currentDate]
       existingEntry.updatedAt = now
       // Store position with locality if geocoding succeeded
-      existingEntry.position = {
-        ...pos,
-        locality: geocodeResult.success ? geocodeResult.locality : undefined,
+      if (geocodeResult.success) {
+        existingEntry.position = {
+          ...pos,
+          locality: geocodeResult.locality,
+        }
+      } else {
+        existingEntry.position = pos
       }
     })
   }, [requestPosition, changeDoc, currentDate])

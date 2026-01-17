@@ -10,9 +10,9 @@ export interface UseClaudeOptions {
   /** Anthropic API key */
   apiKey: string
   /** Model to use (defaults to claude-sonnet-4-20250514) */
-  model?: string
+  model?: string | undefined
   /** Maximum tokens in the response */
-  maxTokens?: number
+  maxTokens?: number | undefined
   /** Initial messages to start the conversation with */
   initialMessages?: Message[]
 }

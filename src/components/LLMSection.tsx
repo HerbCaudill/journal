@@ -30,15 +30,15 @@ interface LLMSectionProps {
   /** Callback when messages change (for persisting to document) */
   onMessagesChange?: (messages: Message[]) => void
   /** User's bio - helps the AI understand context about the user */
-  bio?: string
+  bio?: string | undefined
   /** Additional instructions for customizing AI behavior */
-  additionalInstructions?: string
+  additionalInstructions?: string | undefined
   /** Callback to receive submit button props - parent can render the button elsewhere */
-  onSubmitButtonProps?: (props: LLMSubmitButtonProps) => void
+  onSubmitButtonProps?: ((props: LLMSubmitButtonProps) => void) | undefined
   /** Callback when conversation starts (user submits first message) */
   onConversationStart?: () => void
   /** Unique key to identify the conversation context (e.g., date). When this changes, conversation resets. */
-  conversationKey?: string
+  conversationKey?: string | undefined
 }
 
 /**

@@ -2,11 +2,11 @@ import { useEffect } from "react"
 
 export interface KeyboardNavigationOptions {
   /** Callback when user presses left arrow (previous day) */
-  onPrevious?: () => void
+  onPrevious?: (() => void) | undefined
   /** Callback when user presses right arrow (next day) */
-  onNext?: () => void
+  onNext?: (() => void) | undefined
   /** Callback when user presses 't' key (go to today) */
-  onToday?: () => void
+  onToday?: (() => void) | undefined
   /** Whether keyboard navigation is enabled (default: true) */
   enabled?: boolean
 }
@@ -34,7 +34,7 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}): 
 
   useEffect(() => {
     if (!enabled) {
-      return
+      return undefined
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {

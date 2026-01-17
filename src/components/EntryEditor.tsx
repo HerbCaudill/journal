@@ -12,7 +12,7 @@ interface EntryEditorProps {
   /** Optional footer content to render in the InputGroup addon (e.g., submit button) */
   footer?: React.ReactNode
   /** Callback when user presses Cmd/Ctrl+Enter to submit */
-  onSubmit?: () => void
+  onSubmit?: (() => void) | undefined
 }
 
 /**

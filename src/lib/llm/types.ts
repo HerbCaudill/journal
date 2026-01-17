@@ -19,13 +19,13 @@ export interface LLMConfig {
   /** API key for the provider */
   apiKey: string
   /** Model identifier (provider-specific) */
-  model?: string
+  model?: string | undefined
   /** Maximum tokens in the response */
-  maxTokens?: number
+  maxTokens?: number | undefined
   /** User's bio - helps the AI understand context about the user */
-  bio?: string
+  bio?: string | undefined
   /** Additional instructions for customizing AI behavior */
-  additionalInstructions?: string
+  additionalInstructions?: string | undefined
 }
 
 /**

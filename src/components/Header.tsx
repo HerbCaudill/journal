@@ -14,7 +14,7 @@ interface HeaderProps {
   /** Optional position to display in the header */
   position?: GeoPosition | null
   /** Optional click handler for location badge */
-  onLocationClick?: () => void
+  onLocationClick?: (() => void) | undefined
 }
 
 /**
@@ -87,6 +87,10 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
 
   // Close date picker when clicking outside
   useEffect(() => {
+    if (!isDatePickerOpen) {
+      return undefined
+    }
+
     function handleClickOutside(event: MouseEvent) {
       if (
         datePickerRef.current &&
@@ -98,24 +102,24 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
       }
     }
 
-    if (isDatePickerOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-      return () => document.removeEventListener("mousedown", handleClickOutside)
-    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isDatePickerOpen])
 
   // Close date picker on Escape key
   useEffect(() => {
+    if (!isDatePickerOpen) {
+      return undefined
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsDatePickerOpen(false)
       }
     }
 
-    if (isDatePickerOpen) {
-      document.addEventListener("keydown", handleKeyDown)
-      return () => document.removeEventListener("keydown", handleKeyDown)
-    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
   }, [isDatePickerOpen])
 
   return (
