@@ -171,11 +171,13 @@ export function EntryEditor({ date, footer }: EntryEditorProps) {
       />
       {(saveStatus !== "idle" || footer) && (
         <InputGroupAddon align="block-end" className="flex items-center justify-between">
-          {saveStatus !== "idle" && (
-            <span className="text-xs" aria-live="polite" data-testid="save-indicator">
-              {saveStatus === "saving" ? "Saving..." : "Saved"}
-            </span>
-          )}
+          <span className="text-xs" aria-live="polite" data-testid="save-indicator">
+            {saveStatus === "saving" ?
+              "Saving..."
+            : saveStatus === "saved" ?
+              "Saved"
+            : ""}
+          </span>
           {footer}
         </InputGroupAddon>
       )}
