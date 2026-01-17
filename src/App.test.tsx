@@ -120,6 +120,24 @@ describe("App", () => {
     expect(heading).toHaveTextContent("January 16, 2025")
   })
 
+  it("defaults to today for invalid date values", () => {
+    // This date matches the YYYY-MM-DD pattern but is not a valid date
+    window.location.hash = "#/day/2025-13-45"
+    render(<App />)
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("January 16, 2025")
+  })
+
+  it("defaults to today for February 30", () => {
+    // February 30 doesn't exist
+    window.location.hash = "#/day/2025-02-30"
+    render(<App />)
+    const heading = screen.getByRole("heading", { level: 1 })
+    expect(heading).toHaveTextContent("Thursday")
+    expect(heading).toHaveTextContent("January 16, 2025")
+  })
+
   describe("OAuth callback", () => {
     it("shows processing state when on OAuth callback route", async () => {
       // Mock location for OAuth callback

@@ -3,7 +3,7 @@ import { Header } from "./components/Header"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
 import { SwipeContainer } from "./components/SwipeContainer"
-import { getToday } from "./lib/dates"
+import { getToday, isValidDate } from "./lib/dates"
 import { useGoogleCalendar } from "./hooks/useGoogleCalendar"
 import { useTheme } from "./hooks/useTheme"
 
@@ -46,7 +46,12 @@ function parseHash(hash: string): Route {
   // Match /#/day/YYYY-MM-DD
   const dayMatch = path.match(/^day\/(\d{4}-\d{2}-\d{2})$/)
   if (dayMatch) {
-    return { type: "day", date: dayMatch[1] }
+    const date = dayMatch[1]
+    // Validate that the date is actually valid (e.g., 2025-13-45 would fail)
+    if (isValidDate(date)) {
+      return { type: "day", date }
+    }
+    // Invalid date - fall through to default
   }
 
   // Match /#/settings

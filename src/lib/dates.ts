@@ -16,6 +16,28 @@ export function formatDate(date: Date): string {
 }
 
 /**
+ * Checks if a string is a valid ISO date (YYYY-MM-DD) representing a real date
+ * @param dateString - String to validate
+ * @returns true if the string is a valid ISO date, false otherwise
+ */
+export function isValidDate(dateString: string): boolean {
+  const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) {
+    return false
+  }
+
+  const [, yearStr, monthStr, dayStr] = match
+  const year = parseInt(yearStr, 10)
+  const month = parseInt(monthStr, 10) - 1 // JavaScript months are 0-indexed
+  const day = parseInt(dayStr, 10)
+
+  const date = new Date(year, month, day)
+
+  // Validate that the date components are valid
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day
+}
+
+/**
  * Parses an ISO date string (YYYY-MM-DD) to a Date object
  * @param dateString - ISO date string in YYYY-MM-DD format
  * @returns Date object set to midnight local time on that date

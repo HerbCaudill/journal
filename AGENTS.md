@@ -84,7 +84,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 
 **Utilities**
 
-- `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout
+- `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout. Includes `isValidDate()` for validating date strings (used by router to reject invalid dates like "2025-13-45")
 - `src/lib/utils.ts` - `cn()` function for Tailwind class merging
 
 ## Code Conventions

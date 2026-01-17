@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { formatDate, parseDate, getToday, addDays } from "./dates"
+import { formatDate, parseDate, getToday, addDays, isValidDate } from "./dates"
 
 describe("dates", () => {
   describe("formatDate", () => {
@@ -50,6 +50,34 @@ describe("dates", () => {
       vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0))
 
       expect(getToday()).toBe("2026-01-16")
+    })
+  })
+
+  describe("isValidDate", () => {
+    it("should return true for valid ISO date strings", () => {
+      expect(isValidDate("2026-01-16")).toBe(true)
+      expect(isValidDate("2025-12-31")).toBe(true)
+      expect(isValidDate("2026-02-28")).toBe(true)
+    })
+
+    it("should return true for leap year dates", () => {
+      expect(isValidDate("2024-02-29")).toBe(true) // 2024 is a leap year
+    })
+
+    it("should return false for invalid format", () => {
+      expect(isValidDate("01-16-2026")).toBe(false)
+      expect(isValidDate("2026/01/16")).toBe(false)
+      expect(isValidDate("2026-1-16")).toBe(false)
+      expect(isValidDate("not-a-date")).toBe(false)
+      expect(isValidDate("")).toBe(false)
+    })
+
+    it("should return false for invalid date values", () => {
+      expect(isValidDate("2026-13-01")).toBe(false) // Invalid month
+      expect(isValidDate("2026-00-01")).toBe(false) // Invalid month
+      expect(isValidDate("2026-02-30")).toBe(false) // February 30 doesn't exist
+      expect(isValidDate("2025-02-29")).toBe(false) // 2025 is not a leap year
+      expect(isValidDate("2026-04-31")).toBe(false) // April has 30 days
     })
   })
 
