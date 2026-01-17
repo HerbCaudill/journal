@@ -17,16 +17,6 @@ interface LLMSectionProps {
 }
 
 /**
- * Formats a timestamp for display
- */
-function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  })
-}
-
-/**
  * Returns the display name for an LLM provider
  */
 function getProviderDisplayName(provider: ProviderType): string {
@@ -220,9 +210,6 @@ export function LLMSection({
                 data-testid="assistant-response"
               >
                 <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
-                <span className="text-muted-foreground mt-2 block text-xs">
-                  {formatTime(message.createdAt)}
-                </span>
               </div>
             ))}
         </div>
