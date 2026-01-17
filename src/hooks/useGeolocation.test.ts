@@ -52,6 +52,7 @@ describe("useGeolocation", () => {
     mockQuery.mockResolvedValue({
       state: "prompt",
       addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     })
   })
 
@@ -275,6 +276,7 @@ describe("useGeolocation", () => {
     mockQuery.mockResolvedValue({
       state: "granted",
       addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     })
 
     const { result } = renderHook(() => useGeolocation())
@@ -293,6 +295,7 @@ describe("useGeolocation", () => {
       addEventListener: vi.fn((_, handler) => {
         permissionChangeHandler = handler
       }),
+      removeEventListener: vi.fn(),
     }
     mockQuery.mockResolvedValue(mockPermissionStatus)
 
@@ -334,5 +337,29 @@ describe("useGeolocation", () => {
     }
 
     expect(positionWithoutLocality.locality).toBeUndefined()
+  })
+
+  it("cleans up permission change listener on unmount", async () => {
+    const mockRemoveEventListener = vi.fn()
+    const mockAddEventListener = vi.fn()
+    const mockPermissionStatus = {
+      state: "prompt" as PermissionState,
+      addEventListener: mockAddEventListener,
+      removeEventListener: mockRemoveEventListener,
+    }
+    mockQuery.mockResolvedValue(mockPermissionStatus)
+
+    const { unmount } = renderHook(() => useGeolocation())
+
+    // Wait for the permission query to complete and listener to be added
+    await waitFor(() => {
+      expect(mockAddEventListener).toHaveBeenCalledWith("change", expect.any(Function))
+    })
+
+    // Unmount the hook
+    unmount()
+
+    // Verify cleanup was called
+    expect(mockRemoveEventListener).toHaveBeenCalledWith("change", expect.any(Function))
   })
 })

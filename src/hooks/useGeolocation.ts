@@ -112,21 +112,35 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
       return
     }
 
+    // Track the permission status result and handler for cleanup
+    let permissionStatus: PermissionStatus | null = null
+    const handleChange = () => {
+      if (permissionStatus) {
+        setPermission(permissionStatus.state as GeolocationPermission)
+      }
+    }
+
     // Check permission status if the Permissions API is available
     if ("permissions" in navigator) {
       navigator.permissions
         .query({ name: "geolocation" })
         .then(result => {
+          permissionStatus = result
           setPermission(result.state as GeolocationPermission)
 
           // Listen for permission changes
-          result.addEventListener("change", () => {
-            setPermission(result.state as GeolocationPermission)
-          })
+          result.addEventListener("change", handleChange)
         })
         .catch(() => {
           // Permissions API not fully supported, stay with "prompt"
         })
+    }
+
+    // Cleanup: remove event listener when unmounting
+    return () => {
+      if (permissionStatus) {
+        permissionStatus.removeEventListener("change", handleChange)
+      }
     }
   }, [isSupported])
 
