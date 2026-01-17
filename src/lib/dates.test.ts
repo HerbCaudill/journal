@@ -264,5 +264,252 @@ describe("dates", () => {
         expect(() => parseDate("2025-02-29")).toThrow("Invalid date")
       })
     })
+
+    describe("timezone boundary cases", () => {
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      describe("DST transitions", () => {
+        // Note: These tests use US Eastern timezone DST rules as examples
+        // DST typically starts second Sunday of March (spring forward)
+        // DST typically ends first Sunday of November (fall back)
+
+        it("should handle dates around spring forward DST transition", () => {
+          // March 10, 2024 was DST spring forward in US (2:00 AM -> 3:00 AM)
+          expect(isValidDate("2024-03-10")).toBe(true)
+          expect(formatDate(new Date(2024, 2, 10))).toBe("2024-03-10")
+          expect(addDays("2024-03-09", 1)).toBe("2024-03-10")
+          expect(addDays("2024-03-10", 1)).toBe("2024-03-11")
+        })
+
+        it("should handle dates around fall back DST transition", () => {
+          // November 3, 2024 was DST fall back in US (2:00 AM -> 1:00 AM)
+          expect(isValidDate("2024-11-03")).toBe(true)
+          expect(formatDate(new Date(2024, 10, 3))).toBe("2024-11-03")
+          expect(addDays("2024-11-02", 1)).toBe("2024-11-03")
+          expect(addDays("2024-11-03", 1)).toBe("2024-11-04")
+        })
+
+        it("should navigate correctly across DST week", () => {
+          // Navigate through a full week around DST transition
+          let currentDate = "2024-03-08"
+          const expectedDates = [
+            "2024-03-08",
+            "2024-03-09",
+            "2024-03-10", // DST change
+            "2024-03-11",
+            "2024-03-12",
+            "2024-03-13",
+            "2024-03-14",
+          ]
+
+          for (let i = 0; i < expectedDates.length; i++) {
+            expect(currentDate).toBe(expectedDates[i])
+            if (i < expectedDates.length - 1) {
+              currentDate = addDays(currentDate, 1)
+            }
+          }
+        })
+
+        it("should navigate backwards correctly across DST week", () => {
+          // Navigate backwards through DST transition
+          let currentDate = "2024-03-12"
+          const expectedDates = [
+            "2024-03-12",
+            "2024-03-11",
+            "2024-03-10", // DST change
+            "2024-03-09",
+            "2024-03-08",
+          ]
+
+          for (let i = 0; i < expectedDates.length; i++) {
+            expect(currentDate).toBe(expectedDates[i])
+            if (i < expectedDates.length - 1) {
+              currentDate = addDays(currentDate, -1)
+            }
+          }
+        })
+      })
+
+      describe("getToday with different times of day", () => {
+        it("should return same date regardless of time of day", () => {
+          // Early morning
+          vi.useFakeTimers()
+          vi.setSystemTime(new Date(2026, 0, 15, 0, 30, 0))
+          expect(getToday()).toBe("2026-01-15")
+
+          // Mid-day
+          vi.setSystemTime(new Date(2026, 0, 15, 12, 0, 0))
+          expect(getToday()).toBe("2026-01-15")
+
+          // Late night
+          vi.setSystemTime(new Date(2026, 0, 15, 23, 59, 59))
+          expect(getToday()).toBe("2026-01-15")
+        })
+
+        it("should transition correctly at midnight", () => {
+          vi.useFakeTimers()
+
+          // Just before midnight
+          vi.setSystemTime(new Date(2026, 0, 15, 23, 59, 59, 999))
+          expect(getToday()).toBe("2026-01-15")
+
+          // Just after midnight
+          vi.setSystemTime(new Date(2026, 0, 16, 0, 0, 0, 0))
+          expect(getToday()).toBe("2026-01-16")
+        })
+
+        it("should transition correctly at midnight on month boundary", () => {
+          vi.useFakeTimers()
+
+          // Just before midnight on Jan 31
+          vi.setSystemTime(new Date(2026, 0, 31, 23, 59, 59, 999))
+          expect(getToday()).toBe("2026-01-31")
+
+          // Just after midnight on Feb 1
+          vi.setSystemTime(new Date(2026, 1, 1, 0, 0, 0, 0))
+          expect(getToday()).toBe("2026-02-01")
+        })
+
+        it("should transition correctly at midnight on year boundary", () => {
+          vi.useFakeTimers()
+
+          // Just before midnight on Dec 31
+          vi.setSystemTime(new Date(2025, 11, 31, 23, 59, 59, 999))
+          expect(getToday()).toBe("2025-12-31")
+
+          // Just after midnight on Jan 1
+          vi.setSystemTime(new Date(2026, 0, 1, 0, 0, 0, 0))
+          expect(getToday()).toBe("2026-01-01")
+        })
+      })
+
+      describe("isFutureDate around midnight transitions", () => {
+        it("should correctly identify future dates at midnight boundary", () => {
+          vi.useFakeTimers()
+
+          // Just before midnight on Jan 15
+          vi.setSystemTime(new Date(2026, 0, 15, 23, 59, 59, 999))
+          expect(isFutureDate("2026-01-15")).toBe(false)
+          expect(isFutureDate("2026-01-16")).toBe(true)
+
+          // Just after midnight on Jan 16
+          vi.setSystemTime(new Date(2026, 0, 16, 0, 0, 0, 1))
+          expect(isFutureDate("2026-01-15")).toBe(false)
+          expect(isFutureDate("2026-01-16")).toBe(false)
+          expect(isFutureDate("2026-01-17")).toBe(true)
+        })
+      })
+
+      describe("parseDate local time behavior", () => {
+        it("should create dates at midnight local time", () => {
+          const date = parseDate("2026-01-15")
+          expect(date.getHours()).toBe(0)
+          expect(date.getMinutes()).toBe(0)
+          expect(date.getSeconds()).toBe(0)
+        })
+
+        it("should create consistent dates regardless of current time", () => {
+          vi.useFakeTimers()
+
+          // Parse at 3 AM
+          vi.setSystemTime(new Date(2026, 5, 15, 3, 0, 0))
+          const date1 = parseDate("2026-01-15")
+
+          // Parse at 11 PM
+          vi.setSystemTime(new Date(2026, 5, 15, 23, 0, 0))
+          const date2 = parseDate("2026-01-15")
+
+          expect(date1.getTime()).toBe(date2.getTime())
+          expect(date1.getFullYear()).toBe(date2.getFullYear())
+          expect(date1.getMonth()).toBe(date2.getMonth())
+          expect(date1.getDate()).toBe(date2.getDate())
+        })
+      })
+
+      describe("date arithmetic across timezone-sensitive periods", () => {
+        it("should handle addDays correctly during DST spring forward", () => {
+          // During spring forward, clocks skip an hour (2 AM -> 3 AM)
+          // This should not affect date-based calculations
+          const beforeDst = "2024-03-09"
+          const dstDay = addDays(beforeDst, 1)
+          const afterDst = addDays(dstDay, 1)
+
+          expect(dstDay).toBe("2024-03-10")
+          expect(afterDst).toBe("2024-03-11")
+
+          // Verify we can go back correctly too
+          expect(addDays(afterDst, -1)).toBe("2024-03-10")
+          expect(addDays(afterDst, -2)).toBe("2024-03-09")
+        })
+
+        it("should handle addDays correctly during DST fall back", () => {
+          // During fall back, clocks repeat an hour (2 AM -> 1 AM)
+          // This should not affect date-based calculations
+          const beforeDst = "2024-11-02"
+          const dstDay = addDays(beforeDst, 1)
+          const afterDst = addDays(dstDay, 1)
+
+          expect(dstDay).toBe("2024-11-03")
+          expect(afterDst).toBe("2024-11-04")
+
+          // Verify we can go back correctly too
+          expect(addDays(afterDst, -1)).toBe("2024-11-03")
+          expect(addDays(afterDst, -2)).toBe("2024-11-02")
+        })
+
+        it("should handle multiple consecutive addDays calls across DST", () => {
+          // Chain of addDays calls spanning the DST transition
+          let date = "2024-03-08"
+          for (let i = 0; i < 5; i++) {
+            date = addDays(date, 1)
+          }
+          expect(date).toBe("2024-03-13")
+
+          // Go back
+          for (let i = 0; i < 5; i++) {
+            date = addDays(date, -1)
+          }
+          expect(date).toBe("2024-03-08")
+        })
+      })
+
+      describe("cross-timezone date consistency", () => {
+        it("should maintain consistent date strings for same local date", () => {
+          // When the system creates a date for Jan 15, it should always format to Jan 15
+          // regardless of what time it is
+          vi.useFakeTimers()
+
+          // Test at various times throughout the day
+          const times = [0, 6, 12, 18, 23]
+
+          for (const hour of times) {
+            vi.setSystemTime(new Date(2026, 0, 15, hour, 30, 0))
+            const date = new Date(2026, 0, 15)
+            expect(formatDate(date)).toBe("2026-01-15")
+          }
+        })
+
+        it("should roundtrip date strings correctly", () => {
+          // Any valid date string should parse and format back to itself
+          const testDates = [
+            "2024-03-10", // DST spring forward
+            "2024-11-03", // DST fall back
+            "2024-02-29", // Leap year
+            "2000-01-01", // Y2K
+            "2038-01-19", // Y2038
+            "2026-06-15", // Summer date
+            "2026-12-15", // Winter date
+          ]
+
+          for (const dateStr of testDates) {
+            const parsed = parseDate(dateStr)
+            const formatted = formatDate(parsed)
+            expect(formatted).toBe(dateStr)
+          }
+        })
+      })
+    })
   })
 })
