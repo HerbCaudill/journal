@@ -108,6 +108,9 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
   const lastFetchedDateRef = useRef<string | null>(null)
   // Track if we're currently fetching to prevent double-fetches
   const isFetchingRef = useRef(false)
+  // Track current events to avoid stale closure issues in fetchEvents
+  const eventsRef = useRef<CalendarEvent[]>([])
+  eventsRef.current = events
 
   // Check authentication status on mount and when config changes
   useEffect(() => {
@@ -193,8 +196,9 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
   const fetchEvents = useCallback(
     async (date: string): Promise<CalendarEvent[]> => {
       // Prevent concurrent fetches for the same date
+      // Use ref to avoid stale closure issue with events state
       if (isFetchingRef.current && lastFetchedDateRef.current === date) {
-        return events
+        return eventsRef.current
       }
 
       if (authState !== "authenticated") {
@@ -236,7 +240,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
         isFetchingRef.current = false
       }
     },
-    [authState, config, events],
+    [authState, config],
   )
 
   /**

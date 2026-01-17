@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { reverseGeocode, getCachedResult, type GeocodingResult } from "@/lib/geocoding"
 
 /**
@@ -57,13 +57,19 @@ export function useReverseGeocode(options: UseReverseGeocodeOptions): UseReverse
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Use a ref to store the latest coordinates for the fetchLocality callback
+  // This avoids recreating the callback on every coordinate change
+  const coordsRef = useRef({ latitude, longitude })
+  coordsRef.current = { latitude, longitude }
+
   const fetchLocality = useCallback(async (): Promise<GeocodingResult | null> => {
-    if (latitude === null || longitude === null) {
+    const { latitude: lat, longitude: lng } = coordsRef.current
+    if (lat === null || lng === null) {
       return null
     }
 
     // Check cache first to avoid unnecessary loading state
-    const cachedResult = getCachedResult(latitude, longitude)
+    const cachedResult = getCachedResult(lat, lng)
     if (cachedResult) {
       if (cachedResult.success) {
         setLocality(cachedResult.locality)
@@ -80,7 +86,7 @@ export function useReverseGeocode(options: UseReverseGeocodeOptions): UseReverse
     setIsLoading(true)
     setError(null)
 
-    const result = await reverseGeocode(latitude, longitude)
+    const result = await reverseGeocode(lat, lng)
 
     if (result.success) {
       setLocality(result.locality)
@@ -94,7 +100,7 @@ export function useReverseGeocode(options: UseReverseGeocodeOptions): UseReverse
 
     setIsLoading(false)
     return result
-  }, [latitude, longitude])
+  }, [])
 
   // Fetch locality when coordinates change and enabled
   useEffect(() => {
@@ -102,8 +108,43 @@ export function useReverseGeocode(options: UseReverseGeocodeOptions): UseReverse
       return
     }
 
-    fetchLocality()
-  }, [enabled, latitude, longitude, fetchLocality])
+    // Inline the fetch logic to avoid dependency on fetchLocality callback
+    const doFetch = async () => {
+      // Check cache first to avoid unnecessary loading state
+      const cachedResult = getCachedResult(latitude, longitude)
+      if (cachedResult) {
+        if (cachedResult.success) {
+          setLocality(cachedResult.locality)
+          setDisplayName(cachedResult.displayName)
+          setError(null)
+        } else {
+          setLocality(null)
+          setDisplayName(null)
+          setError(cachedResult.error ?? "Failed to get locality")
+        }
+        return
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      const result = await reverseGeocode(latitude, longitude)
+
+      if (result.success) {
+        setLocality(result.locality)
+        setDisplayName(result.displayName)
+        setError(null)
+      } else {
+        setLocality(null)
+        setDisplayName(null)
+        setError(result.error ?? "Failed to get locality")
+      }
+
+      setIsLoading(false)
+    }
+
+    doFetch()
+  }, [enabled, latitude, longitude])
 
   // Reset state when coordinates become null
   useEffect(() => {
