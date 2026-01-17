@@ -265,10 +265,17 @@ describe("CalendarEvents", () => {
   })
 
   describe("accessibility", () => {
-    it("has accessible events list", () => {
+    it("has accessible events list with date context", () => {
       render(<CalendarEvents date="2024-01-15" />)
 
-      expect(screen.getByRole("list", { name: "Calendar events" })).toBeInTheDocument()
+      // Use locale-aware formatting for expected value
+      const formattedDate = new Date(2024, 0, 15).toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+      })
+      expect(
+        screen.getByRole("list", { name: `Calendar events for ${formattedDate}` }),
+      ).toBeInTheDocument()
     })
 
     it("renders calendar heading", () => {

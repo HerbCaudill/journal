@@ -149,7 +149,12 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
   return (
-    <div className="bg-popover border-border w-72 rounded-lg border p-4 shadow-lg">
+    <div
+      role="dialog"
+      aria-label="Date picker"
+      aria-modal="true"
+      className="bg-popover border-border w-72 rounded-lg border p-4 shadow-lg"
+    >
       {/* Month navigation header */}
       <div className="mb-4 flex items-center justify-between">
         <button

@@ -425,7 +425,7 @@ test.describe("Touch gestures on mobile viewport", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Click on calendar button
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Date picker should be visible
@@ -438,7 +438,7 @@ test.describe("Touch gestures on mobile viewport", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Click on March 20

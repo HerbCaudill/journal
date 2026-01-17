@@ -33,6 +33,14 @@ describe("DatePicker", () => {
     })
   })
 
+  it("has accessible dialog role and label", () => {
+    render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
+
+    const dialog = screen.getByRole("dialog", { name: "Date picker" })
+    expect(dialog).toBeInTheDocument()
+    expect(dialog).toHaveAttribute("aria-modal", "true")
+  })
+
   it("renders the current month and year", () => {
     render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 

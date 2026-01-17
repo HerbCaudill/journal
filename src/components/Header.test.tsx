@@ -90,7 +90,8 @@ describe("Header", () => {
       render(<Header date="2024-01-15" />)
 
       expect(screen.getByRole("button", { name: /previous day/i })).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: /open calendar/i })).toBeInTheDocument()
+      // The calendar button's accessible name is the date text
+      expect(screen.getByRole("button", { name: /January 15/i })).toBeInTheDocument()
       expect(screen.getByRole("button", { name: /next day/i })).toBeInTheDocument()
     })
 
@@ -98,7 +99,8 @@ describe("Header", () => {
       render(<Header date="2024-01-15" showNavigation={false} />)
 
       expect(screen.queryByRole("button", { name: /previous day/i })).not.toBeInTheDocument()
-      expect(screen.queryByRole("button", { name: /open calendar/i })).not.toBeInTheDocument()
+      // Calendar button uses date text as accessible name
+      expect(screen.queryByRole("button", { name: /January 15/i })).not.toBeInTheDocument()
       expect(screen.queryByRole("button", { name: /next day/i })).not.toBeInTheDocument()
     })
 
@@ -123,7 +125,8 @@ describe("Header", () => {
     it("renders a clickable calendar button that opens date picker", () => {
       render(<Header date="2024-01-15" />)
 
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      // The calendar button's accessible name is the date text
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       expect(calendarButton).toBeInTheDocument()
       expect(calendarButton).toHaveAttribute("aria-haspopup", "dialog")
     })
@@ -131,7 +134,7 @@ describe("Header", () => {
     it("opens date picker when calendar button is clicked", () => {
       render(<Header date="2024-01-15" />)
 
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       fireEvent.click(calendarButton)
 
       // Date picker should now be visible - look for month navigation
@@ -152,8 +155,8 @@ describe("Header", () => {
         year: "numeric",
       })
 
-      // Find and click the button containing the date text
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      // Find and click the button containing the date text (accessible name is the date)
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       expect(calendarButton).toHaveTextContent(expectedMonthDay)
       fireEvent.click(calendarButton)
 
@@ -164,7 +167,7 @@ describe("Header", () => {
     it("closes date picker when clicking outside", () => {
       render(<Header date="2024-01-15" />)
 
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       fireEvent.click(calendarButton)
 
       // Verify date picker is open
@@ -180,7 +183,7 @@ describe("Header", () => {
     it("closes date picker when pressing Escape", () => {
       render(<Header date="2024-01-15" />)
 
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       fireEvent.click(calendarButton)
 
       // Verify date picker is open
@@ -196,7 +199,7 @@ describe("Header", () => {
     it("navigates to selected date when a date is clicked in the picker", () => {
       render(<Header date="2024-01-15" />)
 
-      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      const calendarButton = screen.getByRole("button", { name: /January 15/i })
       fireEvent.click(calendarButton)
 
       // Click on a date (January 20, 2024)

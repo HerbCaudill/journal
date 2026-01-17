@@ -373,7 +373,7 @@ test.describe("Navigation error recovery", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 
     // Open date picker
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Date picker should open

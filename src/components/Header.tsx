@@ -147,7 +147,7 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
                   aria-expanded={isDatePickerOpen}
                   aria-haspopup="dialog"
                 >
-                  <CalendarIcon size={12} aria-label="Open calendar" />
+                  <CalendarIcon size={12} aria-hidden="true" />
                   <span className="text-sm font-normal">{getMonthDay(date)}</span>
                 </button>
               : <span className="text-muted-foreground text-sm font-normal">

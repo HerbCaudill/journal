@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
 import { CalendarIcon, ExternalLinkIcon, XIcon } from "./Icons"
+import { parseDate } from "../lib/dates"
 import type { CalendarEvent } from "../lib/google-calendar"
 
 interface CalendarEventsProps {
@@ -58,7 +59,7 @@ export function CalendarEvents({ date }: CalendarEventsProps) {
 
       {error && <ErrorMessage message={error} onDismiss={clearError} />}
 
-      <EventsList isLoading={isLoading} events={events} />
+      <EventsList isLoading={isLoading} events={events} date={date} />
     </div>
   )
 }
@@ -89,9 +90,24 @@ function ErrorMessage({ message, onDismiss }: ErrorMessageProps) {
 interface EventsListProps {
   isLoading: boolean
   events: CalendarEvent[]
+  date: string
 }
 
-function EventsList({ isLoading, events }: EventsListProps) {
+/**
+ * Formats a date string for display in aria labels.
+ * e.g., "2024-01-15" -> "January 15"
+ */
+function formatDateForLabel(dateString: string): string {
+  const date = parseDate(dateString)
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+  })
+}
+
+function EventsList({ isLoading, events, date }: EventsListProps) {
+  const formattedDate = formatDateForLabel(date)
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -106,7 +122,7 @@ function EventsList({ isLoading, events }: EventsListProps) {
   }
 
   return (
-    <ul className="space-y-2" role="list" aria-label="Calendar events">
+    <ul className="space-y-2" role="list" aria-label={`Calendar events for ${formattedDate}`}>
       {events.map(event => (
         <EventItem key={event.id} event={event} />
       ))}

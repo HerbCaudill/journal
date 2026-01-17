@@ -73,6 +73,7 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
   if (onClick) {
     return (
       <button
+        type="button"
         onClick={onClick}
         className={cn(className, "hover:text-foreground cursor-pointer transition-colors")}
         aria-label={ariaLabel}

@@ -10,7 +10,7 @@ test.describe("Date picker", () => {
 
   test("opens date picker when calendar button is clicked", async ({ page }) => {
     // Click the calendar button
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Date picker should be visible with weekday headers (use exact match to avoid conflicts)
@@ -28,7 +28,7 @@ test.describe("Date picker", () => {
 
   test("closes date picker when clicking outside", async ({ page }) => {
     // Open the date picker
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Verify it's open
@@ -43,7 +43,7 @@ test.describe("Date picker", () => {
 
   test("closes date picker when pressing Escape", async ({ page }) => {
     // Open the date picker
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
     // Verify it's open
@@ -57,7 +57,7 @@ test.describe("Date picker", () => {
   })
 
   test("toggles date picker when clicking calendar button again", async ({ page }) => {
-    const calendarButton = page.getByRole("button", { name: "Open calendar" })
+    const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
 
     // Open date picker
     await calendarButton.click()
@@ -76,7 +76,7 @@ test.describe("Date picker date selection", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Click on March 20th
     await page.getByRole("button", { name: "2025-03-20" }).click()
@@ -94,7 +94,7 @@ test.describe("Date picker date selection", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Click on a February day shown in the March calendar (e.g., Feb 23, 2025)
     await page.getByRole("button", { name: "2025-02-23" }).click()
@@ -110,7 +110,7 @@ test.describe("Date picker month navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Should show March 2025
     await expect(page.getByText("March 2025")).toBeVisible()
@@ -127,7 +127,7 @@ test.describe("Date picker month navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Should show March 2025
     await expect(page.getByText("March 2025")).toBeVisible()
@@ -144,7 +144,7 @@ test.describe("Date picker month navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /January 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Should show January 2025
     await expect(page.getByText("January 2025")).toBeVisible()
@@ -161,7 +161,7 @@ test.describe("Date picker month navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /December 15, 2024/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Should show December 2024
     await expect(page.getByText("December 2024")).toBeVisible()
@@ -178,7 +178,7 @@ test.describe("Date picker month navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Navigate back 3 months to December 2024
     await page.getByRole("button", { name: "Previous month" }).click()
@@ -203,7 +203,7 @@ test.describe("Date picker 'Go to Today' button", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
 
     // Open date picker
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
 
     // Click "Go to Today" button
     await page.getByRole("button", { name: /go to today/i }).click()
@@ -221,7 +221,7 @@ test.describe("Date picker 'Go to Today' button", () => {
     await expect(page.getByRole("heading", { level: 1, name: /June 15, 2024/ })).toBeVisible()
 
     // Open date picker (should show June 2024)
-    await page.getByRole("button", { name: "Open calendar" }).click()
+    await page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ }).click()
     await expect(page.getByText("June 2024")).toBeVisible()
 
     // Click "Go to Today"
