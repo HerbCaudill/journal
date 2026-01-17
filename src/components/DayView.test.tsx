@@ -50,6 +50,17 @@ vi.mock("../hooks/useGoogleCalendar", () => ({
   })),
 }))
 
+// Mock the useReverseGeocode hook (used by LocationBadge)
+vi.mock("../hooks/useReverseGeocode", () => ({
+  useReverseGeocode: vi.fn(() => ({
+    locality: "Chicago",
+    displayName: "Chicago, Illinois, USA",
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 const mockUseJournal = vi.mocked(JournalContext.useJournal)
 const mockUseGeolocation = vi.mocked(GeolocationHook.useGeolocation)
 
@@ -416,6 +427,231 @@ describe("DayView", () => {
 
       expect(mockRequestPosition).toHaveBeenCalledTimes(1)
       expect(mockChangeDoc).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("LocationBadge display", () => {
+    it("renders LocationBadge when entry has a position", () => {
+      const docWithPosition = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            position: {
+              latitude: 41.8781,
+              longitude: -87.6298,
+              timestamp: Date.now(),
+            },
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithPosition,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // LocationBadge should be rendered - look for the clickable badge
+      const locationBadge = screen.getByRole("button", { name: /location/i })
+      expect(locationBadge).toBeInTheDocument()
+      // Should display the locality from the mock
+      expect(screen.getByText("Chicago")).toBeInTheDocument()
+    })
+
+    it("does not render LocationBadge when entry has no position", () => {
+      const docWithoutPosition = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithoutPosition,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // LocationBadge should not be rendered - only capture location button should appear
+      expect(screen.queryByText("Chicago")).not.toBeInTheDocument()
+      // But the capture button should be there
+      expect(screen.getByRole("button", { name: /capture location/i })).toBeInTheDocument()
+    })
+
+    it("LocationBadge is clickable to re-capture location", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const mockPosition = {
+        latitude: 40.7128,
+        longitude: -74.006,
+        accuracy: 10,
+        timestamp: 1705276800000,
+      }
+      const mockRequestPosition = vi.fn().mockResolvedValue(mockPosition)
+
+      mockUseGeolocation.mockReturnValue({
+        position: null,
+        isLoading: false,
+        error: null,
+        permission: "granted",
+        requestPosition: mockRequestPosition,
+        clear: vi.fn(),
+      })
+
+      const docWithPosition = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            position: {
+              latitude: 41.8781,
+              longitude: -87.6298,
+              timestamp: Date.now(),
+            },
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithPosition,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Click the LocationBadge to re-capture
+      const locationBadge = screen.getByRole("button", { name: /location/i })
+      await user.click(locationBadge)
+
+      expect(mockRequestPosition).toHaveBeenCalledTimes(1)
+      expect(mockChangeDoc).toHaveBeenCalled()
+    })
+
+    it("shows updating text when re-capturing location", () => {
+      mockUseGeolocation.mockReturnValue({
+        position: null,
+        isLoading: true,
+        error: null,
+        permission: "granted",
+        requestPosition: vi.fn().mockResolvedValue(null),
+        clear: vi.fn(),
+      })
+
+      const docWithPosition = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            position: {
+              latitude: 41.8781,
+              longitude: -87.6298,
+              timestamp: Date.now(),
+            },
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithPosition,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      expect(screen.getByText("Updating...")).toBeInTheDocument()
+    })
+
+    it("shows error message when re-capture fails", () => {
+      mockUseGeolocation.mockReturnValue({
+        position: null,
+        isLoading: false,
+        error: "Location unavailable",
+        permission: "granted",
+        requestPosition: vi.fn().mockResolvedValue(null),
+        clear: vi.fn(),
+      })
+
+      const docWithPosition = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            position: {
+              latitude: 41.8781,
+              longitude: -87.6298,
+              timestamp: Date.now(),
+            },
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithPosition,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      expect(screen.getByText("Location unavailable")).toBeInTheDocument()
     })
   })
 })

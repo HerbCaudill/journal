@@ -4,6 +4,7 @@ import { useGeolocation } from "../hooks/useGeolocation"
 import { EntryEditor } from "./EntryEditor"
 import { LLMSection } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
+import { LocationBadge } from "./LocationBadge"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
@@ -113,6 +114,15 @@ export function DayView({ date }: DayViewProps) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
+      {hasPosition && entry?.position && (
+        <div className="flex items-center gap-2">
+          <LocationBadge position={entry.position} onClick={handleCaptureLocation} />
+          {isCapturingLocation && (
+            <span className="text-muted-foreground text-sm">Updating...</span>
+          )}
+          {locationError && <span className="text-destructive text-sm">{locationError}</span>}
+        </div>
+      )}
       <EntryEditor date={date} />
       {isGeolocationSupported && !hasPosition && (
         <div className="flex items-center gap-2">
