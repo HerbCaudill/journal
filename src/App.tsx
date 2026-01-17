@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Header } from "./components/Header"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
@@ -6,6 +6,8 @@ import { SwipeContainer } from "./components/SwipeContainer"
 import { getToday, isValidDate } from "./lib/dates"
 import { useGoogleCalendar } from "./hooks/useGoogleCalendar"
 import { useTheme } from "./hooks/useTheme"
+import { useJournal } from "./context/JournalContext"
+import { useGeolocation } from "./hooks/useGeolocation"
 
 type Route = { type: "day"; date: string } | { type: "settings" } | { type: "oauth-callback" }
 
@@ -161,18 +163,96 @@ export function App() {
   // Initialize theme from settings and apply dark class to document
   useTheme()
 
+  // Get journal document for location data
+  const { doc, changeDoc } = useJournal()
+
+  // Geolocation hook for capturing location
+  const { permission, requestPosition, isLoading: isCapturingLocation } = useGeolocation()
+
+  // Get the current date for the header (always show today when on settings)
+  const currentDate = route.type === "day" ? route.date : getToday()
+
+  // Get position from the current entry
+  const entry = doc?.entries[currentDate]
+  const position = entry?.position ?? null
+
+  // Handle capturing location and saving it to the entry
+  const handleCaptureLocation = useCallback(async () => {
+    const pos = await requestPosition()
+    if (!pos) return
+
+    changeDoc(d => {
+      const now = Date.now()
+
+      // Ensure entry exists
+      if (!d.entries[currentDate]) {
+        d.entries[currentDate] = {
+          id: `${currentDate}-${now}`,
+          date: currentDate,
+          messages: [],
+          createdAt: now,
+          updatedAt: now,
+        }
+      }
+
+      const existingEntry = d.entries[currentDate]
+      existingEntry.updatedAt = now
+      existingEntry.position = pos
+    })
+  }, [requestPosition, changeDoc, currentDate])
+
+  // Determine if location capture should be available
+  const isGeolocationSupported = permission !== "unavailable"
+  const isPermissionDenied = permission === "denied"
+  const hasPosition = !!position
+  const isToday = currentDate === getToday()
+
+  // Track if we've already attempted auto-capture to avoid repeated calls
+  const hasAttemptedAutoCapture = useRef(false)
+
+  // Auto-capture location for today's entry when on day view
+  useEffect(() => {
+    if (
+      route.type === "day" &&
+      isToday &&
+      isGeolocationSupported &&
+      !isPermissionDenied &&
+      !hasPosition &&
+      !hasAttemptedAutoCapture.current &&
+      !isCapturingLocation
+    ) {
+      hasAttemptedAutoCapture.current = true
+      handleCaptureLocation()
+    }
+  }, [
+    route.type,
+    isToday,
+    isGeolocationSupported,
+    isPermissionDenied,
+    hasPosition,
+    isCapturingLocation,
+    handleCaptureLocation,
+  ])
+
+  // Reset auto-capture attempt when date changes
+  useEffect(() => {
+    hasAttemptedAutoCapture.current = false
+  }, [currentDate])
+
   // Handle OAuth callback route separately (no header needed)
   if (route.type === "oauth-callback") {
     return <OAuthCallbackHandler />
   }
 
-  // Get the current date for the header (always show today when on settings)
-  const currentDate = route.type === "day" ? route.date : getToday()
-
   return (
     <SwipeContainer date={currentDate} enabled={route.type === "day"}>
       <div className="bg-background text-foreground min-h-screen">
-        <Header date={currentDate} showNavigation={route.type === "day"} />
+        <Header
+          date={currentDate}
+          showNavigation={route.type === "day"}
+          position={route.type === "day" ? position : null}
+          onLocationClick={route.type === "day" ? handleCaptureLocation : undefined}
+        />
         <main>
           {route.type === "day" && <DayView date={route.date} />}
           {route.type === "settings" && <SettingsView />}

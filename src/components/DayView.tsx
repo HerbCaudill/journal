@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback } from "react"
 import { useJournal } from "../context/JournalContext"
-import { useGeolocation } from "../hooks/useGeolocation"
 import { EntryEditor } from "./EntryEditor"
 import { LLMSection } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
-import { LocationBadge } from "./LocationBadge"
-import { getToday } from "../lib/dates"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
@@ -24,12 +21,6 @@ interface DayViewProps {
  */
 export function DayView({ date }: DayViewProps) {
   const { doc, changeDoc } = useJournal()
-  const {
-    isLoading: isCapturingLocation,
-    error: locationError,
-    permission,
-    requestPosition,
-  } = useGeolocation()
 
   const entry = doc?.entries[date]
   const userMessage = entry?.messages.find(m => m.role === "user")
@@ -82,84 +73,9 @@ export function DayView({ date }: DayViewProps) {
     [doc, changeDoc, date],
   )
 
-  // Handle capturing location and saving it to the entry
-  const handleCaptureLocation = useCallback(async () => {
-    const pos = await requestPosition()
-    if (!pos) return
-
-    changeDoc(d => {
-      const now = Date.now()
-
-      // Ensure entry exists
-      if (!d.entries[date]) {
-        d.entries[date] = {
-          id: `${date}-${now}`,
-          date,
-          messages: [],
-          createdAt: now,
-          updatedAt: now,
-        }
-      }
-
-      const existingEntry = d.entries[date]
-      existingEntry.updatedAt = now
-      existingEntry.position = pos
-    })
-  }, [requestPosition, changeDoc, date])
-
-  // Determine if location capture should be available
-  const isGeolocationSupported = permission !== "unavailable"
-  const isPermissionDenied = permission === "denied"
-  const hasPosition = !!entry?.position
-  const isToday = date === getToday()
-
-  // Track if we've already attempted auto-capture to avoid repeated calls
-  const hasAttemptedAutoCapture = useRef(false)
-
-  // Auto-capture location for today's entry when:
-  // - It's today
-  // - Geolocation is supported
-  // - Permission is not denied
-  // - Entry doesn't already have a position
-  // - We haven't already attempted to capture
-  useEffect(() => {
-    if (
-      isToday &&
-      isGeolocationSupported &&
-      !isPermissionDenied &&
-      !hasPosition &&
-      !hasAttemptedAutoCapture.current &&
-      !isCapturingLocation
-    ) {
-      hasAttemptedAutoCapture.current = true
-      handleCaptureLocation()
-    }
-  }, [
-    isToday,
-    isGeolocationSupported,
-    isPermissionDenied,
-    hasPosition,
-    isCapturingLocation,
-    handleCaptureLocation,
-  ])
-
-  // Reset auto-capture attempt when date changes
-  useEffect(() => {
-    hasAttemptedAutoCapture.current = false
-  }, [date])
-
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
-      {hasPosition && entry?.position && (
-        <div className="flex items-center gap-2">
-          <LocationBadge position={entry.position} onClick={handleCaptureLocation} />
-          {isCapturingLocation && (
-            <span className="text-muted-foreground text-sm">Updating...</span>
-          )}
-          {locationError && <span className="text-destructive text-sm">{locationError}</span>}
-        </div>
-      )}
       <EntryEditor date={date} />
       <LLMSection
         entryContent={entryContent}

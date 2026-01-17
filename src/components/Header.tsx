@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { parseDate, addDays } from "../lib/dates"
 import { DatePicker } from "./DatePicker"
+import { LocationBadge } from "./LocationBadge"
+import type { GeoPosition } from "../hooks/useGeolocation"
 
 interface HeaderProps {
   /** The current date in YYYY-MM-DD format */
   date: string
   /** Whether to show navigation controls (only shown on day view, not settings) */
   showNavigation?: boolean
+  /** Optional position to display in the header */
+  position?: GeoPosition | null
+  /** Optional click handler for location badge */
+  onLocationClick?: () => void
 }
 
 /**
@@ -48,7 +54,7 @@ function getMonthDay(dateString: string): string {
  * Clicking on the date opens a date picker for navigation.
  * Layout: day/date on left, back/calendar/forward in center, settings on right.
  */
-export function Header({ date, showNavigation = true }: HeaderProps) {
+export function Header({ date, showNavigation = true, position, onLocationClick }: HeaderProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const datePickerRef = useRef<HTMLDivElement>(null)
   const calendarButtonRef = useRef<HTMLButtonElement>(null)
@@ -107,11 +113,14 @@ export function Header({ date, showNavigation = true }: HeaderProps) {
 
   return (
     <header className="border-border flex items-center justify-between border-b p-4">
-      {/* Left: Day/date */}
+      {/* Left: Day/date and location */}
       <div className="min-w-0 flex-1">
         <h1 className="flex flex-col text-left">
           <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
-          <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+            {position && <LocationBadge position={position} onClick={onLocationClick} />}
+          </div>
         </h1>
       </div>
 

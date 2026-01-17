@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { Header } from "./Header"
+import type { GeoPosition } from "../hooks/useGeolocation"
 
 // Mock the JournalContext since DatePicker uses it
 vi.mock("../context/JournalContext", () => ({
@@ -17,6 +18,17 @@ vi.mock("../context/JournalContext", () => ({
     handle: undefined,
     isLoading: false,
   }),
+}))
+
+// Mock the useReverseGeocode hook for LocationBadge
+vi.mock("../hooks/useReverseGeocode", () => ({
+  useReverseGeocode: vi.fn(() => ({
+    locality: "New York",
+    displayName: "New York, NY, United States",
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }))
 
 describe("Header", () => {
@@ -183,6 +195,53 @@ describe("Header", () => {
 
       // Date picker should be closed
       expect(screen.queryByText("Go to Today")).not.toBeInTheDocument()
+    })
+  })
+
+  describe("location display", () => {
+    const mockPosition: GeoPosition = {
+      latitude: 40.7128,
+      longitude: -74.006,
+      accuracy: 100,
+      timestamp: 1700000000000,
+    }
+
+    it("does not render location badge when position is not provided", () => {
+      render(<Header date="2024-01-15" />)
+
+      expect(screen.queryByText("New York")).not.toBeInTheDocument()
+    })
+
+    it("does not render location badge when position is null", () => {
+      render(<Header date="2024-01-15" position={null} />)
+
+      expect(screen.queryByText("New York")).not.toBeInTheDocument()
+    })
+
+    it("renders location badge when position is provided", () => {
+      render(<Header date="2024-01-15" position={mockPosition} />)
+
+      expect(screen.getByText("New York")).toBeInTheDocument()
+    })
+
+    it("renders location badge next to the date", () => {
+      render(<Header date="2024-01-15" position={mockPosition} />)
+
+      const heading = screen.getByRole("heading", { level: 1 })
+      expect(heading).toContainElement(screen.getByText("New York"))
+    })
+
+    it("calls onLocationClick when location badge is clicked", () => {
+      const handleLocationClick = vi.fn()
+
+      render(
+        <Header date="2024-01-15" position={mockPosition} onLocationClick={handleLocationClick} />,
+      )
+
+      const locationButton = screen.getByRole("button", { name: /location/i })
+      fireEvent.click(locationButton)
+
+      expect(handleLocationClick).toHaveBeenCalledTimes(1)
     })
   })
 })
