@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect } from "react"
 import { useLLM } from "../hooks/useLLM"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
-import { Button } from "@/components/ui/button"
 import {
   InputGroup,
   InputGroupAddon,
@@ -151,46 +150,54 @@ export function LLMSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Initial submit button */}
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={handleSubmit}
-          disabled={isLoading || !apiKey}
-          variant="default"
-          size="icon"
-          aria-label={`Ask ${providerName}`}
-        >
-          {isLoading ?
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
+      {/* Initial submit */}
+      <InputGroup className="bg-card">
+        <InputGroupTextarea
+          readOnly
+          value={isLoading ? "Thinking..." : ""}
+          rows={2}
+          className="min-h-20 cursor-default text-base leading-relaxed"
+          tabIndex={-1}
+        />
+        <InputGroupAddon align="block-end" className="justify-end">
+          <InputGroupButton
+            onClick={handleSubmit}
+            disabled={isLoading || !apiKey}
+            variant="default"
+            size="icon-xs"
+            aria-label={`Ask ${providerName}`}
+          >
+            {isLoading ?
+              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            : <svg
+                className="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          : <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5M5 12l7-7 7 7" />
-            </svg>
-          }
-        </Button>
-        {isLoading && <span className="text-muted-foreground text-sm">Thinking...</span>}
-      </div>
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
+            }
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
 
       {/* Error display */}
       {displayError && (
@@ -232,7 +239,7 @@ export function LLMSection({
             placeholder=""
             disabled={isLoading}
             rows={2}
-            className="min-h-[80px] text-base leading-relaxed"
+            className="min-h-20 text-base leading-relaxed"
             aria-label="Follow-up message"
           />
           <InputGroupAddon align="block-end" className="justify-end">
