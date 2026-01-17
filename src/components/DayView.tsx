@@ -29,11 +29,14 @@ export function DayView({ date }: DayViewProps) {
   const [isEditing, setIsEditing] = useState(false)
   // Track conversation start locally to immediately hide editor (bypass Automerge state timing)
   const [conversationStarted, setConversationStarted] = useState(false)
+  // Track if entry has been tapped on mobile to reveal edit button
+  const [entryTapped, setEntryTapped] = useState(false)
 
   // Reset local conversation state when navigating to a different date
   useEffect(() => {
     setConversationStarted(false)
     setIsEditing(false)
+    setEntryTapped(false)
   }, [date])
 
   const entry = doc?.entries?.[date]
@@ -160,11 +163,26 @@ export function DayView({ date }: DayViewProps) {
       {/* Original journal entry display - show when conversation started but not in edit mode */}
       {hasConversation && !isEditing && (
         <div className="group/entry">
-          <p className="text-foreground whitespace-pre-wrap">{entryContent}</p>
+          <p
+            className="text-foreground cursor-pointer whitespace-pre-wrap md:cursor-auto"
+            onClick={() => setEntryTapped(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => {
+              if (e.key === "Enter" || e.key === " ") {
+                setEntryTapped(true)
+              }
+            }}
+            aria-label="Tap to reveal edit button"
+          >
+            {entryContent}
+          </p>
           <button
             onClick={() => setIsEditing(true)}
-            className="text-muted-foreground/40 hover:text-muted-foreground mt-1 p-1 transition-opacity md:opacity-0 md:group-hover/entry:opacity-100 md:focus:opacity-100"
+            className={`text-muted-foreground/40 hover:text-muted-foreground mt-1 p-1 transition-opacity md:group-hover/entry:opacity-100 md:focus:opacity-100 ${entryTapped ? "opacity-100" : "opacity-0 md:opacity-0"}`}
             aria-label="Edit journal entry"
+            aria-hidden={!entryTapped}
+            tabIndex={entryTapped ? 0 : -1}
           >
             <svg
               className="h-3 w-3"

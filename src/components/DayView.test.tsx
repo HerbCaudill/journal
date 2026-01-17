@@ -426,7 +426,8 @@ describe("DayView", () => {
       expect(textarea).toBeInTheDocument()
     })
 
-    it("shows Edit button when conversation has started", async () => {
+    it("shows Edit button when conversation has started and entry is tapped", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const { useLLM } = await import("../hooks/useLLM")
       vi.mocked(useLLM).mockReturnValue({
         messages: [
@@ -486,9 +487,191 @@ describe("DayView", () => {
 
       render(<DayView date={toDateString("2024-01-15")} />)
 
-      // Edit button should be visible
+      // Edit button should be hidden initially (aria-hidden)
+      const editButtonHidden = screen.queryByRole("button", { name: /edit journal entry/i })
+      expect(editButtonHidden).not.toBeInTheDocument()
+
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
+      // Now edit button should be visible
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
       expect(editButton).toBeInTheDocument()
+    })
+
+    it("keeps edit button visible after tapping entry once", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Edit button should initially be hidden
+      expect(screen.queryByRole("button", { name: /edit journal entry/i })).not.toBeInTheDocument()
+
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
+      // Edit button should be visible
+      expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
+
+      // Tapping the entry again should keep the edit button visible
+      await user.click(entryText)
+      expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
+    })
+
+    it("resets entry tapped state when navigating to a new date", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "Response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+      })
+
+      const docWithConversations = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "Entry for Jan 15",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "Response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          "2024-01-16": {
+            id: "entry-2",
+            date: "2024-01-16",
+            messages: [
+              {
+                id: "user-2",
+                role: "user" as const,
+                content: "Entry for Jan 16",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-2",
+                role: "assistant" as const,
+                content: "Another response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversations,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      const { rerender } = render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
+      // Edit button should be visible
+      expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
+
+      // Navigate to a different date
+      rerender(<DayView date={toDateString("2024-01-16")} />)
+
+      // Edit button should be hidden again on the new date (tapped state reset)
+      expect(screen.queryByRole("button", { name: /edit journal entry/i })).not.toBeInTheDocument()
+
+      // Entry should still be there
+      expect(screen.getByText("Entry for Jan 16")).toBeInTheDocument()
     })
 
     it("does not show Edit button when no conversation has started", () => {
@@ -596,6 +779,10 @@ describe("DayView", () => {
       // Initially, EntryEditor should NOT be visible
       expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
 
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
       // Click the Edit button
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
       await user.click(editButton)
@@ -667,6 +854,10 @@ describe("DayView", () => {
 
       render(<DayView date={toDateString("2024-01-15")} />)
 
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
       // Click the Edit button to enter edit mode
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
       await user.click(editButton)
@@ -680,7 +871,7 @@ describe("DayView", () => {
 
       // EntryEditor should be hidden again
       expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
-      // Edit button should be visible again
+      // Entry tapped state should persist, so edit button should still be visible
       expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
     })
 
@@ -745,11 +936,15 @@ describe("DayView", () => {
 
       render(<DayView date={toDateString("2024-01-15")} />)
 
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
       // Click the Edit button to enter edit mode
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
       await user.click(editButton)
 
-      // Edit button should be hidden while in edit mode
+      // Edit button should be hidden while in edit mode (entry display area is replaced by editor)
       expect(screen.queryByRole("button", { name: /edit journal entry/i })).not.toBeInTheDocument()
       // Done button should be visible
       expect(screen.getByRole("button", { name: /done editing/i })).toBeInTheDocument()
@@ -1249,6 +1444,10 @@ describe("DayView", () => {
 
       const { rerender } = render(<DayView date={toDateString("2024-01-15")} />)
 
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
       // Enter edit mode
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
       await user.click(editButton)
@@ -1300,6 +1499,7 @@ describe("DayView", () => {
     it("passes follow-up user messages to LLMSection for restoration", async () => {
       // This test verifies that when a conversation with follow-up user messages
       // is saved and reloaded, all messages are passed to LLMSection
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const { useLLM } = await import("../hooks/useLLM")
       vi.mocked(useLLM).mockReturnValue({
         messages: [
@@ -1387,7 +1587,11 @@ describe("DayView", () => {
       expect(screen.getByText("First response")).toBeInTheDocument()
       expect(screen.getByText("Second response")).toBeInTheDocument()
 
-      // Edit button should be visible since conversation has started
+      // Tap on the entry to reveal edit button
+      const entryText = screen.getByRole("button", { name: /tap to reveal edit button/i })
+      await user.click(entryText)
+
+      // Edit button should be visible since conversation has started and entry was tapped
       expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
 
       // EntryEditor should be hidden when conversation has started
