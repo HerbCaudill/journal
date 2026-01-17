@@ -15,7 +15,7 @@ interface HeaderProps {
  */
 function getDayOfWeek(dateString: string): string {
   const date = parseDate(dateString)
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(undefined, {
     weekday: "long",
   })
 }
@@ -30,12 +30,12 @@ function getMonthDay(dateString: string): string {
   const dateYear = date.getFullYear()
 
   if (dateYear === currentYear) {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(undefined, {
       month: "long",
       day: "numeric",
     })
   } else {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(undefined, {
       month: "long",
       day: "numeric",
       year: "numeric",

@@ -36,7 +36,12 @@ describe("DatePicker", () => {
   it("renders the current month and year", () => {
     render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
-    expect(screen.getByText("June 2024")).toBeInTheDocument()
+    // Use locale-aware formatting for expected value
+    const expectedMonthYear = new Date(2024, 5).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    })
+    expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
   })
 
   it("renders weekday headers", () => {
@@ -72,7 +77,12 @@ describe("DatePicker", () => {
     const prevButton = screen.getByRole("button", { name: "Previous month" })
     await user.click(prevButton)
 
-    expect(screen.getByText("May 2024")).toBeInTheDocument()
+    // Use locale-aware formatting for expected value
+    const expectedMonthYear = new Date(2024, 4).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    })
+    expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
   })
 
   it("navigates to next month", async () => {
@@ -83,7 +93,12 @@ describe("DatePicker", () => {
     const nextButton = screen.getByRole("button", { name: "Next month" })
     await user.click(nextButton)
 
-    expect(screen.getByText("July 2024")).toBeInTheDocument()
+    // Use locale-aware formatting for expected value
+    const expectedMonthYear = new Date(2024, 6).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    })
+    expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
   })
 
   it("shows 'Go to Today' button", () => {
@@ -186,12 +201,21 @@ describe("DatePicker", () => {
 
     render(<DatePicker selectedDate="2024-01-15" onDateSelect={vi.fn()} />)
 
-    expect(screen.getByText("January 2024")).toBeInTheDocument()
+    // Use locale-aware formatting for expected values
+    const expectedJan2024 = new Date(2024, 0).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    })
+    expect(screen.getByText(expectedJan2024)).toBeInTheDocument()
 
     // Navigate to previous month (December 2023)
     const prevButton = screen.getByRole("button", { name: "Previous month" })
     await user.click(prevButton)
 
-    expect(screen.getByText("December 2023")).toBeInTheDocument()
+    const expectedDec2023 = new Date(2023, 11).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    })
+    expect(screen.getByText(expectedDec2023)).toBeInTheDocument()
   })
 })

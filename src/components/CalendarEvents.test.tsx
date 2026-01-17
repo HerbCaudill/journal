@@ -140,8 +140,19 @@ describe("CalendarEvents", () => {
     it("displays event times correctly", () => {
       render(<CalendarEvents date="2024-01-15" />)
 
-      expect(screen.getByText(/9:00 AM - 10:00 AM/)).toBeInTheDocument()
-      expect(screen.getByText(/12:00 PM - 1:00 PM/)).toBeInTheDocument()
+      // Use locale-aware formatting for expected values
+      const formatTime = (date: Date) =>
+        date.toLocaleTimeString(undefined, {
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      const time9am = formatTime(new Date("2024-01-15T09:00:00"))
+      const time10am = formatTime(new Date("2024-01-15T10:00:00"))
+      const time12pm = formatTime(new Date("2024-01-15T12:00:00"))
+      const time1pm = formatTime(new Date("2024-01-15T13:00:00"))
+
+      expect(screen.getByText(new RegExp(`${time9am} - ${time10am}`))).toBeInTheDocument()
+      expect(screen.getByText(new RegExp(`${time12pm} - ${time1pm}`))).toBeInTheDocument()
     })
 
     it("displays 'All day' for all-day events", () => {

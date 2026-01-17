@@ -30,8 +30,16 @@ describe("Header", () => {
 
     const heading = screen.getByRole("heading", { level: 1 })
     expect(heading).toBeInTheDocument()
-    expect(heading).toHaveTextContent("Monday")
-    expect(heading).toHaveTextContent("January 15, 2024")
+    // Use locale-aware formatting for expected values
+    const date = new Date(2024, 0, 15)
+    const expectedDayOfWeek = date.toLocaleDateString(undefined, { weekday: "long" })
+    const expectedMonthDay = date.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
+    expect(heading).toHaveTextContent(expectedDayOfWeek)
+    expect(heading).toHaveTextContent(expectedMonthDay)
   })
 
   it("renders a settings link", () => {
@@ -46,8 +54,16 @@ describe("Header", () => {
     render(<Header date="2024-06-20" />)
 
     const heading = screen.getByRole("heading", { level: 1 })
-    expect(heading).toHaveTextContent("Thursday")
-    expect(heading).toHaveTextContent("June 20, 2024")
+    // Use locale-aware formatting for expected values
+    const date = new Date(2024, 5, 20)
+    const expectedDayOfWeek = date.toLocaleDateString(undefined, { weekday: "long" })
+    const expectedMonthDay = date.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
+    expect(heading).toHaveTextContent(expectedDayOfWeek)
+    expect(heading).toHaveTextContent(expectedMonthDay)
   })
 
   it("omits year for current year dates", () => {
@@ -55,7 +71,13 @@ describe("Header", () => {
     render(<Header date={`${currentYear}-03-15`} />)
 
     const heading = screen.getByRole("heading", { level: 1 })
-    expect(heading).toHaveTextContent("March 15")
+    // Use locale-aware formatting for expected values
+    const date = new Date(currentYear, 2, 15)
+    const expectedMonthDay = date.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+    })
+    expect(heading).toHaveTextContent(expectedMonthDay)
     expect(heading).not.toHaveTextContent(`${currentYear}`)
   })
 

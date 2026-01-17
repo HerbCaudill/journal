@@ -107,7 +107,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
     [viewYear, viewMonth],
   )
 
-  const monthName = new Date(viewYear, viewMonth).toLocaleDateString("en-US", {
+  const monthName = new Date(viewYear, viewMonth).toLocaleDateString(undefined, {
     month: "long",
     year: "numeric",
   })

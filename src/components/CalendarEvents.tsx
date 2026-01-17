@@ -21,10 +21,9 @@ function formatEventTime(event: CalendarEvent): string {
   const endDate = new Date(event.end)
 
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString("en-US", {
+    date.toLocaleTimeString(undefined, {
       hour: "numeric",
       minute: "2-digit",
-      hour12: true,
     })
 
   return `${formatTime(startDate)} - ${formatTime(endDate)}`
