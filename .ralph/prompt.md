@@ -28,6 +28,7 @@ When you complete a task:
 
 - Run `ppnpm format`.
 - Run `pnpm build && pnpm test:all`.
+- Record a summary of the changes you made as a comment in the issue.
 - Close the issue: `bd close <id>`.
 - Commit and push your work. Include the issue id
 - Output `✅ <task name>`.
