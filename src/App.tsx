@@ -9,6 +9,7 @@ import { useGoogleCalendar } from "./hooks/useGoogleCalendar"
 import { useTheme } from "./hooks/useTheme"
 import { useJournal } from "./context/JournalContext"
 import { useGeolocation } from "./hooks/useGeolocation"
+import { reverseGeocode } from "./lib/geocoding"
 
 type Route = { type: "day"; date: string } | { type: "settings" } | { type: "oauth-callback" }
 
@@ -182,6 +183,9 @@ export function App() {
     const pos = await requestPosition()
     if (!pos) return
 
+    // Fetch locality via reverse geocoding before storing
+    const geocodeResult = await reverseGeocode(pos.latitude, pos.longitude)
+
     changeDoc(d => {
       const now = Date.now()
 
@@ -198,7 +202,11 @@ export function App() {
 
       const existingEntry = d.entries[currentDate]
       existingEntry.updatedAt = now
-      existingEntry.position = pos
+      // Store position with locality if geocoding succeeded
+      existingEntry.position = {
+        ...pos,
+        locality: geocodeResult.success ? geocodeResult.locality : undefined,
+      }
     })
   }, [requestPosition, changeDoc, currentDate])
 
