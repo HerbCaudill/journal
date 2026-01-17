@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { Header } from "./components/Header"
+import { Footer } from "./components/Footer"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
 import { SwipeContainer } from "./components/SwipeContainer"
@@ -246,17 +247,18 @@ export function App() {
 
   return (
     <SwipeContainer date={currentDate} enabled={route.type === "day"}>
-      <div className="bg-background text-foreground min-h-screen">
+      <div className="bg-background text-foreground flex min-h-screen flex-col">
         <Header
           date={currentDate}
           showNavigation={route.type === "day"}
           position={route.type === "day" ? position : null}
           onLocationClick={route.type === "day" ? handleCaptureLocation : undefined}
         />
-        <main>
+        <main className="flex-1">
           {route.type === "day" && <DayView date={route.date} />}
           {route.type === "settings" && <SettingsView />}
         </main>
+        {route.type === "day" && <Footer />}
       </div>
     </SwipeContainer>
   )

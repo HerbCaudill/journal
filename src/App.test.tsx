@@ -138,6 +138,22 @@ describe("App", () => {
     expect(heading).toHaveTextContent("January 16, 2025")
   })
 
+  describe("Footer integration", () => {
+    it("renders footer on day view", () => {
+      render(<App />)
+      const footer = screen.getByRole("contentinfo")
+      expect(footer).toBeInTheDocument()
+      // Footer should contain a settings link
+      expect(footer.querySelector('a[href="#/settings"]')).toBeInTheDocument()
+    })
+
+    it("does not render footer on settings view", () => {
+      window.location.hash = "#/settings"
+      render(<App />)
+      expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument()
+    })
+  })
+
   describe("OAuth callback", () => {
     it("shows processing state when on OAuth callback route", async () => {
       // Mock location for OAuth callback
