@@ -554,96 +554,12 @@ export function SettingsView() {
         </section>
       )}
 
-      {/* OpenAI API Key Section - Hidden until OpenAI is wired up (j-3q0) */}
-      {/* TODO: Uncomment when OpenAI functionality is implemented
-      {llmProvider === "openai" && (
-        <section className="flex flex-col gap-3">
-          <h3 className="text-foreground text-lg font-medium">OpenAI</h3>
-          <p className="text-muted-foreground text-sm">
-            Enter your OpenAI API key to enable OpenAI features. You can get an API key from{" "}
-            <a
-              href="https://platform.openai.com/api-keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground underline"
-            >
-              platform.openai.com
-            </a>
-          </p>
-
-          <form onSubmit={handleOpenaiSubmit} className="flex flex-col gap-3">
-            <input
-              type="text"
-              value={openaiApiKey}
-              onChange={e => {
-                setOpenaiApiKey(e.target.value)
-                setOpenaiApiKeyError(null) // Clear error when user types
-              }}
-              placeholder="sk-..."
-              className={`bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
-                openaiApiKeyError ? "border-destructive" : ""
-              }`}
-              aria-label="OpenAI API key"
-              aria-invalid={!!openaiApiKeyError}
-              aria-describedby={openaiApiKeyError ? "openai-api-key-error" : undefined}
-              autoComplete="off"
-            />
-
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={
-                  !openaiApiKey.trim() || !hasOpenaiUnsavedChanges || saveStatus === "saving"
-                }
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saveStatus === "saving" ?
-                  "Saving..."
-                : saveStatus === "saved" ?
-                  "Saved!"
-                : "Save"}
-              </button>
-
-              {openaiApiKey && (
-                <button
-                  type="button"
-                  onClick={handleClearOpenaiApiKey}
-                  className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-
-              {saveStatus === "saved" && (
-                <span className="text-sm text-green-600 dark:text-green-400">
-                  API key saved successfully
-                </span>
-              )}
-            </div>
-
-            {openaiApiKeyError && (
-              <p
-                id="openai-api-key-error"
-                className="text-destructive flex items-center gap-1 text-sm"
-                role="alert"
-              >
-                <ErrorIcon />
-                {openaiApiKeyError}
-              </p>
-            )}
-          </form>
-
-          {openaiApiKey && !hasOpenaiUnsavedChanges && (
-            <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-              <CheckIcon />
-              {isOpenaiFromEnv ?
-                "OpenAI API key configured (from environment)"
-              : "OpenAI API key configured"}
-            </p>
-          )}
-        </section>
-      )}
-      */}
+      {/* TODO (j-3q0): OpenAI API Key Section
+       * To implement OpenAI support, add:
+       * - openaiApiKey state and autosave logic (similar to claudeApiKey)
+       * - openaiApiKeyError validation state
+       * - OpenAI provider option in the LLM Provider Selection section above
+       */}
 
       {/* Security warning */}
       <section className="flex flex-col gap-3">
