@@ -8,8 +8,10 @@ vi.mock("../lib/google-calendar", () => ({
   getAuthUrl: vi.fn(),
   exchangeCodeForTokens: vi.fn(),
   getValidTokens: vi.fn(),
+  getStoredTokens: vi.fn(),
   storeTokens: vi.fn().mockResolvedValue(undefined),
   clearStoredTokens: vi.fn(),
+  revokeTokens: vi.fn(),
   fetchAllEventsForDate: vi.fn(),
   isGoogleCalendarConfigured: vi.fn(),
   isAuthenticated: vi.fn().mockResolvedValue(false),
@@ -57,7 +59,9 @@ describe("useGoogleCalendar", () => {
     vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
     vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(false)
     vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+    vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(null)
     vi.mocked(googleCalendar.storeTokens).mockResolvedValue(undefined)
+    vi.mocked(googleCalendar.revokeTokens).mockResolvedValue({ success: true })
 
     // Store and mock window.location.href
     originalHref = window.location.href
@@ -420,12 +424,14 @@ describe("useGoogleCalendar", () => {
   })
 
   describe("signOut", () => {
-    it("clears tokens and resets state", async () => {
+    it("revokes tokens and clears state", async () => {
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(mockTokens)
       vi.mocked(googleCalendar.fetchAllEventsForDate).mockResolvedValue({
         events: mockEvents,
         success: true,
       })
+      vi.mocked(googleCalendar.revokeTokens).mockResolvedValue({ success: true })
 
       const { result } = renderHook(() => useGoogleCalendar())
 
@@ -442,14 +448,109 @@ describe("useGoogleCalendar", () => {
       expect(result.current.events).toHaveLength(2)
 
       // Then sign out
-      act(() => {
-        result.current.signOut()
+      await act(async () => {
+        await result.current.signOut()
       })
 
+      // Should have revoked tokens using refresh token (preferred)
+      expect(googleCalendar.revokeTokens).toHaveBeenCalledWith(mockTokens.refreshToken)
       expect(googleCalendar.clearStoredTokens).toHaveBeenCalled()
       expect(result.current.authState).toBe("unauthenticated")
       expect(result.current.events).toEqual([])
       expect(result.current.error).toBeNull()
+    })
+
+    it("uses access token for revocation when no refresh token", async () => {
+      const tokensWithoutRefresh: googleCalendar.GoogleTokens = {
+        accessToken: "mock-access-token",
+        expiresAt: Date.now() + 3600000,
+        tokenType: "Bearer",
+      }
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(tokensWithoutRefresh)
+      vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(tokensWithoutRefresh)
+      vi.mocked(googleCalendar.revokeTokens).mockResolvedValue({ success: true })
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      await act(async () => {
+        await result.current.signOut()
+      })
+
+      // Should have revoked tokens using access token
+      expect(googleCalendar.revokeTokens).toHaveBeenCalledWith(tokensWithoutRefresh.accessToken)
+      expect(googleCalendar.clearStoredTokens).toHaveBeenCalled()
+    })
+
+    it("clears local tokens even when revocation fails", async () => {
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.revokeTokens).mockResolvedValue({
+        success: false,
+        error: "Network error",
+      })
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      await act(async () => {
+        await result.current.signOut()
+      })
+
+      // Even though revocation failed, local tokens should be cleared
+      expect(googleCalendar.clearStoredTokens).toHaveBeenCalled()
+      expect(result.current.authState).toBe("unauthenticated")
+    })
+
+    it("clears local tokens even when revocation throws", async () => {
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.revokeTokens).mockRejectedValue(new Error("Network error"))
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      await act(async () => {
+        await result.current.signOut()
+      })
+
+      // Even though revocation threw, local tokens should be cleared
+      expect(googleCalendar.clearStoredTokens).toHaveBeenCalled()
+      expect(result.current.authState).toBe("unauthenticated")
+    })
+
+    it("skips revocation when no tokens are stored", async () => {
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+      vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      await act(async () => {
+        await result.current.signOut()
+      })
+
+      // Should not have attempted revocation
+      expect(googleCalendar.revokeTokens).not.toHaveBeenCalled()
+      // But should still clear local storage
+      expect(googleCalendar.clearStoredTokens).toHaveBeenCalled()
+      expect(result.current.authState).toBe("unauthenticated")
     })
   })
 

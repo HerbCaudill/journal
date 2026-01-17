@@ -27,6 +27,7 @@ const GOOGLE_REDIRECT_URI =
 // OAuth and API endpoints
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+const GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
 // Scopes needed for calendar access
@@ -323,6 +324,63 @@ export async function getStoredTokens(): Promise<GoogleTokens | null> {
  */
 export function clearStoredTokens(): void {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+/**
+ * Result of a token revocation attempt
+ */
+export interface RevokeTokensResult {
+  /** Whether the revocation was successful */
+  success: boolean
+  /** Error message if the revocation failed */
+  error?: string
+}
+
+/**
+ * Revoke OAuth tokens by calling Google's revocation endpoint.
+ *
+ * This should be called when the user signs out to properly invalidate
+ * the tokens on Google's side, not just clear them locally.
+ *
+ * Note: Even if revocation fails, local tokens should still be cleared
+ * to prevent further use. The caller should handle this.
+ *
+ * @param token - The access token or refresh token to revoke.
+ *                Revoking one will invalidate both tokens.
+ * @returns Promise resolving to the revocation result
+ */
+export async function revokeTokens(token: string): Promise<RevokeTokensResult> {
+  try {
+    const response = await fetch(GOOGLE_REVOKE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        token,
+      }),
+    })
+
+    // Google's revocation endpoint returns 200 on success
+    // It may return 400 if the token is already revoked or invalid,
+    // which we consider a success (token is not usable either way)
+    if (response.ok || response.status === 400) {
+      return { success: true }
+    }
+
+    // For other errors, try to get error details
+    const errorData = await response.json().catch(() => ({}))
+    return {
+      success: false,
+      error: errorData.error_description ?? errorData.error ?? "Failed to revoke token",
+    }
+  } catch (error) {
+    // Network errors or other failures
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to revoke token",
+    }
+  }
 }
 
 /**

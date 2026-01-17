@@ -6,6 +6,7 @@ import {
   storeTokens,
   getStoredTokens,
   clearStoredTokens,
+  revokeTokens,
   isTokenExpired,
   getValidTokens,
   fetchEventsForDate,
@@ -227,6 +228,96 @@ describe("google-calendar", () => {
       mockLocalStorage["google_calendar_tokens"] = JSON.stringify({ foo: "bar" })
       const tokens = await getStoredTokens()
       expect(tokens).toBeNull()
+    })
+  })
+
+  describe("revokeTokens", () => {
+    it("successfully revokes a token", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      })
+
+      const result = await revokeTokens("access-token-123")
+
+      expect(result.success).toBe(true)
+      expect(result.error).toBeUndefined()
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://oauth2.googleapis.com/revoke",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }),
+      )
+
+      // Verify the token was sent in the body
+      const fetchCall = mockFetch.mock.calls[0]
+      const body = fetchCall[1].body as URLSearchParams
+      expect(body.get("token")).toBe("access-token-123")
+    })
+
+    it("treats 400 response as success (token already revoked or invalid)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "invalid_token" }),
+      })
+
+      const result = await revokeTokens("already-revoked-token")
+
+      // 400 means the token is already invalid, which is the desired outcome
+      expect(result.success).toBe(true)
+    })
+
+    it("returns error for server errors", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ error_description: "Internal server error" }),
+      })
+
+      const result = await revokeTokens("some-token")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Internal server error")
+    })
+
+    it("returns error for other HTTP errors", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: "service_unavailable" }),
+      })
+
+      const result = await revokeTokens("some-token")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("service_unavailable")
+    })
+
+    it("handles network errors gracefully", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"))
+
+      const result = await revokeTokens("some-token")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Network error")
+    })
+
+    it("handles JSON parsing errors in error response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error("JSON parse error")
+        },
+      })
+
+      const result = await revokeTokens("some-token")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Failed to revoke token")
     })
   })
 

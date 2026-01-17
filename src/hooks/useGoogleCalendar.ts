@@ -3,8 +3,10 @@ import {
   getAuthUrl,
   exchangeCodeForTokens,
   getValidTokens,
+  getStoredTokens,
   storeTokens,
   clearStoredTokens,
+  revokeTokens,
   fetchAllEventsForDate,
   isGoogleCalendarConfigured,
   type CalendarEvent,
@@ -48,8 +50,8 @@ export interface UseGoogleCalendarReturn {
   handleCallback: (code: string, state: string) => Promise<boolean>
   /** Fetch events for a specific date (YYYY-MM-DD format) */
   fetchEvents: (date: string) => Promise<CalendarEvent[]>
-  /** Sign out and clear stored tokens */
-  signOut: () => void
+  /** Sign out and clear stored tokens (revokes tokens on Google's side) */
+  signOut: () => Promise<void>
   /** Clear the current error */
   clearError: () => void
 }
@@ -245,9 +247,28 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
   )
 
   /**
-   * Sign out and clear stored tokens
+   * Sign out and clear stored tokens.
+   * Attempts to revoke tokens on Google's side before clearing locally.
+   * Even if revocation fails, local tokens are still cleared.
    */
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async (): Promise<void> => {
+    // Try to revoke the token on Google's side
+    // We do this before clearing local storage so we have access to the token
+    try {
+      const tokens = await getStoredTokens()
+      if (tokens) {
+        // Prefer revoking the refresh token as it invalidates the access token too
+        // If no refresh token, revoke the access token
+        const tokenToRevoke = tokens.refreshToken ?? tokens.accessToken
+        await revokeTokens(tokenToRevoke)
+        // We don't check the result - even if revocation fails,
+        // we still want to clear local tokens
+      }
+    } catch {
+      // Ignore revocation errors - we still want to clear local state
+    }
+
+    // Always clear local tokens and state, regardless of revocation result
     clearStoredTokens()
     setAuthState("unauthenticated")
     setEvents([])
