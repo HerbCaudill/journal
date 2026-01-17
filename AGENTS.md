@@ -43,7 +43,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 
 - `Header` - App header with day/date on left, back/calendar/forward navigation in center, and settings on right
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
-- `DayView` - Main view displaying calendar events, entry editor, and Claude section for a specific date
+- `DayView` - Main view displaying calendar events, entry editor, location capture button, and Claude section for a specific date
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
 - `LLMSection` - Submit button to ask LLM about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned). Provider-agnostic (supports Claude and OpenAI)
