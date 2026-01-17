@@ -9,6 +9,14 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group"
 
+/** Props for the LLM submit button */
+export interface LLMSubmitButtonProps {
+  onClick: () => void
+  disabled: boolean
+  isLoading: boolean
+  ariaLabel: string
+}
+
 interface LLMSectionProps {
   /** The user's journal entry content to send to the LLM */
   entryContent: string
@@ -24,6 +32,8 @@ interface LLMSectionProps {
   bio?: string
   /** Additional instructions for customizing AI behavior */
   additionalInstructions?: string
+  /** Callback to receive submit button props - parent can render the button elsewhere */
+  onSubmitButtonProps?: (props: LLMSubmitButtonProps) => void
 }
 
 /**
@@ -41,9 +51,47 @@ function getProviderDisplayName(provider: ProviderType): string {
 }
 
 /**
+ * Renders the submit button icon based on loading state
+ */
+export function SubmitButtonIcon({ isLoading }: { isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        />
+      </svg>
+    )
+  }
+  return (
+    <svg
+      className="h-3 w-3"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  )
+}
+
+/**
  * Component for interacting with an LLM provider.
- * Displays a submit button to send the journal entry to the LLM,
- * and shows the conversation history with assistant responses.
+ * Displays the conversation history with assistant responses and follow-up input.
+ * The submit button can be rendered externally via onSubmitButtonProps callback.
  */
 export function LLMSection({
   entryContent,
@@ -53,6 +101,7 @@ export function LLMSection({
   onMessagesChange,
   bio,
   additionalInstructions,
+  onSubmitButtonProps,
 }: LLMSectionProps) {
   const { messages, isLoading, error, send } = useLLM({
     provider,
@@ -146,58 +195,32 @@ export function LLMSection({
     }
   }, [isLoading, messages.length, apiKey])
 
+  // Provide submit button props to parent via callback
+  useEffect(() => {
+    onSubmitButtonProps?.({
+      onClick: handleSubmit,
+      disabled: isLoading || !apiKey,
+      isLoading,
+      ariaLabel: `Ask ${providerName}`,
+    })
+  }, [onSubmitButtonProps, handleSubmit, isLoading, apiKey, providerName])
+
   const displayError = localError || error
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Initial submit */}
-      <InputGroup className="bg-card">
-        <InputGroupTextarea
-          readOnly
-          value={isLoading ? "Thinking..." : ""}
-          rows={2}
-          className="min-h-20 cursor-default text-base leading-relaxed"
-          tabIndex={-1}
-        />
-        <InputGroupAddon align="block-end" className="justify-end">
-          <InputGroupButton
-            onClick={handleSubmit}
-            disabled={isLoading || !apiKey}
-            variant="default"
-            size="icon-xs"
-            aria-label={`Ask ${providerName}`}
-          >
-            {isLoading ?
-              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            : <svg
-                className="h-3 w-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 19V5M5 12l7-7 7 7" />
-              </svg>
-            }
-          </InputGroupButton>
-        </InputGroupAddon>
-      </InputGroup>
+      {/* Submit button - only rendered here if parent doesn't handle it via onSubmitButtonProps */}
+      {!onSubmitButtonProps && (
+        <InputGroupButton
+          onClick={handleSubmit}
+          disabled={isLoading || !apiKey}
+          variant="default"
+          size="icon-xs"
+          aria-label={`Ask ${providerName}`}
+        >
+          <SubmitButtonIcon isLoading={isLoading} />
+        </InputGroupButton>
+      )}
 
       {/* Error display */}
       {displayError && (

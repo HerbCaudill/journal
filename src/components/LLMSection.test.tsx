@@ -115,8 +115,8 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
+      // Button should be disabled during loading (spinner shown inside button)
       expect(screen.getByRole("button", { name: /ask claude/i })).toBeDisabled()
-      expect(screen.getByText(/thinking/i)).toBeInTheDocument()
     })
 
     it("displays assistant responses", () => {

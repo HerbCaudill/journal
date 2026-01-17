@@ -11,6 +11,8 @@ type SaveStatus = "idle" | "saving" | "saved"
 interface EntryEditorProps {
   /** The date for this entry in YYYY-MM-DD format */
   date: string
+  /** Optional footer content to render in the InputGroup addon (e.g., submit button) */
+  footer?: React.ReactNode
 }
 
 /**
@@ -24,7 +26,7 @@ function generateId(): string {
  * Textarea component with debounced auto-save to Automerge.
  * Manages a single user message for a given date's journal entry.
  */
-export function EntryEditor({ date }: EntryEditorProps) {
+export function EntryEditor({ date, footer }: EntryEditorProps) {
   const { doc, changeDoc, isLoading } = useJournal()
   const [localContent, setLocalContent] = useState("")
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
@@ -167,14 +169,14 @@ export function EntryEditor({ date }: EntryEditorProps) {
         className="min-h-[200px] text-base leading-relaxed"
         aria-label="Journal entry"
       />
-      {saveStatus !== "idle" && (
-        <InputGroupAddon
-          align="block-end"
-          className="justify-end"
-          aria-live="polite"
-          data-testid="save-indicator"
-        >
-          <span className="text-xs">{saveStatus === "saving" ? "Saving..." : "Saved"}</span>
+      {(saveStatus !== "idle" || footer) && (
+        <InputGroupAddon align="block-end" className="flex items-center justify-between">
+          {saveStatus !== "idle" && (
+            <span className="text-xs" aria-live="polite" data-testid="save-indicator">
+              {saveStatus === "saving" ? "Saving..." : "Saved"}
+            </span>
+          )}
+          {footer}
         </InputGroupAddon>
       )}
     </InputGroup>

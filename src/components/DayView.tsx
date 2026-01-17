@@ -1,8 +1,10 @@
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useJournal } from "../context/JournalContext"
 import { EntryEditor } from "./EntryEditor"
-import { LLMSection } from "./LLMSection"
+import { LLMSection, SubmitButtonIcon } from "./LLMSection"
+import type { LLMSubmitButtonProps } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
+import { InputGroupButton } from "@/components/ui/input-group"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
@@ -21,6 +23,7 @@ interface DayViewProps {
  */
 export function DayView({ date }: DayViewProps) {
   const { doc, changeDoc } = useJournal()
+  const [submitButtonProps, setSubmitButtonProps] = useState<LLMSubmitButtonProps | null>(null)
 
   const entry = doc?.entries[date]
   const userMessage = entry?.messages.find(m => m.role === "user")
@@ -75,10 +78,23 @@ export function DayView({ date }: DayViewProps) {
     [doc, changeDoc, date],
   )
 
+  // Render the submit button for the entry editor footer
+  const submitButton = submitButtonProps && (
+    <InputGroupButton
+      onClick={submitButtonProps.onClick}
+      disabled={submitButtonProps.disabled}
+      variant="default"
+      size="icon-xs"
+      aria-label={submitButtonProps.ariaLabel}
+    >
+      <SubmitButtonIcon isLoading={submitButtonProps.isLoading} />
+    </InputGroupButton>
+  )
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
-      <EntryEditor date={date} />
+      <EntryEditor date={date} footer={submitButton} />
       <LLMSection
         entryContent={entryContent}
         apiKey={apiKey}
@@ -87,6 +103,7 @@ export function DayView({ date }: DayViewProps) {
         onMessagesChange={handleMessagesChange}
         bio={bio}
         additionalInstructions={additionalInstructions}
+        onSubmitButtonProps={setSubmitButtonProps}
       />
     </div>
   )
