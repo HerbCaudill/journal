@@ -126,4 +126,43 @@ describe("SwipeContainer", () => {
     const container = screen.getByTestId("content").parentElement!
     expect(container).toHaveClass("touch-pan-y")
   })
+
+  it("does not navigate when enabled is false", () => {
+    window.location.hash = "#/day/2025-01-16"
+
+    render(
+      <SwipeContainer date="2025-01-16" enabled={false}>
+        <div data-testid="content">Content</div>
+      </SwipeContainer>,
+    )
+
+    const container = screen.getByTestId("content").parentElement!
+
+    // Try swipe left
+    fireTouchStart(container, 200, 100)
+    fireTouchEnd(container, 50, 100)
+
+    expect(window.location.hash).toBe("#/day/2025-01-16") // Should not change
+
+    // Try swipe right
+    fireTouchStart(container, 50, 100)
+    fireTouchEnd(container, 200, 100)
+
+    expect(window.location.hash).toBe("#/day/2025-01-16") // Should not change
+  })
+
+  it("defaults enabled to true when not specified", () => {
+    render(
+      <SwipeContainer date="2025-01-16">
+        <div data-testid="content">Content</div>
+      </SwipeContainer>,
+    )
+
+    const container = screen.getByTestId("content").parentElement!
+
+    fireTouchStart(container, 200, 100)
+    fireTouchEnd(container, 50, 100) // Swipe left by 150px
+
+    expect(window.location.hash).toBe("#/day/2025-01-17")
+  })
 })

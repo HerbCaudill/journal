@@ -162,16 +162,14 @@ export function App() {
   const currentDate = route.type === "day" ? route.date : getToday()
 
   return (
-    <div className="bg-background text-foreground min-h-screen">
-      <Header date={currentDate} showNavigation={route.type === "day"} />
-      <main>
-        {route.type === "day" && (
-          <SwipeContainer date={route.date}>
-            <DayView date={route.date} />
-          </SwipeContainer>
-        )}
-        {route.type === "settings" && <SettingsView />}
-      </main>
-    </div>
+    <SwipeContainer date={currentDate} enabled={route.type === "day"}>
+      <div className="bg-background text-foreground min-h-screen">
+        <Header date={currentDate} showNavigation={route.type === "day"} />
+        <main>
+          {route.type === "day" && <DayView date={route.date} />}
+          {route.type === "settings" && <SettingsView />}
+        </main>
+      </div>
+    </SwipeContainer>
   )
 }

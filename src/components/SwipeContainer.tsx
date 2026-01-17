@@ -8,6 +8,8 @@ interface SwipeContainerProps {
   date: string
   /** The content to render inside the swipeable container */
   children: ReactNode
+  /** Whether swipe navigation is enabled (default: true) */
+  enabled?: boolean
 }
 
 /**
@@ -21,7 +23,7 @@ interface SwipeContainerProps {
  * </SwipeContainer>
  * ```
  */
-export function SwipeContainer({ date, children }: SwipeContainerProps) {
+export function SwipeContainer({ date, children, enabled = true }: SwipeContainerProps) {
   const navigateToDay = useCallback((newDate: string) => {
     window.location.hash = `#/day/${newDate}`
   }, [])
@@ -39,14 +41,14 @@ export function SwipeContainer({ date, children }: SwipeContainerProps) {
   }, [date, navigateToDay])
 
   const swipeHandlers = useSwipeNavigation({
-    onSwipeLeft: handleSwipeLeft,
-    onSwipeRight: handleSwipeRight,
+    onSwipeLeft: enabled ? handleSwipeLeft : undefined,
+    onSwipeRight: enabled ? handleSwipeRight : undefined,
   })
 
   // Add keyboard navigation (← → arrow keys)
   useKeyboardNavigation({
-    onPrevious: handleSwipeRight, // Left arrow = previous day (same as swipe right)
-    onNext: handleSwipeLeft, // Right arrow = next day (same as swipe left)
+    onPrevious: enabled ? handleSwipeRight : undefined, // Left arrow = previous day (same as swipe right)
+    onNext: enabled ? handleSwipeLeft : undefined, // Right arrow = next day (same as swipe left)
   })
 
   return (
