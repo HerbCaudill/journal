@@ -151,7 +151,7 @@ export function LLMSection({
   return (
     <div className="flex flex-col gap-4">
       {/* Submit button in input-like container */}
-      <InputGroup className="min-h-[3rem]">
+      <InputGroup className="min-h-12">
         {isLoading && (
           <span className="text-muted-foreground absolute top-2 left-3 text-sm">Thinking...</span>
         )}
