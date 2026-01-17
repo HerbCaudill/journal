@@ -528,5 +528,54 @@ describe("geocoding", () => {
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
     })
+
+    it("serializes concurrent requests to prevent race conditions", async () => {
+      vi.useFakeTimers()
+      const fetchTimes: number[] = []
+
+      mockFetch.mockImplementation(async () => {
+        fetchTimes.push(Date.now())
+        return {
+          ok: true,
+          json: async () => mockResponse,
+        }
+      })
+
+      // Start multiple concurrent requests with different coordinates
+      const promise1 = reverseGeocode(41.0, 2.0)
+      const promise2 = reverseGeocode(42.0, 3.0)
+      const promise3 = reverseGeocode(43.0, 4.0)
+
+      // Run all timers to complete all requests
+      await vi.runAllTimersAsync()
+      await Promise.all([promise1, promise2, promise3])
+
+      // All 3 requests should have been made
+      expect(mockFetch).toHaveBeenCalledTimes(3)
+
+      // Each request should be at least 1000ms apart (except the first one)
+      expect(fetchTimes.length).toBe(3)
+      expect(fetchTimes[1] - fetchTimes[0]).toBeGreaterThanOrEqual(1000)
+      expect(fetchTimes[2] - fetchTimes[1]).toBeGreaterThanOrEqual(1000)
+    })
+
+    it("does not wait for rate limit on first request", async () => {
+      vi.useFakeTimers()
+      const startTime = Date.now()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      const promise = reverseGeocode(41.0, 2.0)
+      await vi.runAllTimersAsync()
+      await promise
+
+      const endTime = Date.now()
+
+      // First request should complete immediately (no rate limit wait)
+      expect(endTime - startTime).toBeLessThan(1000)
+    })
   })
 })

@@ -64,6 +64,10 @@ const NOMINATIM_API = "https://nominatim.openstreetmap.org/reverse"
 
 // Minimum time between API requests (Nominatim usage policy: max 1 request/second)
 const MIN_REQUEST_INTERVAL_MS = 1000
+
+// Promise-based rate limiter to prevent race conditions
+// Each new request chains onto the previous one to ensure serialization
+let rateLimitChain: Promise<void> = Promise.resolve()
 let lastRequestTime = 0
 
 /**
@@ -138,19 +142,40 @@ function cacheResult(latitude: number, longitude: number, result: GeocodingResul
 }
 
 /**
- * Respect Nominatim rate limiting by waiting if necessary
+ * Acquire a rate limit slot for making a request.
+ * Uses a promise chain to serialize access and prevent race conditions.
+ * Returns a function to release the slot after the request completes.
  */
-async function respectRateLimit(): Promise<void> {
+async function acquireRateLimitSlot(): Promise<() => void> {
+  // Create a deferred promise that will be resolved when we're ready for the next request
+  let resolveNext: () => void
+  const nextSlot = new Promise<void>(resolve => {
+    resolveNext = resolve
+  })
+
+  // Get the current chain and replace it with our slot
+  const previousChain = rateLimitChain
+  rateLimitChain = nextSlot
+
+  // Wait for our turn in the queue
+  await previousChain
+
+  // Check if we need to wait for rate limiting
   const now = Date.now()
   const timeSinceLastRequest = now - lastRequestTime
-
   if (timeSinceLastRequest < MIN_REQUEST_INTERVAL_MS) {
     await new Promise(resolve =>
       setTimeout(resolve, MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest),
     )
   }
 
+  // Update last request time
   lastRequestTime = Date.now()
+
+  // Return a function to release the slot for the next request
+  return () => {
+    resolveNext!()
+  }
 }
 
 /**
@@ -223,10 +248,10 @@ export async function reverseGeocode(
     return cachedResult
   }
 
-  try {
-    // Respect rate limiting
-    await respectRateLimit()
+  // Acquire rate limit slot before making request
+  const releaseSlot = await acquireRateLimitSlot()
 
+  try {
     const url = new URL(NOMINATIM_API)
     url.searchParams.set("lat", latitude.toString())
     url.searchParams.set("lon", longitude.toString())
@@ -281,6 +306,9 @@ export async function reverseGeocode(
       success: false,
       error: errorMessage,
     }
+  } finally {
+    // Always release the slot so next request can proceed
+    releaseSlot()
   }
 }
 
@@ -301,10 +329,11 @@ export function getCacheSize(): number {
 }
 
 /**
- * Reset the rate limiter's last request time
+ * Reset the rate limiter
  * Useful for testing
  */
 export function resetRateLimiter(): void {
+  rateLimitChain = Promise.resolve()
   lastRequestTime = 0
 }
 
