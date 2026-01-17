@@ -176,7 +176,11 @@ export function DayView({ date }: DayViewProps) {
 
       {/* EntryEditor - show when no conversation yet, or when in edit mode */}
       {showEditor && (
-        <EntryEditor date={date} footer={hasConversation ? editModeFooter : submitButton} />
+        <EntryEditor
+          date={date}
+          footer={hasConversation ? editModeFooter : submitButton}
+          onSubmit={!hasConversation && submitButtonProps ? submitButtonProps.onClick : undefined}
+        />
       )}
 
       <LLMSection

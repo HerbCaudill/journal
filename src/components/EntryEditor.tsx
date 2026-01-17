@@ -13,6 +13,8 @@ interface EntryEditorProps {
   date: string
   /** Optional footer content to render in the InputGroup addon (e.g., submit button) */
   footer?: React.ReactNode
+  /** Callback when user presses Cmd/Ctrl+Enter to submit */
+  onSubmit?: () => void
 }
 
 /**
@@ -26,7 +28,7 @@ function generateId(): string {
  * Textarea component with debounced auto-save to Automerge.
  * Manages a single user message for a given date's journal entry.
  */
-export function EntryEditor({ date, footer }: EntryEditorProps) {
+export function EntryEditor({ date, footer, onSubmit }: EntryEditorProps) {
   const { doc, changeDoc, isLoading } = useJournal()
   const [localContent, setLocalContent] = useState("")
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
@@ -166,6 +168,12 @@ export function EntryEditor({ date, footer }: EntryEditorProps) {
         ref={textareaRef}
         value={localContent}
         onChange={handleChange}
+        onKeyDown={e => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && onSubmit) {
+            e.preventDefault()
+            onSubmit()
+          }
+        }}
         className="min-h-[200px] text-base leading-relaxed"
         aria-label="Journal entry"
       />

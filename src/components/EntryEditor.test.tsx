@@ -202,4 +202,56 @@ describe("EntryEditor", () => {
       expect(screen.queryByTestId("save-indicator")).not.toBeInTheDocument()
     })
   })
+
+  describe("keyboard shortcuts", () => {
+    it("calls onSubmit when Cmd+Enter is pressed", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const onSubmit = vi.fn()
+
+      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test content")
+      await user.keyboard("{Meta>}{Enter}{/Meta}")
+
+      expect(onSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    it("calls onSubmit when Ctrl+Enter is pressed", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const onSubmit = vi.fn()
+
+      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test content")
+      await user.keyboard("{Control>}{Enter}{/Control}")
+
+      expect(onSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not call onSubmit when just Enter is pressed", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const onSubmit = vi.fn()
+
+      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test content{Enter}")
+
+      expect(onSubmit).not.toHaveBeenCalled()
+    })
+
+    it("does not crash when onSubmit is not provided", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      render(<EntryEditor date="2024-01-15" />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test content")
+
+      // Should not throw when pressing Cmd+Enter without onSubmit
+      await expect(user.keyboard("{Meta>}{Enter}{/Meta}")).resolves.not.toThrow()
+    })
+  })
 })

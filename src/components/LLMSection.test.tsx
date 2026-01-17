@@ -469,6 +469,60 @@ describe("LLMSection", () => {
       expect(mockSend).toHaveBeenCalledWith("What do you think?")
     })
 
+    it("sends follow-up message when Cmd+Enter is pressed", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "What do you think?")
+      await user.keyboard("{Meta>}{Enter}{/Meta}")
+
+      expect(mockSend).toHaveBeenCalledWith("What do you think?")
+    })
+
+    it("sends follow-up message when Ctrl+Enter is pressed", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "What do you think?")
+      await user.keyboard("{Control>}{Enter}{/Control}")
+
+      expect(mockSend).toHaveBeenCalledWith("What do you think?")
+    })
+
     it("clears follow-up input after sending", async () => {
       const user = userEvent.setup()
       const messages: Message[] = [

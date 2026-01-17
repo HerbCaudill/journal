@@ -248,7 +248,11 @@ export function LLMSection({
             value={followUpInput}
             onChange={e => setFollowUpInput(e.target.value)}
             onKeyDown={e => {
-              if (e.key === "Enter" && !e.shiftKey && !isLoading && followUpInput.trim()) {
+              // Submit on Enter (without Shift) or Cmd/Ctrl+Enter
+              const isSubmitShortcut =
+                (e.key === "Enter" && !e.shiftKey) ||
+                (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+              if (isSubmitShortcut && !isLoading && followUpInput.trim()) {
                 e.preventDefault()
                 handleFollowUp()
               }
