@@ -143,25 +143,12 @@ export function LLMSection({
 
     const response = await send(entryContent)
 
-    if (response.success && onMessagesChange) {
-      // Include both the user message and assistant response
-      onMessagesChange([
-        ...messages,
-        {
-          id: `user-${Date.now()}`,
-          role: "user",
-          content: entryContent.trim(),
-          createdAt: Date.now(),
-        },
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: response.content,
-          createdAt: Date.now(),
-        },
-      ])
+    if (response.success && onMessagesChange && response.messages) {
+      // Use the messages from useLLM to ensure consistency between display and persistence
+      // This avoids issues with stale closures where 'messages' would be outdated
+      onMessagesChange(response.messages)
     }
-  }, [apiKey, entryContent, send, messages, onMessagesChange, onConversationStart])
+  }, [apiKey, entryContent, send, onMessagesChange, onConversationStart])
 
   // Handle sending a follow-up message
   const handleFollowUp = useCallback(async () => {
@@ -174,28 +161,15 @@ export function LLMSection({
 
     const response = await send(messageContent)
 
-    if (response.success && onMessagesChange) {
-      // Update with the new user message and assistant response
-      onMessagesChange([
-        ...messages,
-        {
-          id: `user-${Date.now()}`,
-          role: "user",
-          content: messageContent,
-          createdAt: Date.now(),
-        },
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: response.content,
-          createdAt: Date.now(),
-        },
-      ])
+    if (response.success && onMessagesChange && response.messages) {
+      // Use the messages from useLLM to ensure consistency between display and persistence
+      // This avoids issues with stale closures where 'messages' would be outdated
+      onMessagesChange(response.messages)
     } else if (!response.success) {
       // Restore the input if there was an error
       setFollowUpInput(messageContent)
     }
-  }, [followUpInput, send, messages, onMessagesChange])
+  }, [followUpInput, send, onMessagesChange])
 
   // Auto-focus the follow-up input when a response is received
   useEffect(() => {

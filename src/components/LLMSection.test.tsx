@@ -209,7 +209,21 @@ describe("LLMSection", () => {
     it("calls onMessagesChange callback when messages are updated", async () => {
       const user = userEvent.setup()
       const onMessagesChange = vi.fn()
-      mockSend.mockResolvedValue({ content: "Response content", success: true })
+      // Mock send to return response with messages array (as useLLM now does)
+      const mockMessages: Message[] = [
+        { id: "user-1", role: "user", content: "My entry", createdAt: Date.now() },
+        {
+          id: "assistant-1",
+          role: "assistant",
+          content: "Response content",
+          createdAt: Date.now(),
+        },
+      ]
+      mockSend.mockResolvedValue({
+        content: "Response content",
+        success: true,
+        messages: mockMessages,
+      })
 
       render(
         <LLMSection
@@ -538,7 +552,17 @@ describe("LLMSection", () => {
         setMessages: mockSetMessages,
       })
 
-      mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
+      // Mock send to return the updated messages array (as useLLM now does)
+      const updatedMessages: Message[] = [
+        ...messages,
+        { id: "3", role: "user", content: "Follow-up question", createdAt: 2000 },
+        { id: "4", role: "assistant", content: "Follow-up response", createdAt: 2001 },
+      ]
+      mockSend.mockResolvedValue({
+        content: "Follow-up response",
+        success: true,
+        messages: updatedMessages,
+      })
 
       render(
         <LLMSection

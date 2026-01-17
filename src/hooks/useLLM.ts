@@ -180,7 +180,10 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
       }
 
       setIsLoading(false)
-      return response
+      // Return response with the current messages for persistence
+      // This ensures the caller gets the actual messages created by useLLM,
+      // not stale closure values
+      return { ...response, messages: messagesRef.current }
     },
     [llmProvider],
   )

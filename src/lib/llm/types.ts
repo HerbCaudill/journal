@@ -38,6 +38,8 @@ export interface LLMResponse {
   success: boolean
   /** Error message if the request failed */
   error?: string
+  /** Updated messages array after the send operation (includes user message and assistant response) */
+  messages?: Message[]
 }
 
 /**
