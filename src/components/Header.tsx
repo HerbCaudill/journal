@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { parseDate, addDays, getToday, isFutureDate } from "../lib/dates"
 import { DatePicker } from "./DatePicker"
 import { LocationBadge } from "./LocationBadge"
+import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from "./Icons"
 import type { GeoPosition } from "../hooks/useGeolocation"
 
 interface HeaderProps {
@@ -145,7 +146,7 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
                   aria-expanded={isDatePickerOpen}
                   aria-haspopup="dialog"
                 >
-                  <CalendarIcon aria-label="Open calendar" />
+                  <CalendarIcon size={12} aria-label="Open calendar" />
                   <span className="text-sm font-normal">{getMonthDay(date)}</span>
                 </button>
               : <span className="text-muted-foreground text-sm font-normal">
@@ -186,64 +187,5 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
         </div>
       </div>
     </header>
-  )
-}
-
-function ChevronLeftIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  )
-}
-
-function CalendarIcon({ "aria-label": ariaLabel }: { "aria-label"?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-label={ariaLabel}
-      aria-hidden={!ariaLabel}
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
   )
 }

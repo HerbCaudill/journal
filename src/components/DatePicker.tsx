@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { parseDate, formatDate, getToday, isFutureDate } from "../lib/dates"
 import { useJournal } from "../context/JournalContext"
+import { ChevronLeftIcon, ChevronRightIcon } from "./Icons"
 
 interface DatePickerProps {
   /** The currently selected date in YYYY-MM-DD format */
@@ -156,7 +157,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
           className="hover:bg-accent rounded p-1 transition-colors"
           aria-label="Previous month"
         >
-          <ChevronLeftIcon />
+          <ChevronLeftIcon size={16} />
         </button>
         <span className="text-foreground text-sm font-medium">{monthName}</span>
         <button
@@ -164,7 +165,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
           className="hover:bg-accent rounded p-1 transition-colors"
           aria-label="Next month"
         >
-          <ChevronRightIcon />
+          <ChevronRightIcon size={16} />
         </button>
       </div>
 
@@ -227,41 +228,5 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
         </button>
       </div>
     </div>
-  )
-}
-
-function ChevronLeftIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 18l6-6-6-6" />
-    </svg>
   )
 }

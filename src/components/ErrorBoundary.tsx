@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react"
+import { AlertTriangleIcon } from "./Icons"
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -44,8 +45,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="bg-background text-foreground flex min-h-screen items-center justify-center p-4">
           <div className="max-w-md text-center">
-            <div className="mb-6 text-6xl">
-              <AlertTriangleIcon />
+            <div className="mb-6">
+              <AlertTriangleIcon size={64} className="mx-auto text-yellow-500" />
             </div>
             <h1 className="mb-2 text-2xl font-bold">Something went wrong</h1>
             <p className="text-muted-foreground mb-6">
@@ -83,25 +84,4 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return this.props.children
   }
-}
-
-function AlertTriangleIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="64"
-      height="64"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="mx-auto text-yellow-500"
-    >
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  )
 }
