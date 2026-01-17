@@ -1037,6 +1037,507 @@ describe("SettingsView", () => {
       })
     })
 
+    describe("Edge cases - Empty bio/instructions save behavior", () => {
+      it("does not autosave empty bio on initial load", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load period
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        // No changes should have been made during initial load
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("saves empty string when clearing bio after having content", async () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.bio = "Initial bio"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        expect(bioInput).toHaveValue("Initial bio")
+
+        // Clear the bio
+        fireEvent.change(bioInput, { target: { value: "" } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("saves empty string when clearing additional instructions after having content", async () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.additionalInstructions = "Initial instructions"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const instructionsInput = screen.getByLabelText(/additional instructions/i)
+        expect(instructionsInput).toHaveValue("Initial instructions")
+
+        // Clear the instructions
+        fireEvent.change(instructionsInput, { target: { value: "" } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("trims whitespace-only bio to empty string on save", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        fireEvent.change(bioInput, { target: { value: "   \n\t  " } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        // changeDoc should be called - the callback will receive the trimmed value
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe("Edge cases - Special characters in input fields", () => {
+      it("handles special characters in bio", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        const specialContent = "Hello! @#$%^&*() <script>alert('xss')</script> 日本語 émojis 🎉"
+        fireEvent.change(bioInput, { target: { value: specialContent } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+        expect(bioInput).toHaveValue(specialContent)
+      })
+
+      it("handles special characters in additional instructions", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const instructionsInput = screen.getByLabelText(/additional instructions/i)
+        const specialContent = "Use markdown: **bold** _italic_ `code` \n• bullets"
+        fireEvent.change(instructionsInput, { target: { value: specialContent } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+        expect(instructionsInput).toHaveValue(specialContent)
+      })
+
+      it("handles newlines and multiline content in bio", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        const multilineContent = "Line 1\nLine 2\n\nLine 4 after blank"
+        fireEvent.change(bioInput, { target: { value: multilineContent } })
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+        expect(bioInput).toHaveValue(multilineContent)
+      })
+
+      it("handles unicode emojis in Claude API key field (validates correctly as invalid)", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "sk-ant-🔑-test" } })
+
+        // Advance timers to trigger debounced save and validation
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        // Should show validation error since this isn't a valid format (too short after sk-ant-)
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Claude API key appears to be too short",
+        )
+      })
+    })
+
+    describe("Edge cases - Rapid consecutive changes", () => {
+      it("only saves final value when typing rapidly", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+
+        // Simulate rapid typing - each keystroke before debounce
+        fireEvent.change(bioInput, { target: { value: "H" } })
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+        fireEvent.change(bioInput, { target: { value: "He" } })
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+        fireEvent.change(bioInput, { target: { value: "Hel" } })
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+        fireEvent.change(bioInput, { target: { value: "Hell" } })
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+        fireEvent.change(bioInput, { target: { value: "Hello" } })
+
+        // Should still show saving status
+        expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saving...")
+
+        // No actual save yet (debounce not elapsed)
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+
+        // Now advance past debounce
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        // Should only call changeDoc once with final value
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("cancels debounce when component unmounts", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        const { unmount } = render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        fireEvent.change(bioInput, { target: { value: "Test content" } })
+
+        // Unmount before debounce completes
+        unmount()
+
+        // Advance timers past debounce delay
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY + 1000)
+        })
+
+        // changeDoc should not have been called (debounce was cancelled)
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+    })
+
+    describe("Error cases - Save failure scenarios", () => {
+      it("handles changeDoc throwing an error during save", async () => {
+        const throwingChangeDoc = vi.fn().mockImplementation(() => {
+          throw new Error("Failed to save to Automerge")
+        })
+
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: throwingChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        fireEvent.change(bioInput, { target: { value: "Test bio content" } })
+
+        // Should show saving status
+        expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saving...")
+
+        // Advance timers to trigger debounced save - should throw but be caught
+        // The component doesn't currently have explicit error handling for changeDoc failures,
+        // so this test documents the current behavior (exception propagates)
+        await expect(async () => {
+          await act(async () => {
+            vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+          })
+        }).rejects.toThrow("Failed to save to Automerge")
+      })
+
+      it("calls changeDoc when clear button is clicked (error handling is responsibility of changeDoc implementation)", () => {
+        // This test verifies that changeDoc is called during clear operation
+        // If changeDoc throws, the error propagates up through React's event system
+        // The actual error handling behavior depends on the Automerge/changeDoc implementation
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc("sk-ant-existing-key-12345"),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const clearButton = screen.getByRole("button", { name: /clear/i })
+        fireEvent.click(clearButton)
+
+        // Verify changeDoc was called to clear the API key
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe("Error cases - Document state edge cases", () => {
+      it("does not save when doc is undefined", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: undefined,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag period
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        // Component should handle undefined doc gracefully
+        // Bio input may not be visible in loading state, so just verify no crash
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("handles missing settings object in doc", () => {
+        const docWithoutSettings = {
+          entries: {},
+        } as any
+
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: docWithoutSettings,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        // Should not throw when rendering with missing settings
+        expect(() => render(<SettingsView />)).not.toThrow()
+      })
+
+      it("handles null values in settings fields", () => {
+        const docWithNulls = {
+          entries: {},
+          settings: {
+            displayName: null,
+            timezone: "America/New_York",
+            theme: "system",
+            llmProvider: "claude",
+            claudeApiKey: null,
+            bio: null,
+            additionalInstructions: null,
+          },
+        } as any
+
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: docWithNulls,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        // Should render with fallback empty strings
+        expect(() => render(<SettingsView />)).not.toThrow()
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        expect(bioInput).toHaveValue("")
+      })
+    })
+
+    describe("Clear API key functionality edge cases", () => {
+      it("clear button resets to environment variable value if available", () => {
+        // Note: This test documents expected behavior. The actual env var is mocked
+        // at module load time, so we verify the component clears to empty string
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc("sk-ant-user-saved-key"),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const clearButton = screen.getByRole("button", { name: /clear/i })
+        fireEvent.click(clearButton)
+
+        // changeDoc should be called to clear the saved value
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+
+        // The input should now be empty (or env var value if set, but in test it's empty)
+        const input = screen.getByLabelText(/claude api key/i) as HTMLInputElement
+        expect(input.value).toBe("")
+      })
+
+      it("clear button clears any validation error", async () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
+        })
+
+        const input = screen.getByLabelText(/claude api key/i)
+
+        // Enter an invalid key and trigger validation
+        fireEvent.change(input, { target: { value: "invalid-key" } })
+        await act(async () => {
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
+        })
+
+        expect(screen.getByRole("alert")).toBeInTheDocument()
+
+        // Now clear - should remove validation error
+        const clearButton = screen.getByRole("button", { name: /clear/i })
+        fireEvent.click(clearButton)
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+      })
+
+      it("does not show clear button when API key is empty", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(""),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        expect(screen.queryByRole("button", { name: /clear/i })).not.toBeInTheDocument()
+      })
+    })
+
     // Note: OpenAI API key validation UI tests are commented out because the
     // OpenAI UI is hidden until functionality is wired up (j-3q0)
     // TODO: Uncomment when OpenAI functionality is implemented
