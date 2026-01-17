@@ -137,4 +137,132 @@ describe("dates", () => {
       expect(isFutureDate("2020-01-01")).toBe(false)
     })
   })
+
+  describe("date boundary conditions", () => {
+    describe("Y2K (Year 2000) dates", () => {
+      it("should format Y2K dates correctly", () => {
+        expect(formatDate(new Date(1999, 11, 31))).toBe("1999-12-31")
+        expect(formatDate(new Date(2000, 0, 1))).toBe("2000-01-01")
+        expect(formatDate(new Date(2000, 1, 29))).toBe("2000-02-29") // Y2K was a leap year
+      })
+
+      it("should parse Y2K dates correctly", () => {
+        const dec31_1999 = parseDate("1999-12-31")
+        expect(dec31_1999.getFullYear()).toBe(1999)
+        expect(dec31_1999.getMonth()).toBe(11)
+        expect(dec31_1999.getDate()).toBe(31)
+
+        const jan1_2000 = parseDate("2000-01-01")
+        expect(jan1_2000.getFullYear()).toBe(2000)
+        expect(jan1_2000.getMonth()).toBe(0)
+        expect(jan1_2000.getDate()).toBe(1)
+      })
+
+      it("should validate Y2K dates correctly", () => {
+        expect(isValidDate("1999-12-31")).toBe(true)
+        expect(isValidDate("2000-01-01")).toBe(true)
+        expect(isValidDate("2000-02-29")).toBe(true) // Y2K was a leap year
+      })
+
+      it("should handle Y2K date arithmetic", () => {
+        expect(addDays("1999-12-31", 1)).toBe("2000-01-01")
+        expect(addDays("2000-01-01", -1)).toBe("1999-12-31")
+        expect(addDays("1999-12-30", 3)).toBe("2000-01-02")
+      })
+    })
+
+    describe("Y2038 (32-bit timestamp limit) dates", () => {
+      // The Y2038 problem affects timestamps after January 19, 2038 03:14:07 UTC
+      // JavaScript uses 64-bit floats for Date, so it should handle these correctly
+
+      it("should format Y2038 dates correctly", () => {
+        expect(formatDate(new Date(2038, 0, 19))).toBe("2038-01-19")
+        expect(formatDate(new Date(2038, 0, 20))).toBe("2038-01-20")
+        expect(formatDate(new Date(2038, 11, 31))).toBe("2038-12-31")
+      })
+
+      it("should parse Y2038 dates correctly", () => {
+        const jan19_2038 = parseDate("2038-01-19")
+        expect(jan19_2038.getFullYear()).toBe(2038)
+        expect(jan19_2038.getMonth()).toBe(0)
+        expect(jan19_2038.getDate()).toBe(19)
+
+        const jan20_2038 = parseDate("2038-01-20")
+        expect(jan20_2038.getFullYear()).toBe(2038)
+        expect(jan20_2038.getMonth()).toBe(0)
+        expect(jan20_2038.getDate()).toBe(20)
+      })
+
+      it("should validate Y2038 dates correctly", () => {
+        expect(isValidDate("2038-01-19")).toBe(true)
+        expect(isValidDate("2038-01-20")).toBe(true)
+        expect(isValidDate("2038-12-31")).toBe(true)
+      })
+
+      it("should handle Y2038 date arithmetic", () => {
+        expect(addDays("2038-01-19", 1)).toBe("2038-01-20")
+        expect(addDays("2038-01-20", -1)).toBe("2038-01-19")
+      })
+
+      it("should handle dates well beyond Y2038", () => {
+        expect(formatDate(new Date(2100, 0, 1))).toBe("2100-01-01")
+        expect(isValidDate("2100-01-01")).toBe(true)
+        expect(addDays("2099-12-31", 1)).toBe("2100-01-01")
+      })
+    })
+
+    describe("leap year edge cases", () => {
+      it("should validate Feb 29 in leap years", () => {
+        // Divisible by 4 = leap year
+        expect(isValidDate("2024-02-29")).toBe(true) // 2024 is a leap year
+        expect(isValidDate("2028-02-29")).toBe(true)
+        expect(isValidDate("2032-02-29")).toBe(true)
+      })
+
+      it("should reject Feb 29 in non-leap years", () => {
+        expect(isValidDate("2025-02-29")).toBe(false) // 2025 is not a leap year
+        expect(isValidDate("2026-02-29")).toBe(false)
+        expect(isValidDate("2027-02-29")).toBe(false)
+      })
+
+      it("should reject Feb 29 in century years not divisible by 400", () => {
+        // Century years are only leap years if divisible by 400
+        expect(isValidDate("1900-02-29")).toBe(false) // 1900 not a leap year
+        expect(isValidDate("2100-02-29")).toBe(false) // 2100 not a leap year
+        expect(isValidDate("2200-02-29")).toBe(false)
+        expect(isValidDate("2300-02-29")).toBe(false)
+      })
+
+      it("should validate Feb 29 in century years divisible by 400", () => {
+        expect(isValidDate("2000-02-29")).toBe(true) // 2000 was a leap year
+        expect(isValidDate("2400-02-29")).toBe(true)
+      })
+
+      it("should handle leap year day arithmetic across Feb 28/29", () => {
+        // In leap years, Feb 28 + 1 = Feb 29
+        expect(addDays("2024-02-28", 1)).toBe("2024-02-29")
+        expect(addDays("2024-02-29", 1)).toBe("2024-03-01")
+
+        // In non-leap years, Feb 28 + 1 = Mar 1
+        expect(addDays("2025-02-28", 1)).toBe("2025-03-01")
+        expect(addDays("2025-03-01", -1)).toBe("2025-02-28")
+      })
+
+      it("should format leap year dates correctly", () => {
+        expect(formatDate(new Date(2024, 1, 29))).toBe("2024-02-29")
+        expect(formatDate(new Date(2000, 1, 29))).toBe("2000-02-29")
+      })
+
+      it("should parse leap year dates correctly", () => {
+        const feb29_2024 = parseDate("2024-02-29")
+        expect(feb29_2024.getFullYear()).toBe(2024)
+        expect(feb29_2024.getMonth()).toBe(1)
+        expect(feb29_2024.getDate()).toBe(29)
+      })
+
+      it("should throw when parsing Feb 29 in non-leap year", () => {
+        expect(() => parseDate("2025-02-29")).toThrow("Invalid date")
+      })
+    })
+  })
 })

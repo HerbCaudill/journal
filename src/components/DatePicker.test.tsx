@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { DatePicker } from "./DatePicker"
 import { toDateString } from "../types/journal"
@@ -232,6 +232,176 @@ describe("DatePicker", () => {
       year: "numeric",
     })
     expect(screen.getByText(expectedDec2023)).toBeInTheDocument()
+  })
+
+  describe("date boundary conditions", () => {
+    describe("Y2K dates", () => {
+      it("renders Y2K transition correctly", () => {
+        render(<DatePicker selectedDate="1999-12-31" onDateSelect={vi.fn()} />)
+
+        // Use locale-aware formatting for expected value
+        const expectedMonthYear = new Date(1999, 11).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+        expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
+
+        // December 31, 1999 should be selectable
+        const dec31Button = screen.getByRole("button", { name: "1999-12-31" })
+        expect(dec31Button).toBeInTheDocument()
+      })
+
+      it("navigates from Dec 1999 to Jan 2000", async () => {
+        const user = userEvent.setup()
+        render(<DatePicker selectedDate="1999-12-15" onDateSelect={vi.fn()} />)
+
+        const nextButton = screen.getByRole("button", { name: "Next month" })
+        await user.click(nextButton)
+
+        const expectedMonthYear = new Date(2000, 0).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+        expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
+      })
+
+      it("selects dates across Y2K transition", async () => {
+        const user = userEvent.setup()
+        const onDateSelect = vi.fn()
+
+        render(<DatePicker selectedDate="2000-01-01" onDateSelect={onDateSelect} />)
+
+        const jan1Button = screen.getByRole("button", { name: "2000-01-01" })
+        await user.click(jan1Button)
+
+        expect(onDateSelect).toHaveBeenCalledWith("2000-01-01")
+      })
+
+      it("handles Feb 29, 2000 (Y2K was a leap year)", () => {
+        render(<DatePicker selectedDate="2000-02-29" onDateSelect={vi.fn()} />)
+
+        // Feb 29, 2000 should be visible and selectable
+        const feb29Button = screen.getByRole("button", { name: "2000-02-29" })
+        expect(feb29Button).toBeInTheDocument()
+      })
+    })
+
+    describe("Y2038 dates", () => {
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      it("renders Y2038 dates correctly when current date is in 2038", () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2038, 0, 19, 12, 0, 0))
+
+        render(<DatePicker selectedDate="2038-01-19" onDateSelect={vi.fn()} />)
+
+        const expectedMonthYear = new Date(2038, 0).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+        expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
+
+        // The Y2038 critical date should be selectable
+        const jan19Button = screen.getByRole("button", { name: "2038-01-19" })
+        expect(jan19Button).toBeInTheDocument()
+      })
+
+      it("navigates correctly around Y2038", () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2038, 1, 15, 12, 0, 0))
+
+        render(<DatePicker selectedDate="2038-01-15" onDateSelect={vi.fn()} />)
+
+        const nextButton = screen.getByRole("button", { name: "Next month" })
+        fireEvent.click(nextButton)
+
+        const expectedMonthYear = new Date(2038, 1).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+        expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
+      })
+
+      it("can select dates after Y2038 timestamp limit", () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2038, 0, 20, 12, 0, 0))
+
+        const onDateSelect = vi.fn()
+
+        render(<DatePicker selectedDate="2038-01-15" onDateSelect={onDateSelect} />)
+
+        const jan20Button = screen.getByRole("button", { name: "2038-01-20" })
+        jan20Button.click()
+
+        expect(onDateSelect).toHaveBeenCalledWith("2038-01-20")
+      })
+    })
+
+    describe("leap year dates", () => {
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      it("shows Feb 29 in leap years", () => {
+        render(<DatePicker selectedDate="2024-02-15" onDateSelect={vi.fn()} />)
+
+        // Feb 29 should be present in leap year 2024
+        const feb29Button = screen.getByRole("button", { name: "2024-02-29" })
+        expect(feb29Button).toBeInTheDocument()
+      })
+
+      it("does not show Feb 29 in non-leap years", () => {
+        render(<DatePicker selectedDate="2025-02-15" onDateSelect={vi.fn()} />)
+
+        // Feb 29 should not be present in non-leap year 2025
+        expect(screen.queryByRole("button", { name: "2025-02-29" })).not.toBeInTheDocument()
+      })
+
+      it("can select Feb 29 in leap year", () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2024, 2, 15, 12, 0, 0)) // March 15, 2024
+
+        const onDateSelect = vi.fn()
+
+        render(<DatePicker selectedDate="2024-02-15" onDateSelect={onDateSelect} />)
+
+        const feb29Button = screen.getByRole("button", { name: "2024-02-29" })
+        feb29Button.click()
+
+        expect(onDateSelect).toHaveBeenCalledWith("2024-02-29")
+      })
+
+      it("handles century leap year rules (2000 was leap, 1900 was not)", () => {
+        // 2000 was a leap year (divisible by 400)
+        render(<DatePicker selectedDate="2000-02-15" onDateSelect={vi.fn()} />)
+        expect(screen.getByRole("button", { name: "2000-02-29" })).toBeInTheDocument()
+      })
+
+      it("handles non-leap century years", () => {
+        // 1900 was NOT a leap year (divisible by 100 but not 400)
+        render(<DatePicker selectedDate="1900-02-15" onDateSelect={vi.fn()} />)
+        expect(screen.queryByRole("button", { name: "1900-02-29" })).not.toBeInTheDocument()
+      })
+
+      it("navigates correctly from Feb 29 in leap year", () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2024, 2, 15, 12, 0, 0)) // After Feb 29, 2024
+
+        render(<DatePicker selectedDate="2024-02-29" onDateSelect={vi.fn()} />)
+
+        // Navigate to March
+        const nextButton = screen.getByRole("button", { name: "Next month" })
+        fireEvent.click(nextButton)
+
+        const expectedMonthYear = new Date(2024, 2).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+        expect(screen.getByText(expectedMonthYear)).toBeInTheDocument()
+      })
+    })
   })
 
   describe("future date prevention", () => {
