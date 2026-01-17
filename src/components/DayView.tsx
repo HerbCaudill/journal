@@ -135,28 +135,28 @@ export function DayView({ date }: DayViewProps) {
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
 
-      {/* Edit button - show when conversation started but not in edit mode */}
+      {/* Original journal entry display - show when conversation started but not in edit mode */}
       {hasConversation && !isEditing && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsEditing(true)}
-          className="self-start"
-          aria-label="Edit journal entry"
-        >
-          <svg
-            className="mr-1 h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="group/entry">
+          <p className="text-foreground whitespace-pre-wrap">{entryContent}</p>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-muted-foreground/40 hover:text-muted-foreground mt-1 p-1 transition-opacity md:opacity-0 md:group-hover/entry:opacity-100 md:focus:opacity-100"
+            aria-label="Edit journal entry"
           >
-            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-          </svg>
-          Edit entry
-        </Button>
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* EntryEditor - show when no conversation yet, or when in edit mode */}
