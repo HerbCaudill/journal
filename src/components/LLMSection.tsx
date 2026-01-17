@@ -211,7 +211,6 @@ export function LLMSection({
       {/* Conversation display */}
       {messages.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium">Conversation</h3>
           {messages.map(message => (
             <div
               key={message.id}

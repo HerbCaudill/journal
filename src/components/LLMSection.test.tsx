@@ -141,7 +141,6 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      expect(screen.getByText("Conversation")).toBeInTheDocument()
       expect(screen.getByText("Hi there! How can I help?")).toBeInTheDocument()
     })
 
