@@ -9,6 +9,43 @@ const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
 const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
 
 /**
+ * Validates a Claude API key format.
+ * Anthropic API keys should start with 'sk-ant-' and have a reasonable length.
+ * @returns null if valid, or an error message if invalid
+ */
+export function validateClaudeApiKey(key: string): string | null {
+  const trimmed = key.trim()
+  if (!trimmed) return null // Empty is allowed (no key configured)
+  if (!trimmed.startsWith("sk-ant-")) {
+    return "Claude API key should start with 'sk-ant-'"
+  }
+  if (trimmed.length < 20) {
+    return "Claude API key appears to be too short"
+  }
+  return null
+}
+
+/**
+ * Validates an OpenAI API key format.
+ * OpenAI API keys should start with 'sk-' (but not 'sk-ant-') and have a reasonable length.
+ * @returns null if valid, or an error message if invalid
+ */
+export function validateOpenaiApiKey(key: string): string | null {
+  const trimmed = key.trim()
+  if (!trimmed) return null // Empty is allowed (no key configured)
+  if (!trimmed.startsWith("sk-")) {
+    return "OpenAI API key should start with 'sk-'"
+  }
+  if (trimmed.startsWith("sk-ant-")) {
+    return "This appears to be a Claude API key, not an OpenAI key"
+  }
+  if (trimmed.length < 20) {
+    return "OpenAI API key appears to be too short"
+  }
+  return null
+}
+
+/**
  * Settings view component for managing app configuration.
  * Allows users to:
  * - Enter their Claude API key for AI integration
@@ -25,6 +62,8 @@ export function SettingsView() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [showClaudeApiKey, setShowClaudeApiKey] = useState(false)
   const [showOpenaiApiKey, setShowOpenaiApiKey] = useState(false)
+  const [claudeApiKeyError, setClaudeApiKeyError] = useState<string | null>(null)
+  const [openaiApiKeyError, setOpenaiApiKeyError] = useState<string | null>(null)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
   const { preference: themePreference, setTheme } = useTheme()
 
@@ -57,6 +96,14 @@ export function SettingsView() {
   const handleSaveClaudeApiKey = useCallback(() => {
     if (!doc) return
 
+    // Validate API key format
+    const validationError = validateClaudeApiKey(claudeApiKey)
+    if (validationError) {
+      setClaudeApiKeyError(validationError)
+      return
+    }
+
+    setClaudeApiKeyError(null)
     setSaveStatus("saving")
     changeDoc(d => {
       d.settings.claudeApiKey = claudeApiKey.trim()
@@ -71,6 +118,14 @@ export function SettingsView() {
   const handleSaveOpenaiApiKey = useCallback(() => {
     if (!doc) return
 
+    // Validate API key format
+    const validationError = validateOpenaiApiKey(openaiApiKey)
+    if (validationError) {
+      setOpenaiApiKeyError(validationError)
+      return
+    }
+
+    setOpenaiApiKeyError(null)
     setSaveStatus("saving")
     changeDoc(d => {
       d.settings.openaiApiKey = openaiApiKey.trim()
@@ -261,10 +316,17 @@ export function SettingsView() {
               <input
                 type={showClaudeApiKey ? "text" : "password"}
                 value={claudeApiKey}
-                onChange={e => setClaudeApiKey(e.target.value)}
+                onChange={e => {
+                  setClaudeApiKey(e.target.value)
+                  setClaudeApiKeyError(null) // Clear error when user types
+                }}
                 placeholder="sk-ant-..."
-                className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                className={`bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                  claudeApiKeyError ? "border-destructive" : ""
+                }`}
                 aria-label="Claude API key"
+                aria-invalid={!!claudeApiKeyError}
+                aria-describedby={claudeApiKeyError ? "claude-api-key-error" : undefined}
                 autoComplete="off"
               />
               {claudeApiKey && (
@@ -310,6 +372,17 @@ export function SettingsView() {
                 </span>
               )}
             </div>
+
+            {claudeApiKeyError && (
+              <p
+                id="claude-api-key-error"
+                className="text-destructive flex items-center gap-1 text-sm"
+                role="alert"
+              >
+                <ErrorIcon />
+                {claudeApiKeyError}
+              </p>
+            )}
           </form>
 
           {claudeApiKey && !hasClaudeUnsavedChanges && (
@@ -344,10 +417,17 @@ export function SettingsView() {
               <input
                 type={showOpenaiApiKey ? "text" : "password"}
                 value={openaiApiKey}
-                onChange={e => setOpenaiApiKey(e.target.value)}
+                onChange={e => {
+                  setOpenaiApiKey(e.target.value)
+                  setOpenaiApiKeyError(null) // Clear error when user types
+                }}
                 placeholder="sk-..."
-                className="bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                className={`bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                  openaiApiKeyError ? "border-destructive" : ""
+                }`}
                 aria-label="OpenAI API key"
+                aria-invalid={!!openaiApiKeyError}
+                aria-describedby={openaiApiKeyError ? "openai-api-key-error" : undefined}
                 autoComplete="off"
               />
               {openaiApiKey && (
@@ -393,6 +473,17 @@ export function SettingsView() {
                 </span>
               )}
             </div>
+
+            {openaiApiKeyError && (
+              <p
+                id="openai-api-key-error"
+                className="text-destructive flex items-center gap-1 text-sm"
+                role="alert"
+              >
+                <ErrorIcon />
+                {openaiApiKeyError}
+              </p>
+            )}
           </form>
 
           {openaiApiKey && !hasOpenaiUnsavedChanges && (
@@ -527,6 +618,26 @@ function CheckIcon() {
       strokeLinejoin="round"
     >
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function ErrorIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="8" y2="12" />
+      <line x1="12" x2="12.01" y1="16" y2="16" />
     </svg>
   )
 }

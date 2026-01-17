@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act } from "@testing-library/react"
-import { SettingsView } from "./SettingsView"
+import { SettingsView, validateClaudeApiKey, validateOpenaiApiKey } from "./SettingsView"
 import * as JournalContext from "../context/JournalContext"
 import * as GoogleCalendarHook from "../hooks/useGoogleCalendar"
 import * as ThemeHook from "../hooks/useTheme"
@@ -353,7 +353,7 @@ describe("SettingsView", () => {
     render(<SettingsView />)
 
     const input = screen.getByLabelText(/claude api key/i)
-    fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
+    fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
     // Get the first save button (Claude section)
     const saveButtons = screen.getAllByRole("button", { name: /save/i })
@@ -440,7 +440,7 @@ describe("SettingsView", () => {
     render(<SettingsView />)
 
     const input = screen.getByLabelText(/claude api key/i)
-    fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
+    fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
     // Get the first save button (Claude section)
     const saveButtons = screen.getAllByRole("button", { name: /save/i })
@@ -555,7 +555,7 @@ describe("SettingsView", () => {
       render(<SettingsView />)
 
       const input = screen.getByLabelText(/openai api key/i)
-      fireEvent.change(input, { target: { value: "sk-openai-key" } })
+      fireEvent.change(input, { target: { value: "sk-proj-validkey1234567890" } })
 
       // There's only one save button now (for OpenAI)
       const saveButton = screen.getByRole("button", { name: /save/i })
@@ -697,6 +697,237 @@ describe("SettingsView", () => {
       render(<SettingsView />)
 
       expect(screen.getByText(/choose your preferred color scheme/i)).toBeInTheDocument()
+    })
+  })
+
+  describe("API key validation", () => {
+    describe("validateClaudeApiKey", () => {
+      it("returns null for empty string (allowed)", () => {
+        expect(validateClaudeApiKey("")).toBeNull()
+        expect(validateClaudeApiKey("   ")).toBeNull()
+      })
+
+      it("returns null for valid Claude API key", () => {
+        expect(validateClaudeApiKey("sk-ant-api03-validkey12345678")).toBeNull()
+        expect(validateClaudeApiKey("sk-ant-test-1234567890abcdef")).toBeNull()
+      })
+
+      it("returns error for key not starting with sk-ant-", () => {
+        expect(validateClaudeApiKey("invalid-key")).toBe(
+          "Claude API key should start with 'sk-ant-'",
+        )
+        expect(validateClaudeApiKey("sk-openai-key12345")).toBe(
+          "Claude API key should start with 'sk-ant-'",
+        )
+      })
+
+      it("returns error for key that is too short", () => {
+        expect(validateClaudeApiKey("sk-ant-short")).toBe("Claude API key appears to be too short")
+      })
+    })
+
+    describe("validateOpenaiApiKey", () => {
+      it("returns null for empty string (allowed)", () => {
+        expect(validateOpenaiApiKey("")).toBeNull()
+        expect(validateOpenaiApiKey("   ")).toBeNull()
+      })
+
+      it("returns null for valid OpenAI API key", () => {
+        expect(validateOpenaiApiKey("sk-proj-validkey123456789")).toBeNull()
+        expect(validateOpenaiApiKey("sk-test-12345678901234567890")).toBeNull()
+      })
+
+      it("returns error for key not starting with sk-", () => {
+        expect(validateOpenaiApiKey("invalid-key")).toBe("OpenAI API key should start with 'sk-'")
+        expect(validateOpenaiApiKey("api-key-12345678")).toBe(
+          "OpenAI API key should start with 'sk-'",
+        )
+      })
+
+      it("returns error when Claude key is entered for OpenAI", () => {
+        expect(validateOpenaiApiKey("sk-ant-api03-somekey")).toBe(
+          "This appears to be a Claude API key, not an OpenAI key",
+        )
+      })
+
+      it("returns error for key that is too short", () => {
+        expect(validateOpenaiApiKey("sk-short")).toBe("OpenAI API key appears to be too short")
+      })
+    })
+
+    describe("Claude API key validation UI", () => {
+      it("shows validation error when saving invalid Claude API key", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "invalid-key" } })
+
+        const saveButtons = screen.getAllByRole("button", { name: /save/i })
+        fireEvent.click(saveButtons[0])
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Claude API key should start with 'sk-ant-'",
+        )
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("shows validation error for short Claude API key", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "sk-ant-short" } })
+
+        const saveButtons = screen.getAllByRole("button", { name: /save/i })
+        fireEvent.click(saveButtons[0])
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Claude API key appears to be too short",
+        )
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("clears validation error when user types", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "invalid-key" } })
+
+        const saveButtons = screen.getAllByRole("button", { name: /save/i })
+        fireEvent.click(saveButtons[0])
+
+        expect(screen.getByRole("alert")).toBeInTheDocument()
+
+        // Type to clear the error
+        fireEvent.change(input, { target: { value: "sk-ant-" } })
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+      })
+
+      it("saves valid Claude API key successfully", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "sk-ant-api03-validkey12345678" } })
+
+        const saveButtons = screen.getAllByRole("button", { name: /save/i })
+        fireEvent.click(saveButtons[0])
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("sets aria-invalid on input when validation fails", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/claude api key/i)
+        fireEvent.change(input, { target: { value: "invalid-key" } })
+
+        const saveButtons = screen.getAllByRole("button", { name: /save/i })
+        fireEvent.click(saveButtons[0])
+
+        expect(input).toHaveAttribute("aria-invalid", "true")
+      })
+    })
+
+    describe("OpenAI API key validation UI", () => {
+      it("shows validation error when saving invalid OpenAI API key", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc("", "openai"),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/openai api key/i)
+        fireEvent.change(input, { target: { value: "invalid-key" } })
+
+        const saveButton = screen.getByRole("button", { name: /save/i })
+        fireEvent.click(saveButton)
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "OpenAI API key should start with 'sk-'",
+        )
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("shows error when entering Claude key in OpenAI field", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc("", "openai"),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/openai api key/i)
+        fireEvent.change(input, { target: { value: "sk-ant-api03-somekey" } })
+
+        const saveButton = screen.getByRole("button", { name: /save/i })
+        fireEvent.click(saveButton)
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "This appears to be a Claude API key, not an OpenAI key",
+        )
+        expect(mockChangeDoc).not.toHaveBeenCalled()
+      })
+
+      it("saves valid OpenAI API key successfully", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc("", "openai"),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const input = screen.getByLabelText(/openai api key/i)
+        fireEvent.change(input, { target: { value: "sk-proj-validkey12345678901234567890" } })
+
+        const saveButton = screen.getByRole("button", { name: /save/i })
+        fireEvent.click(saveButton)
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
     })
   })
 })

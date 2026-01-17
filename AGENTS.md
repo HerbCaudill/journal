@@ -60,6 +60,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
 - Settings view allows selecting LLM provider; only shows API key field for the selected provider
 - API keys stored in document settings, masked (password field with show/hide toggle) with security warning
+- API key format validation: Claude keys must start with `sk-ant-`, OpenAI keys must start with `sk-` (but not `sk-ant-`); validation functions exported from SettingsView.tsx
 
 **Google Calendar Integration**
 
