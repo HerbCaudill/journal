@@ -68,7 +68,7 @@ describe("CalendarEvents", () => {
     mockUseGoogleCalendar.mockReturnValue(defaultMockReturn)
   })
 
-  describe("unconfigured state", () => {
+  describe("non-authenticated states", () => {
     it("renders nothing when Google Calendar is unconfigured", () => {
       mockUseGoogleCalendar.mockReturnValue({
         ...defaultMockReturn,
@@ -80,51 +80,29 @@ describe("CalendarEvents", () => {
 
       expect(container.firstChild).toBeNull()
     })
-  })
 
-  describe("unauthenticated state", () => {
-    beforeEach(() => {
+    it("renders nothing when unauthenticated", () => {
       mockUseGoogleCalendar.mockReturnValue({
         ...defaultMockReturn,
         authState: "unauthenticated",
         events: [],
       })
+
+      const { container } = render(<CalendarEvents date="2024-01-15" />)
+
+      expect(container.firstChild).toBeNull()
     })
 
-    it("shows connect button when unauthenticated", () => {
-      render(<CalendarEvents date="2024-01-15" />)
-
-      expect(screen.getByText("Connect Google Calendar")).toBeInTheDocument()
-    })
-
-    it("shows prompt to connect calendar", () => {
-      render(<CalendarEvents date="2024-01-15" />)
-
-      expect(
-        screen.getByText("Connect your Google Calendar to see today's events."),
-      ).toBeInTheDocument()
-    })
-
-    it("calls authenticate when connect button is clicked", () => {
-      render(<CalendarEvents date="2024-01-15" />)
-
-      fireEvent.click(screen.getByText("Connect Google Calendar"))
-
-      expect(mockAuthenticate).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe("authenticating state", () => {
-    it("shows connecting text during authentication", () => {
+    it("renders nothing when authenticating", () => {
       mockUseGoogleCalendar.mockReturnValue({
         ...defaultMockReturn,
         authState: "authenticating",
         events: [],
       })
 
-      render(<CalendarEvents date="2024-01-15" />)
+      const { container } = render(<CalendarEvents date="2024-01-15" />)
 
-      expect(screen.getByText("Connecting...")).toBeInTheDocument()
+      expect(container.firstChild).toBeNull()
     })
   })
 
@@ -195,12 +173,6 @@ describe("CalendarEvents", () => {
       render(<CalendarEvents date="2024-01-15" />)
 
       expect(screen.getByText("No events scheduled for this day.")).toBeInTheDocument()
-    })
-
-    it("does not show connect button when authenticated", () => {
-      render(<CalendarEvents date="2024-01-15" />)
-
-      expect(screen.queryByText("Connect Google Calendar")).not.toBeInTheDocument()
     })
   })
 

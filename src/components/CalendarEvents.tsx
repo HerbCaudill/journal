@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { useGoogleCalendar, type GoogleCalendarAuthState } from "../hooks/useGoogleCalendar"
+import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
 import type { CalendarEvent } from "../lib/google-calendar"
 
 interface CalendarEventsProps {
@@ -34,8 +34,7 @@ function formatEventTime(event: CalendarEvent): string {
  * Handles authentication state and loading/error states.
  */
 export function CalendarEvents({ date }: CalendarEventsProps) {
-  const { authState, isLoading, error, events, authenticate, fetchEvents, clearError } =
-    useGoogleCalendar()
+  const { authState, isLoading, error, events, fetchEvents, clearError } = useGoogleCalendar()
 
   // Fetch events when the date changes and user is authenticated
   useEffect(() => {
@@ -44,49 +43,22 @@ export function CalendarEvents({ date }: CalendarEventsProps) {
     }
   }, [date, authState, fetchEvents])
 
-  // Don't render anything if Google Calendar isn't configured
-  if (authState === "unconfigured") {
+  // Only render when user is authenticated with Google Calendar
+  if (authState !== "authenticated") {
     return null
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
-          <CalendarIcon />
-          Calendar
-        </h3>
-        <AuthButton authState={authState} onAuthenticate={authenticate} />
-      </div>
+      <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
+        <CalendarIcon />
+        Calendar
+      </h3>
 
       {error && <ErrorMessage message={error} onDismiss={clearError} />}
 
-      <EventsList authState={authState} isLoading={isLoading} events={events} />
+      <EventsList isLoading={isLoading} events={events} />
     </div>
-  )
-}
-
-interface AuthButtonProps {
-  authState: GoogleCalendarAuthState
-  onAuthenticate: () => void
-}
-
-function AuthButton({ authState, onAuthenticate }: AuthButtonProps) {
-  if (authState === "authenticated") {
-    return null
-  }
-
-  if (authState === "authenticating") {
-    return <span className="text-muted-foreground text-xs">Connecting...</span>
-  }
-
-  return (
-    <button
-      onClick={onAuthenticate}
-      className="text-primary hover:text-primary/80 text-xs transition-colors"
-    >
-      Connect Google Calendar
-    </button>
   )
 }
 
@@ -114,20 +86,11 @@ function ErrorMessage({ message, onDismiss }: ErrorMessageProps) {
 }
 
 interface EventsListProps {
-  authState: GoogleCalendarAuthState
   isLoading: boolean
   events: CalendarEvent[]
 }
 
-function EventsList({ authState, isLoading, events }: EventsListProps) {
-  if (authState !== "authenticated") {
-    return (
-      <p className="text-muted-foreground text-sm">
-        Connect your Google Calendar to see today's events.
-      </p>
-    )
-  }
-
+function EventsList({ isLoading, events }: EventsListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
