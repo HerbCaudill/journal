@@ -30,6 +30,28 @@ describe("Journal types", () => {
     expect(entry.messages).toEqual([])
   })
 
+  it("should allow creating a JournalEntry with position", () => {
+    const entry: JournalEntry = {
+      id: "entry-1",
+      date: "2026-01-16",
+      messages: [],
+      position: {
+        latitude: 41.9286,
+        longitude: 3.2014,
+        accuracy: 10,
+        timestamp: Date.now(),
+        locality: "Tamariu",
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    expect(entry.position).toBeDefined()
+    expect(entry.position?.latitude).toBe(41.9286)
+    expect(entry.position?.longitude).toBe(3.2014)
+    expect(entry.position?.locality).toBe("Tamariu")
+  })
+
   it("should allow creating valid Settings", () => {
     const settings: Settings = {
       displayName: "Test User",

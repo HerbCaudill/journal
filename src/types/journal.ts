@@ -2,6 +2,8 @@
  * TypeScript interfaces for the Journal app's Automerge documents
  */
 
+import type { GeoPosition } from "../hooks/useGeolocation"
+
 /**
  * A single message within a journal entry (conversation turn)
  */
@@ -26,6 +28,8 @@ export interface JournalEntry {
   date: string
   /** Array of messages in this entry */
   messages: Message[]
+  /** Geographic position captured for this entry (optional) */
+  position?: GeoPosition
   /** Timestamp when the entry was created */
   createdAt: number
   /** Timestamp when the entry was last updated */
