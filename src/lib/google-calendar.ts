@@ -10,6 +10,7 @@ import {
   isEncryptedData,
   type EncryptedData,
 } from "./crypto"
+import { isValidDate } from "./dates"
 
 // Google OAuth configuration
 // These should be set up in a Google Cloud project with Calendar API enabled
@@ -374,6 +375,15 @@ export async function fetchEventsForDate(
   date: string,
   calendarId: string = "primary",
 ): Promise<CalendarEventsResponse> {
+  // Validate date format
+  if (!isValidDate(date)) {
+    return {
+      events: [],
+      success: false,
+      error: `Invalid date format: ${date}. Expected YYYY-MM-DD`,
+    }
+  }
+
   try {
     // Create time bounds for the date (full day in local timezone)
     const startOfDay = new Date(`${date}T00:00:00`)
@@ -466,6 +476,15 @@ export async function fetchAllEventsForDate(
   tokens: GoogleTokens,
   date: string,
 ): Promise<CalendarEventsResponse> {
+  // Validate date format
+  if (!isValidDate(date)) {
+    return {
+      events: [],
+      success: false,
+      error: `Invalid date format: ${date}. Expected YYYY-MM-DD`,
+    }
+  }
+
   try {
     // First, get the list of calendars
     const calendarListResponse = await fetch(`${GOOGLE_CALENDAR_API}/users/me/calendarList`, {

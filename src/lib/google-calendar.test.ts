@@ -429,6 +429,38 @@ describe("google-calendar", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe("Network error")
     })
+
+    it("returns error for invalid date format (wrong separator)", async () => {
+      const result = await fetchEventsForDate(mockTokens, "2024/01/15")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: 2024/01/15. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for invalid date format (missing parts)", async () => {
+      const result = await fetchEventsForDate(mockTokens, "2024-01")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: 2024-01. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for invalid date (non-existent day)", async () => {
+      const result = await fetchEventsForDate(mockTokens, "2024-02-30")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: 2024-02-30. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for completely malformed date", async () => {
+      const result = await fetchEventsForDate(mockTokens, "not-a-date")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: not-a-date. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
   })
 
   describe("fetchAllEventsForDate", () => {
@@ -497,6 +529,22 @@ describe("google-calendar", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Authentication expired. Please reconnect your Google account.")
+    })
+
+    it("returns error for invalid date format", async () => {
+      const result = await fetchAllEventsForDate(mockTokens, "invalid-date")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: invalid-date. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for malformed date", async () => {
+      const result = await fetchAllEventsForDate(mockTokens, "2024/01/15")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid date format: 2024/01/15. Expected YYYY-MM-DD")
+      expect(mockFetch).not.toHaveBeenCalled()
     })
   })
 

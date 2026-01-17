@@ -198,6 +198,25 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number,
 ): Promise<GeocodingResult> {
+  // Validate coordinates
+  if (latitude < -90 || latitude > 90) {
+    return {
+      locality: "",
+      displayName: "",
+      success: false,
+      error: `Invalid latitude: ${latitude}. Must be between -90 and 90.`,
+    }
+  }
+
+  if (longitude < -180 || longitude > 180) {
+    return {
+      locality: "",
+      displayName: "",
+      success: false,
+      error: `Invalid longitude: ${longitude}. Must be between -180 and 180.`,
+    }
+  }
+
   // Check cache first
   const cachedResult = getCachedResult(latitude, longitude)
   if (cachedResult) {

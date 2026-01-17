@@ -245,6 +245,71 @@ describe("geocoding", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe("Unknown error occurred")
     })
+
+    it("returns error for latitude below -90", async () => {
+      const result = await reverseGeocode(-91, 0)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid latitude: -91. Must be between -90 and 90.")
+      expect(result.locality).toBe("")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for latitude above 90", async () => {
+      const result = await reverseGeocode(91, 0)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid latitude: 91. Must be between -90 and 90.")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for longitude below -180", async () => {
+      const result = await reverseGeocode(0, -181)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid longitude: -181. Must be between -180 and 180.")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns error for longitude above 180", async () => {
+      const result = await reverseGeocode(0, 181)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Invalid longitude: 181. Must be between -180 and 180.")
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("accepts valid boundary coordinates", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          display_name: "Boundary Location",
+          address: { country: "Test" },
+        }),
+      })
+
+      // Test boundary values: lat=90, lon=180
+      const result = await reverseGeocode(90, 180)
+
+      expect(result.success).toBe(true)
+      expect(mockFetch).toHaveBeenCalled()
+    })
+
+    it("accepts valid negative boundary coordinates", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          display_name: "Boundary Location",
+          address: { country: "Test" },
+        }),
+      })
+
+      // Test boundary values: lat=-90, lon=-180
+      const result = await reverseGeocode(-90, -180)
+
+      expect(result.success).toBe(true)
+      expect(mockFetch).toHaveBeenCalled()
+    })
   })
 
   describe("caching", () => {
