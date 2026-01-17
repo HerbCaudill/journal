@@ -14,7 +14,7 @@
     "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "ralph": "pnpm dlx @herbcaudill/ralph",
+    "ralph": "clear && ralph",
     "beads": "pnpm dlx beads-ui start --open"
   },
   "dependencies": {
