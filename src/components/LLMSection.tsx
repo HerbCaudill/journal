@@ -166,11 +166,11 @@ export function LLMSection({
           <button
             onClick={handleSubmit}
             disabled={isLoading || !apiKey}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-6 w-6 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={`Ask ${providerName}`}
           >
             {isLoading ?
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -186,7 +186,7 @@ export function LLMSection({
                 />
               </svg>
             : <svg
-                className="h-4 w-4"
+                className="h-3 w-3"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -250,11 +250,11 @@ export function LLMSection({
           <button
             onClick={handleFollowUp}
             disabled={isLoading || !followUpInput.trim()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Send follow-up"
           >
             {isLoading ?
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -270,7 +270,7 @@ export function LLMSection({
                 />
               </svg>
             : <svg
-                className="h-4 w-4"
+                className="h-3 w-3"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
