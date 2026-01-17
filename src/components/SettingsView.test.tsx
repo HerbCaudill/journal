@@ -6,6 +6,11 @@ import * as GoogleCalendarHook from "../hooks/useGoogleCalendar"
 import * as ThemeHook from "../hooks/useTheme"
 import type { Doc } from "@automerge/automerge"
 import type { JournalDoc } from "../types/journal"
+import {
+  AUTOSAVE_DEBOUNCE_DELAY,
+  SETTINGS_SAVE_STATUS_DURATION,
+  SETTINGS_INITIAL_LOAD_DELAY,
+} from "@/lib/timing"
 
 // Mock the useJournal hook
 vi.mock("../context/JournalContext", () => ({
@@ -326,7 +331,7 @@ describe("SettingsView", () => {
 
     // Wait for initial load flag to be cleared
     await act(async () => {
-      vi.advanceTimersByTime(100)
+      vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
     })
 
     const input = screen.getByLabelText(/claude api key/i)
@@ -337,7 +342,7 @@ describe("SettingsView", () => {
 
     // Advance timers to trigger debounced save
     await act(async () => {
-      vi.advanceTimersByTime(500)
+      vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
     })
 
     expect(mockChangeDoc).toHaveBeenCalledTimes(1)
@@ -403,7 +408,7 @@ describe("SettingsView", () => {
 
     // Wait for initial load flag to be cleared
     await act(async () => {
-      vi.advanceTimersByTime(100)
+      vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
     })
 
     const input = screen.getByLabelText(/claude api key/i)
@@ -411,14 +416,14 @@ describe("SettingsView", () => {
 
     // Advance timers to trigger debounced save
     await act(async () => {
-      vi.advanceTimersByTime(500)
+      vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
     })
 
     expect(screen.getByTestId("claude-api-key-save-status")).toHaveTextContent("Saved")
 
     // Confirmation should disappear after timeout
     await act(async () => {
-      vi.advanceTimersByTime(2000)
+      vi.advanceTimersByTime(SETTINGS_SAVE_STATUS_DURATION)
     })
     expect(screen.queryByTestId("claude-api-key-save-status")).not.toBeInTheDocument()
   })
@@ -742,7 +747,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const input = screen.getByLabelText(/claude api key/i)
@@ -750,7 +755,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save and validation
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(screen.getByRole("alert")).toHaveTextContent(
@@ -771,7 +776,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const input = screen.getByLabelText(/claude api key/i)
@@ -779,7 +784,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save and validation
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(screen.getByRole("alert")).toHaveTextContent(
@@ -800,7 +805,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const input = screen.getByLabelText(/claude api key/i)
@@ -808,7 +813,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save and validation
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(screen.getByRole("alert")).toBeInTheDocument()
@@ -831,7 +836,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const input = screen.getByLabelText(/claude api key/i)
@@ -839,7 +844,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument()
@@ -858,7 +863,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const input = screen.getByLabelText(/claude api key/i)
@@ -866,7 +871,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save and validation
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(input).toHaveAttribute("aria-invalid", "true")
@@ -950,7 +955,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const bioInput = screen.getByLabelText(/bio/i)
@@ -961,7 +966,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
@@ -980,7 +985,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const instructionsInput = screen.getByLabelText(/additional instructions/i)
@@ -991,7 +996,7 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
@@ -1010,7 +1015,7 @@ describe("SettingsView", () => {
 
         // Wait for initial load flag to be cleared
         await act(async () => {
-          vi.advanceTimersByTime(100)
+          vi.advanceTimersByTime(SETTINGS_INITIAL_LOAD_DELAY)
         })
 
         const bioInput = screen.getByLabelText(/bio/i)
@@ -1018,14 +1023,14 @@ describe("SettingsView", () => {
 
         // Advance timers to trigger debounced save
         await act(async () => {
-          vi.advanceTimersByTime(500)
+          vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY)
         })
 
         expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saved")
 
         // Advance timers to hide the status
         await act(async () => {
-          vi.advanceTimersByTime(2000)
+          vi.advanceTimersByTime(SETTINGS_SAVE_STATUS_DURATION)
         })
 
         expect(screen.queryByTestId("bio-save-status")).not.toBeInTheDocument()

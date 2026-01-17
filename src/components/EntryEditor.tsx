@@ -2,9 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useJournal } from "../context/JournalContext"
 import type { JournalEntry, Message } from "../types/journal"
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
-
-const DEBOUNCE_DELAY = 500
-const SAVED_INDICATOR_DURATION = 1500
+import { AUTOSAVE_DEBOUNCE_DELAY, SAVED_INDICATOR_DURATION } from "@/lib/timing"
 
 type SaveStatus = "idle" | "saving" | "saved"
 
@@ -140,7 +138,7 @@ export function EntryEditor({ date, footer, onSubmit }: EntryEditorProps) {
       // Set new debounced save
       debounceTimeoutRef.current = setTimeout(() => {
         saveToDocument(newContent)
-      }, DEBOUNCE_DELAY)
+      }, AUTOSAVE_DEBOUNCE_DELAY)
     },
     [saveToDocument],
   )

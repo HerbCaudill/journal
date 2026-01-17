@@ -13,9 +13,11 @@ import {
   WarningIcon,
 } from "./Icons"
 import type { LLMProviderType } from "../types/journal"
-
-// Debounce delay for autosave (in milliseconds)
-const AUTOSAVE_DELAY = 500
+import {
+  AUTOSAVE_DEBOUNCE_DELAY,
+  SETTINGS_SAVE_STATUS_DURATION,
+  SETTINGS_INITIAL_LOAD_DELAY,
+} from "@/lib/timing"
 
 // Environment variable defaults for API keys
 const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
@@ -117,7 +119,7 @@ export function SettingsView() {
       // Mark initial load as complete after a short delay to allow state to settle
       setTimeout(() => {
         isInitialLoadRef.current = false
-      }, 100)
+      }, SETTINGS_INITIAL_LOAD_DELAY)
     }
   }, [
     doc?.settings?.llmProvider,
@@ -181,8 +183,11 @@ export function SettingsView() {
         if (bioSaveStatusTimeoutRef.current) {
           clearTimeout(bioSaveStatusTimeoutRef.current)
         }
-        bioSaveStatusTimeoutRef.current = setTimeout(() => setBioSaveStatus("idle"), 2000)
-      }, AUTOSAVE_DELAY)
+        bioSaveStatusTimeoutRef.current = setTimeout(
+          () => setBioSaveStatus("idle"),
+          SETTINGS_SAVE_STATUS_DURATION,
+        )
+      }, AUTOSAVE_DEBOUNCE_DELAY)
     },
     [doc, changeDoc],
   )
@@ -213,9 +218,9 @@ export function SettingsView() {
         }
         instructionsSaveStatusTimeoutRef.current = setTimeout(
           () => setInstructionsSaveStatus("idle"),
-          2000,
+          SETTINGS_SAVE_STATUS_DURATION,
         )
-      }, AUTOSAVE_DELAY)
+      }, AUTOSAVE_DEBOUNCE_DELAY)
     },
     [doc, changeDoc],
   )
@@ -257,9 +262,9 @@ export function SettingsView() {
         }
         claudeApiKeySaveStatusTimeoutRef.current = setTimeout(
           () => setClaudeApiKeySaveStatus("idle"),
-          2000,
+          SETTINGS_SAVE_STATUS_DURATION,
         )
-      }, AUTOSAVE_DELAY)
+      }, AUTOSAVE_DEBOUNCE_DELAY)
     },
     [doc, changeDoc],
   )

@@ -5,6 +5,7 @@ import { EntryEditor } from "./EntryEditor"
 import * as JournalContext from "../context/JournalContext"
 import type { JournalDoc } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
+import { AUTOSAVE_DEBOUNCE_DELAY, SAVED_INDICATOR_DURATION } from "@/lib/timing"
 
 // Mock the useJournal hook
 vi.mock("../context/JournalContext", async () => {
@@ -79,7 +80,7 @@ describe("EntryEditor", () => {
 
     // Advance time past debounce delay
     await act(async () => {
-      vi.advanceTimersByTime(600)
+      vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY + 100)
     })
 
     // Now it should have been called
@@ -163,7 +164,7 @@ describe("EntryEditor", () => {
 
       // Advance time past debounce delay
       await act(async () => {
-        vi.advanceTimersByTime(600)
+        vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY + 100)
       })
 
       // Should show "Saved" indicator
@@ -180,15 +181,15 @@ describe("EntryEditor", () => {
 
       // Advance time past debounce delay
       await act(async () => {
-        vi.advanceTimersByTime(600)
+        vi.advanceTimersByTime(AUTOSAVE_DEBOUNCE_DELAY + 100)
       })
 
       // Verify "Saved" is showing
       expect(screen.getByTestId("save-indicator")).toHaveTextContent("Saved")
 
-      // Advance time past saved indicator duration (1500ms)
+      // Advance time past saved indicator duration
       await act(async () => {
-        vi.advanceTimersByTime(1500)
+        vi.advanceTimersByTime(SAVED_INDICATOR_DURATION + 100)
       })
 
       // Indicator should be hidden
