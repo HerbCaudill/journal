@@ -2,6 +2,12 @@ import { useState, useCallback, useRef, useEffect } from "react"
 import { useLLM } from "../hooks/useLLM"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@/components/ui/input-group"
 
 interface LLMSectionProps {
   /** The user's journal entry content to send to the LLM */
@@ -154,25 +160,26 @@ export function LLMSection({
   return (
     <div className="flex flex-col gap-4">
       {/* Submit button in input-like container */}
-      <div className="border-input bg-background relative flex min-h-[3rem] items-end rounded-lg border p-2">
+      <InputGroup className="min-h-[3rem]">
         {isLoading && (
           <span className="text-muted-foreground absolute top-2 left-3 text-sm">Thinking...</span>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <InputGroupAddon align="inline-end">
           {messages.length > 0 && (
-            <button
+            <InputGroupButton
               onClick={handleReset}
               disabled={isLoading}
-              className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border px-3 py-1.5 text-sm transition-colors disabled:opacity-50"
+              variant="outline"
               aria-label="Clear conversation"
             >
               Clear
-            </button>
+            </InputGroupButton>
           )}
-          <button
+          <InputGroupButton
             onClick={handleSubmit}
             disabled={isLoading || !apiKey}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-6 w-6 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            variant="default"
+            size="icon-xs"
             aria-label={`Ask ${providerName}`}
           >
             {isLoading ?
@@ -203,9 +210,9 @@ export function LLMSection({
                 <path d="M12 19V5M5 12l7-7 7 7" />
               </svg>
             }
-          </button>
-        </div>
-      </div>
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
 
       {/* Error display */}
       {displayError && (
@@ -233,8 +240,8 @@ export function LLMSection({
 
       {/* Follow-up input - shown after initial conversation */}
       {messages.length > 0 && apiKey && (
-        <div className="relative">
-          <textarea
+        <InputGroup className="bg-card">
+          <InputGroupTextarea
             ref={followUpInputRef}
             value={followUpInput}
             onChange={e => setFollowUpInput(e.target.value)}
@@ -247,45 +254,48 @@ export function LLMSection({
             placeholder="Ask a follow-up question..."
             disabled={isLoading}
             rows={2}
-            className="bg-card focus:ring-ring min-h-[80px] w-full resize-none rounded-md border p-4 pr-12 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[80px] text-base leading-relaxed"
             aria-label="Follow-up message"
           />
-          <button
-            onClick={handleFollowUp}
-            disabled={isLoading || !followUpInput.trim()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 absolute right-3 bottom-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Send follow-up"
-          >
-            {isLoading ?
-              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
+          <InputGroupAddon align="block-end" className="justify-end">
+            <InputGroupButton
+              onClick={handleFollowUp}
+              disabled={isLoading || !followUpInput.trim()}
+              variant="default"
+              size="icon-xs"
+              aria-label="Send follow-up"
+            >
+              {isLoading ?
+                <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              : <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            : <svg
-                className="h-3 w-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 19V5M5 12l7-7 7 7" />
-              </svg>
-            }
-          </button>
-        </div>
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+              }
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
       )}
 
       {/* No API key message */}
