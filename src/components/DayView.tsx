@@ -7,7 +7,7 @@ import type { LLMSubmitButtonProps } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
 import { InputGroupButton } from "@/components/ui/input-group"
 import { Button } from "@/components/ui/button"
-import type { Message } from "../types/journal"
+import type { Message, DateString } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
 // Environment variable defaults for API keys
@@ -16,7 +16,7 @@ const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
 
 interface DayViewProps {
   /** The date to display in YYYY-MM-DD format */
-  date: string
+  date: DateString
 }
 
 /**

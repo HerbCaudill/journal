@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { EntryEditor } from "./EntryEditor"
 import * as JournalContext from "../context/JournalContext"
 import type { JournalDoc } from "../types/journal"
+import { toDateString } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
 import { AUTOSAVE_DEBOUNCE_DELAY, SAVED_INDICATOR_DURATION } from "@/lib/timing"
 
@@ -50,7 +51,7 @@ describe("EntryEditor", () => {
   })
 
   it("renders a textarea", () => {
-    render(<EntryEditor date="2024-01-15" />)
+    render(<EntryEditor date={toDateString("2024-01-15")} />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     expect(textarea).toBeInTheDocument()
@@ -59,7 +60,7 @@ describe("EntryEditor", () => {
   it("accepts user input", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-    render(<EntryEditor date="2024-01-15" />)
+    render(<EntryEditor date={toDateString("2024-01-15")} />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     await user.type(textarea, "Hello, journal!")
@@ -70,7 +71,7 @@ describe("EntryEditor", () => {
   it("debounces saves to the document", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-    render(<EntryEditor date="2024-01-15" />)
+    render(<EntryEditor date={toDateString("2024-01-15")} />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     await user.type(textarea, "Test")
@@ -95,7 +96,7 @@ describe("EntryEditor", () => {
       isLoading: true,
     })
 
-    render(<EntryEditor date="2024-01-15" />)
+    render(<EntryEditor date={toDateString("2024-01-15")} />)
 
     // Should show loading skeleton
     const loadingDiv = document.querySelector(".animate-pulse")
@@ -135,7 +136,7 @@ describe("EntryEditor", () => {
       isLoading: false,
     })
 
-    render(<EntryEditor date="2024-01-15" />)
+    render(<EntryEditor date={toDateString("2024-01-15")} />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     expect(textarea).toHaveValue("Existing content")
@@ -145,7 +146,7 @@ describe("EntryEditor", () => {
     it('shows "Saving..." while debounce timer is active', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-      render(<EntryEditor date="2024-01-15" />)
+      render(<EntryEditor date={toDateString("2024-01-15")} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test")
@@ -157,7 +158,7 @@ describe("EntryEditor", () => {
     it('shows "Saved" after debounce completes', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-      render(<EntryEditor date="2024-01-15" />)
+      render(<EntryEditor date={toDateString("2024-01-15")} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test")
@@ -174,7 +175,7 @@ describe("EntryEditor", () => {
     it("hides save indicator after delay", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-      render(<EntryEditor date="2024-01-15" />)
+      render(<EntryEditor date={toDateString("2024-01-15")} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test")
@@ -197,7 +198,7 @@ describe("EntryEditor", () => {
     })
 
     it("does not show indicator when no changes have been made", () => {
-      render(<EntryEditor date="2024-01-15" />)
+      render(<EntryEditor date={toDateString("2024-01-15")} />)
 
       // No indicator should be visible initially
       expect(screen.queryByTestId("save-indicator")).not.toBeInTheDocument()
@@ -209,7 +210,7 @@ describe("EntryEditor", () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const onSubmit = vi.fn()
 
-      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+      render(<EntryEditor date={toDateString("2024-01-15")} onSubmit={onSubmit} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test content")
@@ -222,7 +223,7 @@ describe("EntryEditor", () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const onSubmit = vi.fn()
 
-      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+      render(<EntryEditor date={toDateString("2024-01-15")} onSubmit={onSubmit} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test content")
@@ -235,7 +236,7 @@ describe("EntryEditor", () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const onSubmit = vi.fn()
 
-      render(<EntryEditor date="2024-01-15" onSubmit={onSubmit} />)
+      render(<EntryEditor date={toDateString("2024-01-15")} onSubmit={onSubmit} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test content{Enter}")
@@ -246,7 +247,7 @@ describe("EntryEditor", () => {
     it("does not crash when onSubmit is not provided", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
-      render(<EntryEditor date="2024-01-15" />)
+      render(<EntryEditor date={toDateString("2024-01-15")} />)
 
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       await user.type(textarea, "Test content")

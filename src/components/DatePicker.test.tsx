@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { DatePicker } from "./DatePicker"
+import { toDateString } from "../types/journal"
 
 // Mock the JournalContext to control the entries data
 vi.mock("../context/JournalContext", async () => {
@@ -131,19 +132,21 @@ describe("DatePicker", () => {
   })
 
   it("shows dots on days with entries", () => {
+    const date1 = toDateString("2024-06-10")
+    const date2 = toDateString("2024-06-15")
     mockedUseJournal.mockReturnValue({
       doc: {
         entries: {
-          "entry-1": {
+          [date1]: {
             id: "entry-1",
-            date: "2024-06-10",
+            date: date1,
             messages: [{ id: "msg-1", role: "user", content: "Hello", createdAt: Date.now() }],
             createdAt: Date.now(),
             updatedAt: Date.now(),
           },
-          "entry-2": {
+          [date2]: {
             id: "entry-2",
-            date: "2024-06-15",
+            date: date2,
             messages: [{ id: "msg-2", role: "user", content: "World", createdAt: Date.now() }],
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -177,12 +180,13 @@ describe("DatePicker", () => {
   })
 
   it("does not show dots for entries with empty messages", () => {
+    const date1 = toDateString("2024-06-10")
     mockedUseJournal.mockReturnValue({
       doc: {
         entries: {
-          "entry-1": {
+          [date1]: {
             id: "entry-1",
-            date: "2024-06-10",
+            date: date1,
             messages: [], // Empty messages array
             createdAt: Date.now(),
             updatedAt: Date.now(),

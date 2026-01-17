@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { JournalDoc, Message } from "../types/journal"
+import { toDateString } from "../types/journal"
 import type { Doc, ChangeFn } from "@automerge/automerge"
 
 // Create a mock document that tracks changes
@@ -84,7 +85,7 @@ import * as JournalContext from "../context/JournalContext"
 import * as useLLMHook from "../hooks/useLLM"
 
 describe("Conversation Persistence", () => {
-  const TEST_DATE = "2024-06-15"
+  const TEST_DATE = toDateString("2024-06-15")
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -340,7 +341,7 @@ describe("Conversation Persistence", () => {
 
   it("verifies exact document state after handleMessagesChange", () => {
     // Simulate exact flow: EntryEditor saves journal, then handleMessagesChange is called
-    const TEST_DATE_2 = "2024-06-20"
+    const TEST_DATE_2 = toDateString("2024-06-20")
 
     // Step 1: EntryEditor has saved the journal entry
     mockDoc.entries[TEST_DATE_2] = {
@@ -488,7 +489,7 @@ describe("Conversation Persistence", () => {
     // 3. LLMSection receives initialMessages
     // 4. useLLM syncs its state
 
-    const RELOAD_DATE = "2024-07-01"
+    const RELOAD_DATE = toDateString("2024-07-01")
 
     // Simulate persisted document state (as it would be after a conversation)
     mockDoc.entries[RELOAD_DATE] = {

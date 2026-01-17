@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useJournal } from "../context/JournalContext"
-import type { JournalEntry, Message } from "../types/journal"
+import type { JournalEntry, Message, DateString } from "../types/journal"
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 import { AUTOSAVE_DEBOUNCE_DELAY, SAVED_INDICATOR_DURATION } from "@/lib/timing"
 
@@ -8,7 +8,7 @@ type SaveStatus = "idle" | "saving" | "saved"
 
 interface EntryEditorProps {
   /** The date for this entry in YYYY-MM-DD format */
-  date: string
+  date: DateString
   /** Optional footer content to render in the InputGroup addon (e.g., submit button) */
   footer?: React.ReactNode
   /** Callback when user presses Cmd/Ctrl+Enter to submit */

@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import * as JournalContext from "../context/JournalContext"
 import type { JournalDoc } from "../types/journal"
+import { toDateString } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
 
 // Mock the useJournal hook - don't use importActual to avoid loading automerge
@@ -124,7 +125,7 @@ describe("DayView", () => {
   })
 
   it("renders the EntryEditor for the given date", () => {
-    render(<DayView date="2024-01-15" />)
+    render(<DayView date={toDateString("2024-01-15")} />)
 
     // EntryEditor should be rendered with its textarea
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
@@ -164,7 +165,7 @@ describe("DayView", () => {
       isLoading: false,
     })
 
-    render(<DayView date="2024-06-20" />)
+    render(<DayView date={toDateString("2024-06-20")} />)
 
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     expect(textarea).toHaveValue("Content for June 20")
@@ -172,21 +173,21 @@ describe("DayView", () => {
 
   describe("Claude integration", () => {
     it("renders the Ask Claude button", () => {
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       const askClaudeButton = screen.getByRole("button", { name: /ask claude/i })
       expect(askClaudeButton).toBeInTheDocument()
     })
 
     it("disables Ask Claude button when no API key is configured", () => {
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       const askClaudeButton = screen.getByRole("button", { name: /ask claude/i })
       expect(askClaudeButton).toBeDisabled()
     })
 
     it("shows message to configure API key when not set", () => {
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       expect(screen.getByText(/add your API key/i)).toBeInTheDocument()
     })
@@ -210,7 +211,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       const askClaudeButton = screen.getByRole("button", { name: /ask claude/i })
       expect(askClaudeButton).not.toBeDisabled()
@@ -273,7 +274,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       expect(screen.getByText("This is Claude's response")).toBeInTheDocument()
     })
@@ -340,7 +341,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // EntryEditor should NOT be rendered when there's a conversation
       const textarea = screen.queryByRole("textbox", { name: /journal entry/i })
@@ -381,7 +382,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // EntryEditor should be rendered when there's no conversation yet
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
@@ -415,7 +416,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // EntryEditor should be rendered when there are no messages
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
@@ -479,7 +480,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Edit button should be visible
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
@@ -520,7 +521,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Edit button should NOT be visible when there's no conversation
       const editButton = screen.queryByRole("button", { name: /edit journal entry/i })
@@ -585,7 +586,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Initially, EntryEditor should NOT be visible
       expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
@@ -658,7 +659,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Click the Edit button to enter edit mode
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
@@ -735,7 +736,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Click the Edit button to enter edit mode
       const editButton = screen.getByRole("button", { name: /edit journal entry/i })
@@ -832,7 +833,7 @@ describe("DayView", () => {
         isLoading: false,
       })
 
-      render(<DayView date="2024-01-15" />)
+      render(<DayView date={toDateString("2024-01-15")} />)
 
       // Both assistant responses should be displayed (via the mock LLMSection)
       expect(screen.getByText("First response")).toBeInTheDocument()

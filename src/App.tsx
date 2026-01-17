@@ -10,8 +10,10 @@ import { useTheme } from "./hooks/useTheme"
 import { useJournal } from "./context/JournalContext"
 import { useGeolocation } from "./hooks/useGeolocation"
 import { reverseGeocode } from "./lib/geocoding"
+import type { DateString } from "./types/journal"
+import { toDateString } from "./types/journal"
 
-type Route = { type: "day"; date: string } | { type: "settings" } | { type: "oauth-callback" }
+type Route = { type: "day"; date: DateString } | { type: "settings" } | { type: "oauth-callback" }
 
 /**
  * Checks if the current URL is an OAuth callback
@@ -54,7 +56,7 @@ function parseHash(hash: string): Route {
     // Validate that the date is actually valid (e.g., 2025-13-45 would fail)
     // Also prevent navigation to future dates
     if (isValidDate(date) && !isFutureDate(date)) {
-      return { type: "day", date }
+      return { type: "day", date: toDateString(date) }
     }
     // Invalid or future date - fall through to default
   }

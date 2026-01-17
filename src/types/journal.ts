@@ -5,6 +5,58 @@
 import type { GeoPosition } from "../hooks/useGeolocation"
 
 /**
+ * Branded type for ISO date strings (YYYY-MM-DD format).
+ * This provides compile-time type safety to ensure only valid date strings are used as keys.
+ */
+export type DateString = string & { readonly __brand: "DateString" }
+
+/**
+ * Type guard to check if a string is a valid DateString (YYYY-MM-DD format representing a real date)
+ * @param s - String to validate
+ * @returns true if the string is a valid DateString, false otherwise
+ */
+export function isDateString(s: string): s is DateString {
+  const match = s.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) {
+    return false
+  }
+
+  const [, yearStr, monthStr, dayStr] = match
+  const year = parseInt(yearStr, 10)
+  const month = parseInt(monthStr, 10) - 1 // JavaScript months are 0-indexed
+  const day = parseInt(dayStr, 10)
+
+  const date = new Date(year, month, day)
+
+  // Validate that the date components are valid
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day
+}
+
+/**
+ * Converts a string to a DateString, throwing an error if invalid.
+ * Use this when you have a string that should be a valid date.
+ * @param s - String to convert
+ * @returns DateString if valid
+ * @throws Error if the string is not a valid date format
+ */
+export function toDateString(s: string): DateString {
+  if (!isDateString(s)) {
+    throw new Error(`Invalid date format: ${s}. Expected YYYY-MM-DD`)
+  }
+  return s
+}
+
+/**
+ * Converts a string to a DateString if valid, otherwise returns undefined.
+ * Use this when you want to safely attempt conversion without throwing.
+ * @param s - String to convert
+ * @returns DateString if valid, undefined otherwise
+ */
+export function toDateStringOrUndefined(s: string): DateString | undefined {
+  return isDateString(s) ? s : undefined
+}
+
+/**
  * A single message within a journal entry (conversation turn)
  */
 export interface Message {
@@ -25,7 +77,7 @@ export interface JournalEntry {
   /** Unique identifier for the entry */
   id: string
   /** Date of the entry in ISO format (YYYY-MM-DD) */
-  date: string
+  date: DateString
   /** Array of messages in this entry */
   messages: Message[]
   /** Geographic position captured for this entry (optional) */
@@ -67,8 +119,8 @@ export interface Settings {
  * The root Automerge document structure for the journal
  */
 export interface JournalDoc {
-  /** Map of entry IDs to journal entries */
-  entries: Record<string, JournalEntry>
+  /** Map of date strings to journal entries, keyed by YYYY-MM-DD format dates */
+  entries: Record<DateString, JournalEntry>
   /** User settings */
   settings: Settings
 }
