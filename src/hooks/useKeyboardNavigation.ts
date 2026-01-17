@@ -40,13 +40,30 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}): 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't intercept keyboard events when focus is in an editable element
       const target = event.target as HTMLElement
-      const isEditableElement =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable ||
-        target.contentEditable === "true"
 
-      if (isEditableElement) {
+      // Check for standard input elements
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+        return
+      }
+
+      // Check contentEditable including inherited state
+      // contentEditable can be "true", "false", or "inherit"
+      // We need to walk up the DOM tree to handle inherited values
+      let el: HTMLElement | null = target
+      while (el) {
+        if (el.contentEditable === "true") {
+          return // Found an editable ancestor, don't navigate
+        }
+        if (el.contentEditable === "false") {
+          break // Found an explicit non-editable ancestor, stop checking
+        }
+        // contentEditable === "inherit" - continue checking parent
+        el = el.parentElement
+      }
+
+      // Also check the isContentEditable property as a final safeguard
+      // This handles edge cases where the DOM might not reflect the attribute correctly
+      if (target.isContentEditable) {
         return
       }
 

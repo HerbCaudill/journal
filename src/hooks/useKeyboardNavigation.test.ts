@@ -198,6 +198,78 @@ describe("useKeyboardNavigation", () => {
     }).not.toThrow()
   })
 
+  it("does not call callbacks when focus is in a nested element inside contentEditable", () => {
+    const onPrevious = vi.fn()
+    const onNext = vi.fn()
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday }))
+
+    // Create a contentEditable parent with a nested child
+    const parent = document.createElement("DIV")
+    parent.contentEditable = "true"
+    const child = document.createElement("SPAN")
+    // Child inherits contentEditable from parent (contentEditable="inherit" is the default)
+    parent.appendChild(child)
+    document.body.appendChild(parent)
+
+    dispatchKeyDown("ArrowLeft", child)
+    dispatchKeyDown("ArrowRight", child)
+    dispatchKeyDown("t", child)
+    dispatchKeyDown("p", child)
+    dispatchKeyDown("n", child)
+
+    expect(onPrevious).not.toHaveBeenCalled()
+    expect(onNext).not.toHaveBeenCalled()
+    expect(onToday).not.toHaveBeenCalled()
+
+    // Cleanup
+    document.body.removeChild(parent)
+  })
+
+  it("allows navigation when contentEditable=false overrides parent contentEditable=true", () => {
+    const onPrevious = vi.fn()
+    const onNext = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext }))
+
+    // Create a contentEditable parent with a non-editable child
+    const parent = document.createElement("DIV")
+    parent.contentEditable = "true"
+    const child = document.createElement("SPAN")
+    child.contentEditable = "false"
+    parent.appendChild(child)
+    document.body.appendChild(parent)
+
+    dispatchKeyDown("ArrowLeft", child)
+    dispatchKeyDown("ArrowRight", child)
+
+    expect(onPrevious).toHaveBeenCalledTimes(1)
+    expect(onNext).toHaveBeenCalledTimes(1)
+
+    // Cleanup
+    document.body.removeChild(parent)
+  })
+
+  it("does not call callbacks for deeply nested element inside contentEditable", () => {
+    const onPrevious = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious }))
+
+    // Create a deeply nested structure
+    const grandparent = document.createElement("DIV")
+    grandparent.contentEditable = "true"
+    const parent = document.createElement("DIV")
+    const child = document.createElement("SPAN")
+    grandparent.appendChild(parent)
+    parent.appendChild(child)
+    document.body.appendChild(grandparent)
+
+    dispatchKeyDown("ArrowLeft", child)
+
+    expect(onPrevious).not.toHaveBeenCalled()
+
+    // Cleanup
+    document.body.removeChild(grandparent)
+  })
+
   it("cleans up event listener on unmount", () => {
     const onPrevious = vi.fn()
     const { unmount } = renderHook(() => useKeyboardNavigation({ onPrevious }))
