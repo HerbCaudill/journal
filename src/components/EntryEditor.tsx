@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useJournal } from "../context/JournalContext"
 import type { JournalEntry, Message } from "../types/journal"
+import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 
 const DEBOUNCE_DELAY = 500
 const SAVED_INDICATOR_DURATION = 1500
@@ -158,23 +159,24 @@ export function EntryEditor({ date }: EntryEditorProps) {
   }
 
   return (
-    <div className="relative">
-      <textarea
+    <InputGroup className="bg-card">
+      <InputGroupTextarea
         ref={textareaRef}
         value={localContent}
         onChange={handleChange}
-        className="bg-card focus:ring-ring min-h-[200px] w-full resize-none rounded-md border p-4 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        className="min-h-[200px] text-base leading-relaxed"
         aria-label="Journal entry"
       />
       {saveStatus !== "idle" && (
-        <div
-          className="text-muted-foreground absolute right-3 bottom-3 text-xs"
+        <InputGroupAddon
+          align="block-end"
+          className="justify-end"
           aria-live="polite"
           data-testid="save-indicator"
         >
-          {saveStatus === "saving" ? "Saving..." : "Saved"}
-        </div>
+          <span className="text-xs">{saveStatus === "saving" ? "Saving..." : "Saved"}</span>
+        </InputGroupAddon>
       )}
-    </div>
+    </InputGroup>
   )
 }
