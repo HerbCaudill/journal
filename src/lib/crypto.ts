@@ -53,7 +53,7 @@ function getDeviceIdentifier(): string {
     screen.width?.toString() ?? "",
     screen.height?.toString() ?? "",
     // Add origin to make the key site-specific
-    window.location.origin,
+    typeof window !== "undefined" ? window.location.origin : "",
   ]
 
   return components.join("|")

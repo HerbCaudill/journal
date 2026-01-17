@@ -22,7 +22,8 @@ import {
 // These should be set up in a Google Cloud project with Calendar API enabled
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
 const GOOGLE_REDIRECT_URI =
-  import.meta.env.VITE_GOOGLE_REDIRECT_URI ?? `${window.location.origin}/oauth/callback`
+  import.meta.env.VITE_GOOGLE_REDIRECT_URI ??
+  (typeof window !== "undefined" ? `${window.location.origin}/oauth/callback` : "")
 
 // OAuth and API endpoints
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
