@@ -42,6 +42,9 @@ export function DayView({ date }: DayViewProps) {
   // Get assistant messages for initial conversation state
   const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []
 
+  // Hide EntryEditor once conversation has started (has assistant messages)
+  const hasConversation = assistantMessages.length > 0
+
   // Handle when Claude conversation changes
   const handleMessagesChange = useCallback(
     (messages: Message[]) => {
@@ -94,7 +97,7 @@ export function DayView({ date }: DayViewProps) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
-      <EntryEditor date={date} footer={submitButton} />
+      {!hasConversation && <EntryEditor date={date} footer={submitButton} />}
       <LLMSection
         entryContent={entryContent}
         apiKey={apiKey}

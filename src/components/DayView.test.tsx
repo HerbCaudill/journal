@@ -280,4 +280,145 @@ describe("DayView", () => {
 
   // Note: Location capture and display tests have been moved to App.test.tsx
   // since the location logic is now handled at the App level and displayed in the Header
+
+  describe("EntryEditor visibility", () => {
+    it("hides EntryEditor when conversation has started (has assistant messages)", async () => {
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // EntryEditor should NOT be rendered when there's a conversation
+      const textarea = screen.queryByRole("textbox", { name: /journal entry/i })
+      expect(textarea).not.toBeInTheDocument()
+    })
+
+    it("shows EntryEditor when there are only user messages (no conversation)", () => {
+      const docWithOnlyUserMessage = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithOnlyUserMessage,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // EntryEditor should be rendered when there's no conversation yet
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+      expect(textarea).toHaveValue("My journal entry")
+    })
+
+    it("shows EntryEditor when entry has no messages", () => {
+      const docWithEmptyEntry = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithEmptyEntry,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // EntryEditor should be rendered when there are no messages
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+    })
+  })
 })

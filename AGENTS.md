@@ -44,7 +44,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `Header` - App header with navigation arrows on left/right, day/date/calendar centered (including location badge when position is captured). Location badge is clickable to re-capture location. Settings link has moved to Footer.
 - `Footer` - App footer with settings link, displayed at the bottom of the page.
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
-- `DayView` - Main view displaying calendar events, entry editor, and LLM section for a specific date
+- `DayView` - Main view displaying calendar events, entry editor (hidden once conversation starts), and LLM section for a specific date
 - `App` - Main application component that handles routing, auto-captures location when viewing today's entry (if geolocation is available and not denied), passes location data to Header, and includes Footer on day view (not on settings)
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge; displays save indicator ("Saving..." while debouncing, "Saved" briefly after save completes)
