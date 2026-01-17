@@ -34,6 +34,16 @@ function getFirstDayOfWeek(year: number, month: number): number {
 }
 
 /**
+ * Gets localized weekday abbreviations starting from Sunday
+ * Uses the Intl.DateTimeFormat API for proper localization
+ */
+function getLocalizedWeekdays(): string[] {
+  // Use a known week starting with Sunday (Jan 7, 2024 was a Sunday)
+  const formatter = new Intl.DateTimeFormat(undefined, { weekday: "short" })
+  return Array.from({ length: 7 }, (_, i) => formatter.format(new Date(2024, 0, 7 + i)))
+}
+
+/**
  * Generates calendar days for a month view, including padding days from previous/next months
  */
 function generateCalendarDays(
@@ -146,7 +156,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
     onClose?.()
   }
 
-  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+  const weekDays = useMemo(() => getLocalizedWeekdays(), [])
 
   return (
     <div

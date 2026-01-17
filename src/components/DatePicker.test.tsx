@@ -55,13 +55,16 @@ describe("DatePicker", () => {
   it("renders weekday headers", () => {
     render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
 
-    expect(screen.getByText("Su")).toBeInTheDocument()
-    expect(screen.getByText("Mo")).toBeInTheDocument()
-    expect(screen.getByText("Tu")).toBeInTheDocument()
-    expect(screen.getByText("We")).toBeInTheDocument()
-    expect(screen.getByText("Th")).toBeInTheDocument()
-    expect(screen.getByText("Fr")).toBeInTheDocument()
-    expect(screen.getByText("Sa")).toBeInTheDocument()
+    // Get expected localized weekday abbreviations (Sunday to Saturday)
+    // Jan 7, 2024 was a Sunday
+    const formatter = new Intl.DateTimeFormat(undefined, { weekday: "short" })
+    const expectedWeekdays = Array.from({ length: 7 }, (_, i) =>
+      formatter.format(new Date(2024, 0, 7 + i)),
+    )
+
+    for (const weekday of expectedWeekdays) {
+      expect(screen.getByText(weekday)).toBeInTheDocument()
+    }
   })
 
   it("calls onDateSelect when a date is clicked", async () => {

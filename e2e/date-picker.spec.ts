@@ -13,14 +13,8 @@ test.describe("Date picker", () => {
     const calendarButton = page.getByRole("button", { name: /^[A-Z][a-z]+ \d+/ })
     await calendarButton.click()
 
-    // Date picker should be visible with weekday headers (use exact match to avoid conflicts)
-    await expect(page.getByText("Su", { exact: true })).toBeVisible()
-    await expect(page.getByText("Mo", { exact: true })).toBeVisible()
-    await expect(page.getByText("Tu", { exact: true })).toBeVisible()
-    await expect(page.getByText("We", { exact: true })).toBeVisible()
-    await expect(page.getByText("Th", { exact: true })).toBeVisible()
-    await expect(page.getByText("Fr", { exact: true })).toBeVisible()
-    await expect(page.getByText("Sa", { exact: true })).toBeVisible()
+    // Date picker dialog should be visible
+    await expect(page.getByRole("dialog", { name: "Date picker" })).toBeVisible()
 
     // Should show "Go to Today" button
     await expect(page.getByRole("button", { name: /go to today/i })).toBeVisible()
