@@ -3,11 +3,18 @@ import { useJournal } from "../context/JournalContext"
 import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
 import type { LLMProviderType } from "../types/journal"
 
+// Environment variable defaults for API keys
+const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
+const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
+
 /**
  * Settings view component for managing app configuration.
  * Allows users to:
  * - Enter their Claude API key for AI integration
  * - Connect their Google account for calendar integration
+ *
+ * API keys can be configured via environment variables (VITE_CLAUDE_API_KEY, VITE_OPENAI_API_KEY)
+ * which serve as defaults when no key is saved in the document settings.
  */
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
@@ -20,17 +27,15 @@ export function SettingsView() {
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
 
   // Sync local state with document on mount
+  // Priority: saved value > env var default
   useEffect(() => {
     if (doc?.settings) {
       if (doc.settings.llmProvider) {
         setLlmProvider(doc.settings.llmProvider)
       }
-      if (doc.settings.claudeApiKey) {
-        setClaudeApiKey(doc.settings.claudeApiKey)
-      }
-      if (doc.settings.openaiApiKey) {
-        setOpenaiApiKey(doc.settings.openaiApiKey)
-      }
+      // Use saved value if present, otherwise fall back to env var
+      setClaudeApiKey(doc.settings.claudeApiKey || ENV_CLAUDE_API_KEY)
+      setOpenaiApiKey(doc.settings.openaiApiKey || ENV_OPENAI_API_KEY)
     }
   }, [doc?.settings?.llmProvider, doc?.settings?.claudeApiKey, doc?.settings?.openaiApiKey])
 
@@ -125,8 +130,15 @@ export function SettingsView() {
     )
   }
 
-  const hasClaudeUnsavedChanges = claudeApiKey !== (doc?.settings?.claudeApiKey ?? "")
-  const hasOpenaiUnsavedChanges = openaiApiKey !== (doc?.settings?.openaiApiKey ?? "")
+  // Determine effective saved value (saved or env var default)
+  const effectiveClaudeKey = doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
+  const effectiveOpenaiKey = doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
+  const hasClaudeUnsavedChanges = claudeApiKey !== effectiveClaudeKey
+  const hasOpenaiUnsavedChanges = openaiApiKey !== effectiveOpenaiKey
+
+  // Track if key is from env var (for showing different UI indicator)
+  const isClaudeFromEnv = !doc?.settings?.claudeApiKey && !!ENV_CLAUDE_API_KEY
+  const isOpenaiFromEnv = !doc?.settings?.openaiApiKey && !!ENV_OPENAI_API_KEY
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
@@ -251,7 +263,9 @@ export function SettingsView() {
           {claudeApiKey && !hasClaudeUnsavedChanges && (
             <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
               <CheckIcon />
-              Claude API key configured
+              {isClaudeFromEnv ?
+                "Claude API key configured (from environment)"
+              : "Claude API key configured"}
             </p>
           )}
         </section>
@@ -332,7 +346,9 @@ export function SettingsView() {
           {openaiApiKey && !hasOpenaiUnsavedChanges && (
             <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
               <CheckIcon />
-              OpenAI API key configured
+              {isOpenaiFromEnv ?
+                "OpenAI API key configured (from environment)"
+              : "OpenAI API key configured"}
             </p>
           )}
         </section>

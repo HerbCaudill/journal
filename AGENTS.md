@@ -24,8 +24,12 @@ pnpm format           # Format code with Prettier
 
 Copy `.env.example` to `.env` and configure:
 
+- `VITE_CLAUDE_API_KEY` - Optional default Claude API key (can also be set in app Settings)
+- `VITE_OPENAI_API_KEY` - Optional default OpenAI API key (can also be set in app Settings)
 - `VITE_GOOGLE_CLIENT_ID` - Required for Google Calendar integration (OAuth 2.0 Client ID)
 - `VITE_GOOGLE_REDIRECT_URI` - Optional, defaults to `${origin}/oauth/callback`
+
+Note: API keys set via environment variables serve as defaults. Users can override them by entering a different key in the app's Settings. Keys saved in Settings take precedence over environment variables.
 
 ## Architecture
 

@@ -6,6 +6,10 @@ import { CalendarEvents } from "./CalendarEvents"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
+// Environment variable defaults for API keys
+const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
+const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
+
 interface DayViewProps {
   /** The date to display in YYYY-MM-DD format */
   date: string
@@ -23,11 +27,12 @@ export function DayView({ date }: DayViewProps) {
   const entryContent = userMessage?.content ?? ""
 
   // Get LLM provider and corresponding API key
+  // Priority: saved value > env var default
   const llmProvider = (doc?.settings?.llmProvider ?? "claude") as ProviderType
   const apiKey =
     llmProvider === "claude" ?
-      (doc?.settings?.claudeApiKey ?? "")
-    : (doc?.settings?.openaiApiKey ?? "")
+      doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
+    : doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
 
   // Get assistant messages for initial conversation state
   const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []

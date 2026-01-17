@@ -549,4 +549,8 @@ describe("SettingsView", () => {
       expect(mockChangeDoc).toHaveBeenCalledTimes(1)
     })
   })
+
+  // Note: Environment variable defaults (VITE_CLAUDE_API_KEY, VITE_OPENAI_API_KEY) are tested
+  // manually since import.meta.env is evaluated at module load time, making unit testing complex.
+  // The implementation uses env vars as fallbacks when no saved value exists in document settings.
 })
