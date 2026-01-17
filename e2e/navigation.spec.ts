@@ -97,6 +97,46 @@ test.describe("Keyboard navigation", () => {
     // Should navigate to March 16, 2025
     await expect(page.getByRole("heading", { level: 1, name: /March 16, 2025/ })).toBeVisible()
   })
+
+  test("navigates to today when pressing 't' key", async ({ page }) => {
+    // We're on March 15, 2025 from beforeEach
+    // Press 't' key to go to today
+    await page.keyboard.press("t")
+
+    // Should no longer be on March 15, 2025 (navigated to today)
+    // We can't check the exact date since "today" changes, but we can verify navigation happened
+    await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeHidden()
+
+    // And the heading should still exist (showing today's date)
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
+  })
+
+  test("navigates to today when pressing 'T' key (uppercase)", async ({ page }) => {
+    // We're on March 15, 2025 from beforeEach
+    // Press 'T' key (shift+t) to go to today
+    await page.keyboard.press("Shift+t")
+
+    // Should no longer be on March 15, 2025 (navigated to today)
+    await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeHidden()
+
+    // And the heading should still exist (showing today's date)
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
+  })
+
+  test("does not navigate to today when pressing 't' in text editor", async ({ page }) => {
+    // Focus the text editor
+    const textarea = page.getByRole("textbox", { name: /journal entry/i })
+    await textarea.click()
+
+    // Type 't' - should type into the editor, not navigate
+    await page.keyboard.press("t")
+
+    // Should still be on March 15, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
+
+    // And the 't' should be in the textarea
+    await expect(textarea).toHaveValue("t")
+  })
 })
 
 test.describe("Swipe navigation", () => {

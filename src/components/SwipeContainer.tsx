@@ -1,7 +1,7 @@
 import { type ReactNode, useCallback } from "react"
 import { useSwipeNavigation } from "../hooks/useSwipeNavigation"
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
-import { addDays } from "../lib/dates"
+import { addDays, getToday } from "../lib/dates"
 
 interface SwipeContainerProps {
   /** The current date in YYYY-MM-DD format */
@@ -40,15 +40,21 @@ export function SwipeContainer({ date, children, enabled = true }: SwipeContaine
     navigateToDay(prevDay)
   }, [date, navigateToDay])
 
+  const handleToday = useCallback(() => {
+    // Navigate to today's date
+    navigateToDay(getToday())
+  }, [navigateToDay])
+
   const swipeHandlers = useSwipeNavigation({
     onSwipeLeft: enabled ? handleSwipeLeft : undefined,
     onSwipeRight: enabled ? handleSwipeRight : undefined,
   })
 
-  // Add keyboard navigation (← → arrow keys)
+  // Add keyboard navigation (← → arrow keys, 't' for today)
   useKeyboardNavigation({
     onPrevious: enabled ? handleSwipeRight : undefined, // Left arrow = previous day (same as swipe right)
     onNext: enabled ? handleSwipeLeft : undefined, // Right arrow = next day (same as swipe left)
+    onToday: enabled ? handleToday : undefined, // 't' key = go to today
   })
 
   return (

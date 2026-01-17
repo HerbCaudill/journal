@@ -46,6 +46,24 @@ describe("useKeyboardNavigation", () => {
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 
+  it("calls onToday when lowercase 't' key is pressed", () => {
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onToday }))
+
+    dispatchKeyDown("t")
+
+    expect(onToday).toHaveBeenCalledTimes(1)
+  })
+
+  it("calls onToday when uppercase 'T' key is pressed", () => {
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onToday }))
+
+    dispatchKeyDown("T")
+
+    expect(onToday).toHaveBeenCalledTimes(1)
+  })
+
   it("does not call callbacks for other keys", () => {
     const onPrevious = vi.fn()
     const onNext = vi.fn()
@@ -63,52 +81,64 @@ describe("useKeyboardNavigation", () => {
   it("does not call callbacks when focus is in an input element", () => {
     const onPrevious = vi.fn()
     const onNext = vi.fn()
-    renderHook(() => useKeyboardNavigation({ onPrevious, onNext }))
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday }))
 
     const input = createMockElement("INPUT")
     dispatchKeyDown("ArrowLeft", input)
     dispatchKeyDown("ArrowRight", input)
+    dispatchKeyDown("t", input)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
+    expect(onToday).not.toHaveBeenCalled()
   })
 
   it("does not call callbacks when focus is in a textarea element", () => {
     const onPrevious = vi.fn()
     const onNext = vi.fn()
-    renderHook(() => useKeyboardNavigation({ onPrevious, onNext }))
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday }))
 
     const textarea = createMockElement("TEXTAREA")
     dispatchKeyDown("ArrowLeft", textarea)
     dispatchKeyDown("ArrowRight", textarea)
+    dispatchKeyDown("t", textarea)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
+    expect(onToday).not.toHaveBeenCalled()
   })
 
   it("does not call callbacks when focus is in a contenteditable element", () => {
     const onPrevious = vi.fn()
     const onNext = vi.fn()
-    renderHook(() => useKeyboardNavigation({ onPrevious, onNext }))
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday }))
 
     const editable = createMockElement("DIV", true)
     dispatchKeyDown("ArrowLeft", editable)
     dispatchKeyDown("ArrowRight", editable)
+    dispatchKeyDown("t", editable)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
+    expect(onToday).not.toHaveBeenCalled()
   })
 
   it("can be disabled via enabled option", () => {
     const onPrevious = vi.fn()
     const onNext = vi.fn()
-    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, enabled: false }))
+    const onToday = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday, enabled: false }))
 
     dispatchKeyDown("ArrowLeft")
     dispatchKeyDown("ArrowRight")
+    dispatchKeyDown("t")
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
+    expect(onToday).not.toHaveBeenCalled()
   })
 
   it("handles missing callbacks gracefully", () => {
@@ -118,6 +148,7 @@ describe("useKeyboardNavigation", () => {
     expect(() => {
       dispatchKeyDown("ArrowLeft")
       dispatchKeyDown("ArrowRight")
+      dispatchKeyDown("t")
     }).not.toThrow()
   })
 

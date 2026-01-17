@@ -5,6 +5,8 @@ export interface KeyboardNavigationOptions {
   onPrevious?: () => void
   /** Callback when user presses right arrow (next day) */
   onNext?: () => void
+  /** Callback when user presses 't' key (go to today) */
+  onToday?: () => void
   /** Whether keyboard navigation is enabled (default: true) */
   enabled?: boolean
 }
@@ -23,11 +25,12 @@ export interface KeyboardNavigationOptions {
  * useKeyboardNavigation({
  *   onPrevious: () => navigateToPrevDay(),
  *   onNext: () => navigateToNextDay(),
+ *   onToday: () => navigateToToday(),
  * })
  * ```
  */
 export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}): void {
-  const { onPrevious, onNext, enabled = true } = options
+  const { onPrevious, onNext, onToday, enabled = true } = options
 
   useEffect(() => {
     if (!enabled) {
@@ -47,17 +50,20 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}): 
         return
       }
 
-      // Handle arrow keys
+      // Handle arrow keys and 't' for today
       if (event.key === "ArrowLeft" && onPrevious) {
         event.preventDefault()
         onPrevious()
       } else if (event.key === "ArrowRight" && onNext) {
         event.preventDefault()
         onNext()
+      } else if ((event.key === "t" || event.key === "T") && onToday) {
+        event.preventDefault()
+        onToday()
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onPrevious, onNext, enabled])
+  }, [onPrevious, onNext, onToday, enabled])
 }
