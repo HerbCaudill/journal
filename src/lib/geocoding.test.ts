@@ -111,6 +111,64 @@ describe("geocoding", () => {
       expect(result.error).toBe("Unable to geocode")
     })
 
+    it("extracts neighbourhood when available (most specific)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          display_name: "Tamariu, Palafrugell, Baix Empordà, Girona, Catalonia, Spain",
+          address: {
+            neighbourhood: "Tamariu",
+            municipality: "Palafrugell",
+            county: "Baix Empordà",
+            state: "Catalonia",
+            country: "Spain",
+          },
+        }),
+      })
+
+      const result = await reverseGeocode(41.9178, 3.2014)
+
+      expect(result.locality).toBe("Tamariu")
+    })
+
+    it("extracts quarter when neighbourhood is not available", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          display_name: "Gràcia, Barcelona, Catalonia, Spain",
+          address: {
+            quarter: "Gràcia",
+            city: "Barcelona",
+            state: "Catalonia",
+            country: "Spain",
+          },
+        }),
+      })
+
+      const result = await reverseGeocode(41.4036, 2.1588)
+
+      expect(result.locality).toBe("Gràcia")
+    })
+
+    it("extracts suburb when neighbourhood and quarter are not available", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          display_name: "Brooklyn, New York, USA",
+          address: {
+            suburb: "Brooklyn",
+            city: "New York",
+            state: "New York",
+            country: "USA",
+          },
+        }),
+      })
+
+      const result = await reverseGeocode(40.6782, -73.9442)
+
+      expect(result.locality).toBe("Brooklyn")
+    })
+
     it("extracts city when village is not available", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,

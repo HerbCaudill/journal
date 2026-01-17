@@ -23,10 +23,17 @@ export interface GeocodingResult {
 interface NominatimResponse {
   display_name: string
   address: {
-    city?: string
-    town?: string
-    village?: string
+    // Neighborhood-level (most specific)
+    neighbourhood?: string
+    quarter?: string
+    suburb?: string
+    // Small settlements
     hamlet?: string
+    village?: string
+    // Larger settlements
+    town?: string
+    city?: string
+    // Administrative divisions
     municipality?: string
     county?: string
     state?: string
@@ -148,12 +155,17 @@ async function respectRateLimit(): Promise<void> {
 
 /**
  * Extract the most specific locality name from Nominatim address
+ * Prioritizes neighborhood-level places over larger administrative divisions
  */
 function extractLocality(address: NominatimResponse["address"]): string {
   // Try to get the most specific locality, in order of preference
+  // Start with neighborhood-level, then settlements, then administrative
   return (
-    address.village ||
+    address.neighbourhood ||
+    address.quarter ||
+    address.suburb ||
     address.hamlet ||
+    address.village ||
     address.town ||
     address.city ||
     address.municipality ||
