@@ -432,6 +432,10 @@ describe("SettingsView", () => {
     expect(screen.queryByText(/api key saved successfully/i)).not.toBeInTheDocument()
   })
 
+  // Note: LLM Provider selection tests and OpenAI API key section tests are commented out
+  // because the OpenAI UI is hidden until functionality is wired up (j-3q0)
+  // TODO: Uncomment when OpenAI functionality is implemented
+  /*
   describe("LLM Provider selection", () => {
     it("renders AI Provider section", () => {
       vi.mocked(JournalContext.useJournal).mockReturnValue({
@@ -542,6 +546,7 @@ describe("SettingsView", () => {
       expect(mockChangeDoc).toHaveBeenCalledTimes(1)
     })
   })
+  */
 
   // Note: Environment variable defaults (VITE_CLAUDE_API_KEY, VITE_OPENAI_API_KEY) are tested
   // manually since import.meta.env is evaluated at module load time, making unit testing complex.
@@ -999,6 +1004,10 @@ describe("SettingsView", () => {
       })
     })
 
+    // Note: OpenAI API key validation UI tests are commented out because the
+    // OpenAI UI is hidden until functionality is wired up (j-3q0)
+    // TODO: Uncomment when OpenAI functionality is implemented
+    /*
     describe("OpenAI API key validation UI", () => {
       it("shows validation error when saving invalid OpenAI API key", () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
@@ -1070,5 +1079,6 @@ describe("SettingsView", () => {
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
       })
     })
+    */
   })
 })

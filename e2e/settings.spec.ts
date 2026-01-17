@@ -10,17 +10,13 @@ test.describe("Settings page", () => {
     // Should show Theme section
     await expect(page.getByRole("heading", { name: "Theme" })).toBeVisible()
 
-    // Should show AI Provider section
-    await expect(page.getByRole("heading", { name: "AI Provider" })).toBeVisible()
-
     // Should show theme buttons
     await expect(page.getByRole("button", { name: /Light/ })).toBeVisible()
     await expect(page.getByRole("button", { name: /Dark/ })).toBeVisible()
     await expect(page.getByRole("button", { name: /System/ })).toBeVisible()
 
-    // Should show AI provider buttons
-    await expect(page.getByRole("button", { name: "Claude" })).toBeVisible()
-    await expect(page.getByRole("button", { name: "OpenAI" })).toBeVisible()
+    // Should show Claude AI section (AI Provider section is hidden until OpenAI is wired up)
+    await expect(page.getByRole("heading", { name: "Claude AI" })).toBeVisible()
   })
 
   test("navigates back to journal using back button", async ({ page }) => {
@@ -82,6 +78,10 @@ test.describe("Theme settings", () => {
   })
 })
 
+// Note: AI Provider selection tests are skipped because the provider selection UI
+// is hidden until OpenAI functionality is wired up (j-3q0)
+// TODO: Uncomment when OpenAI functionality is implemented
+/*
 test.describe("AI Provider selection", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/#/settings")
@@ -117,13 +117,14 @@ test.describe("AI Provider selection", () => {
   // selected would cause an error. This test only verifies the selection works
   // within the settings page context.
 })
+*/
 
 test.describe("Claude API key management", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    // Ensure Claude is selected
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
+    await expect(page.getByRole("heading", { name: "Claude AI" })).toBeVisible()
   })
 
   test("can enter and save a valid Claude API key", async ({ page }) => {
@@ -269,8 +270,7 @@ test.describe("Claude API key management", () => {
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
 
-    // Make sure Claude provider is selected to see the API key input
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
 
     // API key should still be there
     await expect(page.getByLabel("Claude API key")).toHaveValue(testKey)
@@ -288,6 +288,10 @@ test.describe("Claude API key management", () => {
   })
 })
 
+// Note: OpenAI API key management tests are skipped because the OpenAI UI
+// is hidden until functionality is wired up (j-3q0)
+// TODO: Uncomment when OpenAI functionality is implemented
+/*
 test.describe("OpenAI API key management", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/#/settings")
@@ -394,6 +398,7 @@ test.describe("OpenAI API key management", () => {
   // the OpenAI provider is not yet implemented. Navigating to home with OpenAI
   // selected would cause an error.
 })
+*/
 
 test.describe("Google Integration section", () => {
   test.beforeEach(async ({ page }) => {

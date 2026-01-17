@@ -42,8 +42,8 @@ test.describe("API key validation errors", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/#/settings")
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-      // Ensure Claude is selected
-      await page.getByRole("button", { name: "Claude" }).click()
+      // Claude is now always shown (provider selection is hidden)
+      await expect(page.getByRole("heading", { name: "Claude AI" })).toBeVisible()
     })
 
     test("shows error for empty API key when save is clicked", async ({ page }) => {
@@ -97,6 +97,10 @@ test.describe("API key validation errors", () => {
     })
   })
 
+  // Note: OpenAI API key validation tests are skipped because the OpenAI UI
+  // is hidden until functionality is wired up (j-3q0)
+  // TODO: Uncomment when OpenAI functionality is implemented
+  /*
   test.describe("OpenAI API key validation", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/#/settings")
@@ -142,12 +146,13 @@ test.describe("API key validation errors", () => {
       await expect(page.getByText(/OpenAI API key should start with 'sk-'/)).toBeVisible()
     })
   })
+  */
 
   test.describe("Error dismissal and recovery", () => {
     test("validation error clears when user starts typing again", async ({ page }) => {
       await page.goto("/#/settings")
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-      await page.getByRole("button", { name: "Claude" }).click()
+      // Claude is now always shown (provider selection is hidden)
 
       const apiKeyInput = page.getByLabel("Claude API key")
       // Find the save button within the Claude AI form section
@@ -169,7 +174,7 @@ test.describe("API key validation errors", () => {
     test("can successfully save after fixing validation error", async ({ page }) => {
       await page.goto("/#/settings")
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-      await page.getByRole("button", { name: "Claude" }).click()
+      // Claude is now always shown (provider selection is hidden)
 
       const apiKeyInput = page.getByLabel("Claude API key")
       // Find the save button within the Claude AI form section
@@ -201,7 +206,7 @@ test.describe("LLM Section - No API key state", () => {
     // Clear any saved API key by going to settings first
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
 
     // Clear any existing key
     const clearButton = page.getByRole("button", { name: "Clear" })
@@ -232,7 +237,7 @@ test.describe("LLM Section - No API key state", () => {
     // Clear any saved API key
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
 
     // Clear any existing key
     const clearButton = page.getByRole("button", { name: "Clear" })
@@ -260,7 +265,7 @@ test.describe("LLM Section - No API key state", () => {
     // Clear any saved API key
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
 
     // Clear any existing key
     const clearButton = page.getByRole("button", { name: "Clear" })
@@ -294,7 +299,7 @@ test.describe("Empty journal entry submission", () => {
     // Set up a valid API key first
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    await page.getByRole("button", { name: "Claude" }).click()
+    // Claude is now always shown (provider selection is hidden)
 
     const apiKeyInput = page.getByLabel("Claude API key")
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")

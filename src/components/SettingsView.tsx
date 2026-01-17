@@ -6,7 +6,8 @@ import type { LLMProviderType } from "../types/journal"
 
 // Environment variable defaults for API keys
 const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
-const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
+// TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+// const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
 
 /**
  * Validates a Claude API key format.
@@ -56,14 +57,17 @@ export function validateOpenaiApiKey(key: string): string | null {
  */
 export function SettingsView() {
   const { doc, changeDoc, isLoading } = useJournal()
+  // Note: llmProvider state is kept but provider selection UI is hidden until OpenAI is wired up (j-3q0)
   const [llmProvider, setLlmProvider] = useState<LLMProviderType>("claude")
   const [claudeApiKey, setClaudeApiKey] = useState("")
-  const [openaiApiKey, setOpenaiApiKey] = useState("")
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const [openaiApiKey, setOpenaiApiKey] = useState("")
   const [bio, setBio] = useState("")
   const [additionalInstructions, setAdditionalInstructions] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [claudeApiKeyError, setClaudeApiKeyError] = useState<string | null>(null)
-  const [openaiApiKeyError, setOpenaiApiKeyError] = useState<string | null>(null)
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const [openaiApiKeyError, setOpenaiApiKeyError] = useState<string | null>(null)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
   const { preference: themePreference, setTheme } = useTheme()
 
@@ -76,7 +80,8 @@ export function SettingsView() {
       }
       // Use saved value if present, otherwise fall back to env var
       setClaudeApiKey(doc.settings.claudeApiKey || ENV_CLAUDE_API_KEY)
-      setOpenaiApiKey(doc.settings.openaiApiKey || ENV_OPENAI_API_KEY)
+      // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+      // setOpenaiApiKey(doc.settings.openaiApiKey || ENV_OPENAI_API_KEY)
       setBio(doc.settings.bio || "")
       setAdditionalInstructions(doc.settings.additionalInstructions || "")
     }
@@ -89,16 +94,20 @@ export function SettingsView() {
   ])
 
   // Handle LLM provider change
-  const handleProviderChange = useCallback(
-    (newProvider: LLMProviderType) => {
-      if (!doc) return
-      setLlmProvider(newProvider)
-      changeDoc(d => {
-        d.settings.llmProvider = newProvider
-      })
-    },
-    [doc, changeDoc],
-  )
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const handleProviderChange = useCallback(
+  //   (newProvider: LLMProviderType) => {
+  //     if (!doc) return
+  //     setLlmProvider(newProvider)
+  //     changeDoc(d => {
+  //       d.settings.llmProvider = newProvider
+  //     })
+  //   },
+  //   [doc, changeDoc],
+  // )
+  // Suppress unused variable warnings for llmProvider and setLlmProvider
+  void llmProvider
+  void setLlmProvider
 
   // Save Claude API key to document
   const handleSaveClaudeApiKey = useCallback(() => {
@@ -123,26 +132,27 @@ export function SettingsView() {
   }, [doc, changeDoc, claudeApiKey])
 
   // Save OpenAI API key to document
-  const handleSaveOpenaiApiKey = useCallback(() => {
-    if (!doc) return
-
-    // Validate API key format
-    const validationError = validateOpenaiApiKey(openaiApiKey)
-    if (validationError) {
-      setOpenaiApiKeyError(validationError)
-      return
-    }
-
-    setOpenaiApiKeyError(null)
-    setSaveStatus("saving")
-    changeDoc(d => {
-      d.settings.openaiApiKey = openaiApiKey.trim()
-    })
-
-    // Show saved confirmation briefly
-    setSaveStatus("saved")
-    setTimeout(() => setSaveStatus("idle"), 2000)
-  }, [doc, changeDoc, openaiApiKey])
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const handleSaveOpenaiApiKey = useCallback(() => {
+  //   if (!doc) return
+  //
+  //   // Validate API key format
+  //   const validationError = validateOpenaiApiKey(openaiApiKey)
+  //   if (validationError) {
+  //     setOpenaiApiKeyError(validationError)
+  //     return
+  //   }
+  //
+  //   setOpenaiApiKeyError(null)
+  //   setSaveStatus("saving")
+  //   changeDoc(d => {
+  //     d.settings.openaiApiKey = openaiApiKey.trim()
+  //   })
+  //
+  //   // Show saved confirmation briefly
+  //   setSaveStatus("saved")
+  //   setTimeout(() => setSaveStatus("idle"), 2000)
+  // }, [doc, changeDoc, openaiApiKey])
 
   // Clear Claude API key
   const handleClearClaudeApiKey = useCallback(() => {
@@ -156,15 +166,16 @@ export function SettingsView() {
   }, [doc, changeDoc])
 
   // Clear OpenAI API key
-  const handleClearOpenaiApiKey = useCallback(() => {
-    if (!doc) return
-
-    setOpenaiApiKey("")
-    changeDoc(d => {
-      d.settings.openaiApiKey = ""
-    })
-    setSaveStatus("idle")
-  }, [doc, changeDoc])
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const handleClearOpenaiApiKey = useCallback(() => {
+  //   if (!doc) return
+  //
+  //   setOpenaiApiKey("")
+  //   changeDoc(d => {
+  //     d.settings.openaiApiKey = ""
+  //   })
+  //   setSaveStatus("idle")
+  // }, [doc, changeDoc])
 
   // Handle Claude form submission
   const handleClaudeSubmit = useCallback(
@@ -176,13 +187,14 @@ export function SettingsView() {
   )
 
   // Handle OpenAI form submission
-  const handleOpenaiSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault()
-      handleSaveOpenaiApiKey()
-    },
-    [handleSaveOpenaiApiKey],
-  )
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const handleOpenaiSubmit = useCallback(
+  //   (e: React.FormEvent) => {
+  //     e.preventDefault()
+  //     handleSaveOpenaiApiKey()
+  //   },
+  //   [handleSaveOpenaiApiKey],
+  // )
 
   // Save bio to document
   const handleSaveBio = useCallback(() => {
@@ -225,18 +237,21 @@ export function SettingsView() {
 
   // Determine effective saved value (saved or env var default)
   const effectiveClaudeKey = doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
-  const effectiveOpenaiKey = doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const effectiveOpenaiKey = doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
   const effectiveBio = doc?.settings?.bio || ""
   const effectiveAdditionalInstructions = doc?.settings?.additionalInstructions || ""
   const hasClaudeUnsavedChanges = claudeApiKey !== effectiveClaudeKey
-  const hasOpenaiUnsavedChanges = openaiApiKey !== effectiveOpenaiKey
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const hasOpenaiUnsavedChanges = openaiApiKey !== effectiveOpenaiKey
   const hasBioUnsavedChanges = bio !== effectiveBio
   const hasAdditionalInstructionsUnsavedChanges =
     additionalInstructions !== effectiveAdditionalInstructions
 
   // Track if key is from env var (for showing different UI indicator)
   const isClaudeFromEnv = !doc?.settings?.claudeApiKey && !!ENV_CLAUDE_API_KEY
-  const isOpenaiFromEnv = !doc?.settings?.openaiApiKey && !!ENV_OPENAI_API_KEY
+  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
+  // const isOpenaiFromEnv = !doc?.settings?.openaiApiKey && !!ENV_OPENAI_API_KEY
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
@@ -301,7 +316,8 @@ export function SettingsView() {
         </div>
       </section>
 
-      {/* LLM Provider Selection */}
+      {/* LLM Provider Selection - Hidden until OpenAI is wired up */}
+      {/* TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
       <section className="flex flex-col gap-3">
         <h3 className="text-foreground text-lg font-medium">AI Provider</h3>
         <p className="text-muted-foreground text-sm">
@@ -335,6 +351,7 @@ export function SettingsView() {
           </button>
         </div>
       </section>
+      */}
 
       {/* Bio Section */}
       <section className="flex flex-col gap-3">
@@ -504,7 +521,8 @@ export function SettingsView() {
         </section>
       )}
 
-      {/* OpenAI API Key Section - only shown when OpenAI is selected */}
+      {/* OpenAI API Key Section - Hidden until OpenAI is wired up (j-3q0) */}
+      {/* TODO: Uncomment when OpenAI functionality is implemented
       {llmProvider === "openai" && (
         <section className="flex flex-col gap-3">
           <h3 className="text-foreground text-lg font-medium">OpenAI</h3>
@@ -592,6 +610,7 @@ export function SettingsView() {
           )}
         </section>
       )}
+      */}
 
       {/* Security warning */}
       <section className="flex flex-col gap-3">

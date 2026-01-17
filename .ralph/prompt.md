@@ -6,9 +6,16 @@ Otherwise, run `bd ready` to list unblocked issues.
 
 If there are no open issues, immediately output <promise>COMPLETE</promise> and exit.
 
-Otherwise, find the highest-priority issue to work on, and work only on that task. Only work on a single issue in a single turn. If the issue you choose is complex, your task is to break it into sub-issues and then end your turn.
+Otherwise:
+
+1. Find the highest-priority issue to work on.
+2. Output `✨ <task name>`
 
 Mark the issue as in progress with `bd update <id> --status=in_progress`
+
+Work only on that task. Only work on a single issue in a single turn. If the issue you choose is complex, your task is to break it into sub-issues and then end your turn.
+
+If you run into other issues -
 
 When you complete a task:
 
@@ -18,5 +25,5 @@ When you complete a task:
 - Run `ppnpm format`
 - Close the issue: `bd close <id>`
 - Commit and push your work
-- Output "🚀"
+- Output `🚀 <task name>`
 - End your turn
