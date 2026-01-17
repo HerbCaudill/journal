@@ -194,7 +194,7 @@ export function LLMSection({
           {messages.slice(1).map(message => (
             <div
               key={message.id}
-              className={message.role === "assistant" ? "bg-muted ml-4 rounded-md p-4" : ""}
+              className={message.role === "assistant" ? "bg-muted my-2 ml-4 rounded-md p-4" : ""}
               data-testid={message.role === "assistant" ? "assistant-response" : "user-message"}
             >
               {message.role === "assistant" ?
