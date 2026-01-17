@@ -42,6 +42,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 **Components**
 
 - `Header` - App header with day/date on left (including location badge when position is captured), back/calendar/forward navigation in center, and settings on right. Location badge is clickable to re-capture location.
+- `Footer` - App footer with settings link, displayed at the bottom of the page.
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
 - `DayView` - Main view displaying calendar events, entry editor, and LLM section for a specific date
 - `App` - Main application component that handles routing, auto-captures location when viewing today's entry (if geolocation is available and not denied), and passes location data to Header
