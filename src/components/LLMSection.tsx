@@ -184,9 +184,7 @@ export function LLMSection({
             </svg>
           }
         </button>
-        <span className="text-muted-foreground text-sm">
-          {isLoading ? "Thinking..." : `Ask ${providerName}`}
-        </span>
+        {isLoading && <span className="text-muted-foreground text-sm">Thinking...</span>}
 
         {messages.length > 0 && (
           <button

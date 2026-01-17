@@ -45,10 +45,10 @@ describe("LLMSection", () => {
       expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute("href", "#/settings")
     })
 
-    it("shows 'Ask Claude' while idle", () => {
+    it("does not show text label while idle", () => {
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      expect(screen.getByText("Ask Claude")).toBeInTheDocument()
+      expect(screen.queryByText("Ask Claude")).not.toBeInTheDocument()
     })
   })
 
@@ -65,10 +65,10 @@ describe("LLMSection", () => {
       expect(screen.getByText(/to use ai, please add your api key/i)).toBeInTheDocument()
     })
 
-    it("shows 'Ask AI' while idle", () => {
+    it("does not show text label while idle", () => {
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="openai" />)
 
-      expect(screen.getByText("Ask AI")).toBeInTheDocument()
+      expect(screen.queryByText("Ask AI")).not.toBeInTheDocument()
     })
   })
 
