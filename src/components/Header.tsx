@@ -112,69 +112,71 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
   }, [isDatePickerOpen])
 
   return (
-    <header className="border-border flex items-center justify-between border-b p-4">
-      {/* Left: Day/date and location */}
-      <div className="min-w-0 flex-1">
-        <h1 className="flex flex-col text-left">
-          <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
-            {position && <LocationBadge position={position} onClick={onLocationClick} />}
-          </div>
-        </h1>
-      </div>
-
-      {/* Center: Back/calendar/forward navigation */}
-      {showNavigation && (
-        <div className="relative flex items-center gap-1">
-          <button
-            onClick={handlePreviousDay}
-            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Previous day"
-          >
-            <ChevronLeftIcon />
-          </button>
-          <button
-            ref={calendarButtonRef}
-            onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-expanded={isDatePickerOpen}
-            aria-haspopup="dialog"
-            aria-label="Open calendar"
-          >
-            <CalendarIcon />
-          </button>
-          <button
-            onClick={handleNextDay}
-            className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Next day"
-          >
-            <ChevronRightIcon />
-          </button>
-          {isDatePickerOpen && (
-            <div
-              ref={datePickerRef}
-              className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2"
-            >
-              <DatePicker
-                selectedDate={date}
-                onDateSelect={handleDateSelect}
-                onClose={handleClose}
-              />
+    <header className="border-border border-b p-4">
+      <div className="mx-auto flex max-w-2xl items-center justify-between">
+        {/* Left: Day/date and location */}
+        <div className="min-w-0 flex-1">
+          <h1 className="flex flex-col text-left">
+            <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+              {position && <LocationBadge position={position} onClick={onLocationClick} />}
             </div>
-          )}
+          </h1>
         </div>
-      )}
 
-      {/* Right: Settings */}
-      <div className="flex flex-1 justify-end">
-        <a
-          href="#/settings"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Settings"
-        >
-          <SettingsIcon />
-        </a>
+        {/* Center: Back/calendar/forward navigation */}
+        {showNavigation && (
+          <div className="relative flex items-center gap-1">
+            <button
+              onClick={handlePreviousDay}
+              className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Previous day"
+            >
+              <ChevronLeftIcon />
+            </button>
+            <button
+              ref={calendarButtonRef}
+              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+              className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-expanded={isDatePickerOpen}
+              aria-haspopup="dialog"
+              aria-label="Open calendar"
+            >
+              <CalendarIcon />
+            </button>
+            <button
+              onClick={handleNextDay}
+              className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Next day"
+            >
+              <ChevronRightIcon />
+            </button>
+            {isDatePickerOpen && (
+              <div
+                ref={datePickerRef}
+                className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2"
+              >
+                <DatePicker
+                  selectedDate={date}
+                  onDateSelect={handleDateSelect}
+                  onClose={handleClose}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Right: Settings */}
+        <div className="flex flex-1 justify-end">
+          <a
+            href="#/settings"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Settings"
+          >
+            <SettingsIcon />
+          </a>
+        </div>
       </div>
     </header>
   )
