@@ -36,8 +36,8 @@ export function DayView({ date }: DayViewProps) {
     setIsEditing(false)
   }, [date])
 
-  const entry = doc?.entries[date]
-  const userMessage = entry?.messages.find(m => m.role === "user")
+  const entry = doc?.entries?.[date]
+  const userMessage = entry?.messages?.find(m => m.role === "user")
   const entryContent = userMessage?.content ?? ""
 
   // Get LLM provider and corresponding API key
