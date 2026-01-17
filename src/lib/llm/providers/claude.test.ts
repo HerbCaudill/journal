@@ -266,8 +266,54 @@ describe("ClaudeProvider", () => {
       const provider = createClaudeProvider(mockConfig)
       const result = await provider.sendMessage([], "Hello")
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Response contained no text content")
       expect(result.content).toBe("")
+    })
+
+    it("handles non-text response content (tool_use)", async () => {
+      const mockResponse = {
+        content: [
+          {
+            type: "tool_use",
+            id: "tool_123",
+            name: "some_tool",
+            input: { param: "value" },
+          },
+        ],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const provider = createClaudeProvider(mockConfig)
+      const result = await provider.sendMessage([], "Hello")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Response contained no text content")
+      expect(result.content).toBe("")
+    })
+
+    it("extracts text when response contains mixed content types", async () => {
+      const mockResponse = {
+        content: [
+          {
+            type: "tool_use",
+            id: "tool_123",
+            name: "some_tool",
+            input: { param: "value" },
+          },
+          { type: "text", text: "Here is my text response" },
+        ],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const provider = createClaudeProvider(mockConfig)
+      const result = await provider.sendMessage([], "Hello")
+
+      expect(result.success).toBe(true)
+      expect(result.content).toBe("Here is my text response")
+      expect(result.error).toBeUndefined()
     })
   })
 

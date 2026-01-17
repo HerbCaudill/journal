@@ -114,10 +114,18 @@ class ClaudeProvider implements LLMProvider {
 
       // Extract text content from the response
       const textContent = response.content.find(block => block.type === "text")
-      const content = textContent?.type === "text" ? textContent.text : ""
+
+      // Handle non-text responses (e.g., tool_use, images) by returning an error
+      if (!textContent || textContent.type !== "text") {
+        return {
+          content: "",
+          success: false,
+          error: "Response contained no text content",
+        }
+      }
 
       return {
-        content,
+        content: textContent.text,
         success: true,
       }
     } catch (error) {
