@@ -187,53 +187,6 @@ describe("LLMSection", () => {
       expect(assistantMessages[0]).toHaveClass("bg-muted")
     })
 
-    it("shows Clear button when there are messages", () => {
-      const messages: Message[] = [
-        { id: "1", role: "assistant", content: "Response", createdAt: Date.now() },
-      ]
-
-      mockUseLLM.mockReturnValue({
-        messages,
-        isLoading: false,
-        error: null,
-        send: mockSend,
-        reset: mockReset,
-        setMessages: mockSetMessages,
-      })
-
-      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
-
-      expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument()
-    })
-
-    it("does not show Clear button when there are no messages", () => {
-      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
-
-      expect(screen.queryByRole("button", { name: /clear/i })).not.toBeInTheDocument()
-    })
-
-    it("calls reset when Clear button is clicked", async () => {
-      const user = userEvent.setup()
-      const messages: Message[] = [
-        { id: "1", role: "assistant", content: "Response", createdAt: Date.now() },
-      ]
-
-      mockUseLLM.mockReturnValue({
-        messages,
-        isLoading: false,
-        error: null,
-        send: mockSend,
-        reset: mockReset,
-        setMessages: mockSetMessages,
-      })
-
-      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
-
-      await user.click(screen.getByRole("button", { name: /clear/i }))
-
-      expect(mockReset).toHaveBeenCalled()
-    })
-
     it("displays API error from useLLM", () => {
       mockUseLLM.mockReturnValue({
         messages: [],
@@ -275,36 +228,6 @@ describe("LLMSection", () => {
       expect(callArgs[0].content).toBe("My entry")
       expect(callArgs[1].role).toBe("assistant")
       expect(callArgs[1].content).toBe("Response content")
-    })
-
-    it("calls onMessagesChange with empty array when reset", async () => {
-      const user = userEvent.setup()
-      const onMessagesChange = vi.fn()
-      const messages: Message[] = [
-        { id: "1", role: "assistant", content: "Response", createdAt: Date.now() },
-      ]
-
-      mockUseLLM.mockReturnValue({
-        messages,
-        isLoading: false,
-        error: null,
-        send: mockSend,
-        reset: mockReset,
-        setMessages: mockSetMessages,
-      })
-
-      render(
-        <LLMSection
-          entryContent="Test entry"
-          apiKey="test-key"
-          provider="claude"
-          onMessagesChange={onMessagesChange}
-        />,
-      )
-
-      await user.click(screen.getByRole("button", { name: /clear/i }))
-
-      expect(onMessagesChange).toHaveBeenCalledWith([])
     })
 
     it("initializes with provided initial messages and provider", () => {

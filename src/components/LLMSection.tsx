@@ -54,7 +54,7 @@ export function LLMSection({
   bio,
   additionalInstructions,
 }: LLMSectionProps) {
-  const { messages, isLoading, error, send, reset } = useLLM({
+  const { messages, isLoading, error, send } = useLLM({
     provider,
     apiKey,
     initialMessages,
@@ -138,15 +138,6 @@ export function LLMSection({
     }
   }, [followUpInput, send, messages, onMessagesChange])
 
-  // Handle resetting the conversation
-  const handleReset = useCallback(() => {
-    reset()
-    setLocalError(null)
-    if (onMessagesChange) {
-      onMessagesChange([])
-    }
-  }, [reset, onMessagesChange])
-
   // Auto-focus the follow-up input when a response is received
   useEffect(() => {
     // Focus when loading finishes and there are messages (conversation has started)
@@ -165,16 +156,6 @@ export function LLMSection({
           <span className="text-muted-foreground absolute top-2 left-3 text-sm">Thinking...</span>
         )}
         <InputGroupAddon align="inline-end">
-          {messages.length > 0 && (
-            <InputGroupButton
-              onClick={handleReset}
-              disabled={isLoading}
-              variant="outline"
-              aria-label="Clear conversation"
-            >
-              Clear
-            </InputGroupButton>
-          )}
           <InputGroupButton
             onClick={handleSubmit}
             disabled={isLoading || !apiKey}
