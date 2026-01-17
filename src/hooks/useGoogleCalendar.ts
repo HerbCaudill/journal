@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import {
   getAuthUrl,
   exchangeCodeForTokens,
@@ -84,10 +84,14 @@ const OAUTH_VERIFIER_KEY = "google_oauth_verifier"
  * ```
  */
 export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGoogleCalendarReturn {
-  const config: GoogleCalendarConfig = {
-    clientId: options.clientId,
-    redirectUri: options.redirectUri,
-  }
+  // Memoize config to prevent unnecessary re-renders and effect re-runs
+  const config: GoogleCalendarConfig = useMemo(
+    () => ({
+      clientId: options.clientId,
+      redirectUri: options.redirectUri,
+    }),
+    [options.clientId, options.redirectUri],
+  )
 
   const [authState, setAuthState] = useState<GoogleCalendarAuthState>(() => {
     if (!isGoogleCalendarConfigured(options.clientId)) {
