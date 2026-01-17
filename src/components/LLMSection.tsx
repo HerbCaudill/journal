@@ -214,10 +214,10 @@ export function LLMSection({
         </div>
       )}
 
-      {/* Conversation display - show all messages */}
+      {/* Conversation display - skip the first user message (journal entry shown by DayView) */}
       {messages.length > 0 && (
         <div className="flex flex-col gap-3">
-          {messages.map(message => (
+          {messages.slice(1).map(message => (
             <div
               key={message.id}
               className={

@@ -144,10 +144,12 @@ describe("LLMSection", () => {
       expect(screen.getByText("Hi there! How can I help?")).toBeInTheDocument()
     })
 
-    it("displays both user and assistant messages", () => {
+    it("displays assistant and follow-up user messages (first user message is shown by DayView)", () => {
+      // First user message is skipped because it's the journal entry shown by DayView
       const messages: Message[] = [
-        { id: "1", role: "user", content: "User message", createdAt: Date.now() },
+        { id: "1", role: "user", content: "Initial entry", createdAt: Date.now() },
         { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
       ]
 
       mockUseLLM.mockReturnValue({
@@ -161,14 +163,18 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      expect(screen.getByText("User message")).toBeInTheDocument()
+      // First user message is NOT shown (displayed by DayView)
+      expect(screen.queryByText("Initial entry")).not.toBeInTheDocument()
       expect(screen.getByText("Assistant message")).toBeInTheDocument()
+      expect(screen.getByText("Follow-up message")).toBeInTheDocument()
     })
 
     it("styles assistant messages with muted background and user messages with primary background", () => {
+      // Note: First user message is not displayed (shown by DayView), so we need a follow-up
       const messages: Message[] = [
-        { id: "1", role: "user", content: "User message", createdAt: Date.now() },
+        { id: "1", role: "user", content: "Initial entry", createdAt: Date.now() },
         { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up question", createdAt: Date.now() },
       ]
 
       mockUseLLM.mockReturnValue({
@@ -187,7 +193,7 @@ describe("LLMSection", () => {
       expect(assistantMessages[0]).toHaveClass("bg-muted")
 
       const userMessages = screen.getAllByTestId("user-message")
-      expect(userMessages).toHaveLength(1)
+      expect(userMessages).toHaveLength(1) // Only the follow-up, first user skipped
       expect(userMessages[0]).toHaveClass("bg-primary/10")
     })
 
@@ -309,7 +315,8 @@ describe("LLMSection", () => {
       expect(onConversationStart).not.toHaveBeenCalled()
     })
 
-    it("displays all messages from multi-turn conversation", () => {
+    it("displays all messages from multi-turn conversation except first user message", () => {
+      // First user message is shown by DayView, so LLMSection skips it
       const messages: Message[] = [
         { id: "1", role: "user", content: "First question", createdAt: 1000 },
         { id: "2", role: "assistant", content: "First response", createdAt: 1001 },
@@ -330,9 +337,10 @@ describe("LLMSection", () => {
 
       const userMessages = screen.getAllByTestId("user-message")
       const assistantMessages = screen.getAllByTestId("assistant-response")
-      expect(userMessages).toHaveLength(2)
+      expect(userMessages).toHaveLength(1) // First user skipped, only second user shown
       expect(assistantMessages).toHaveLength(2)
-      expect(screen.getByText("First question")).toBeInTheDocument()
+      // First question is NOT shown (displayed by DayView)
+      expect(screen.queryByText("First question")).not.toBeInTheDocument()
       expect(screen.getByText("First response")).toBeInTheDocument()
       expect(screen.getByText("Second question")).toBeInTheDocument()
       expect(screen.getByText("Second response")).toBeInTheDocument()
@@ -634,6 +642,7 @@ describe("LLMSection", () => {
     it("shows user message as read-only in conversation while loading (optimistic update)", () => {
       // Simulate the state after a follow-up was submitted but before the response arrives
       // The user's follow-up message should be visible as a read-only message
+      // Note: First user message is not displayed (shown by DayView)
       const messages: Message[] = [
         { id: "1", role: "user", content: "First question", createdAt: Date.now() },
         { id: "2", role: "assistant", content: "First response", createdAt: Date.now() },
@@ -652,8 +661,9 @@ describe("LLMSection", () => {
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
       // The user's follow-up should be visible as a read-only message in the conversation
+      // First user message is skipped (shown by DayView)
       const userMessages = screen.getAllByTestId("user-message")
-      expect(userMessages).toHaveLength(2) // First question + follow-up question
+      expect(userMessages).toHaveLength(1) // Only follow-up question, first user skipped
       expect(screen.getByText("Follow-up question")).toBeInTheDocument()
 
       // The input should be empty and disabled (not containing the user's message)
