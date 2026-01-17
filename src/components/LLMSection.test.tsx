@@ -596,5 +596,47 @@ describe("LLMSection", () => {
       expect(callArgs[3].role).toBe("assistant")
       expect(callArgs[3].content).toBe("Follow-up response")
     })
+
+    it("auto-focuses follow-up input when response is received", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      expect(document.activeElement).toBe(input)
+    })
+
+    it("does not auto-focus when loading", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      expect(document.activeElement).not.toBe(input)
+    })
   })
 })

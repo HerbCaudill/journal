@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useLLM } from "../hooks/useLLM"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
@@ -132,6 +132,14 @@ export function LLMSection({
       onMessagesChange([])
     }
   }, [reset, onMessagesChange])
+
+  // Auto-focus the follow-up input when a response is received
+  useEffect(() => {
+    // Focus when loading finishes and there are messages (conversation has started)
+    if (!isLoading && messages.length > 0 && apiKey) {
+      followUpInputRef.current?.focus()
+    }
+  }, [isLoading, messages.length, apiKey])
 
   const displayError = localError || error
 
