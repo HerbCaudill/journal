@@ -28,7 +28,7 @@ When you complete a task:
 
 - Run `ppnpm format`.
 - Run `pnpm build && pnpm test:all`.
-- Record a summary of the changes you made as a comment in the issue.
+- Record a summary of the changes you made as a comment in the issue with `bd comments <id> --add "...markdown summary of changes"`.
 - Close the issue: `bd close <id>`.
 - Commit and push your work. Include the issue id
 - Output `✅ <task name>`.
