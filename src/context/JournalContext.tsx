@@ -67,6 +67,13 @@ function JournalDocumentProvider({
   const result = useDocument<JournalDoc>(docUrl)
   const [doc, changeDoc] = result ?? [undefined, () => {}]
 
+  // Log document changes for debugging
+  useEffect(() => {
+    if (doc !== undefined) {
+      console.log("Automerge document changed:", doc)
+    }
+  }, [doc])
+
   const value: JournalContextValue = {
     doc,
     changeDoc,
