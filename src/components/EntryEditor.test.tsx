@@ -139,4 +139,67 @@ describe("EntryEditor", () => {
     const textarea = screen.getByRole("textbox", { name: /journal entry/i })
     expect(textarea).toHaveValue("Existing content")
   })
+
+  describe("save indicator", () => {
+    it('shows "Saving..." while debounce timer is active', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      render(<EntryEditor date="2024-01-15" />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test")
+
+      // Should show "Saving..." indicator
+      expect(screen.getByTestId("save-indicator")).toHaveTextContent("Saving...")
+    })
+
+    it('shows "Saved" after debounce completes', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      render(<EntryEditor date="2024-01-15" />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test")
+
+      // Advance time past debounce delay
+      await act(async () => {
+        vi.advanceTimersByTime(600)
+      })
+
+      // Should show "Saved" indicator
+      expect(screen.getByTestId("save-indicator")).toHaveTextContent("Saved")
+    })
+
+    it("hides save indicator after delay", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      render(<EntryEditor date="2024-01-15" />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      await user.type(textarea, "Test")
+
+      // Advance time past debounce delay
+      await act(async () => {
+        vi.advanceTimersByTime(600)
+      })
+
+      // Verify "Saved" is showing
+      expect(screen.getByTestId("save-indicator")).toHaveTextContent("Saved")
+
+      // Advance time past saved indicator duration (1500ms)
+      await act(async () => {
+        vi.advanceTimersByTime(1500)
+      })
+
+      // Indicator should be hidden
+      expect(screen.queryByTestId("save-indicator")).not.toBeInTheDocument()
+    })
+
+    it("does not show indicator when no changes have been made", () => {
+      render(<EntryEditor date="2024-01-15" />)
+
+      // No indicator should be visible initially
+      expect(screen.queryByTestId("save-indicator")).not.toBeInTheDocument()
+    })
+  })
 })

@@ -3,6 +3,9 @@ import { useJournal } from "../context/JournalContext"
 import type { JournalEntry, Message } from "../types/journal"
 
 const DEBOUNCE_DELAY = 500
+const SAVED_INDICATOR_DURATION = 1500
+
+type SaveStatus = "idle" | "saving" | "saved"
 
 interface EntryEditorProps {
   /** The date for this entry in YYYY-MM-DD format */
@@ -23,8 +26,10 @@ function generateId(): string {
 export function EntryEditor({ date }: EntryEditorProps) {
   const { doc, changeDoc, isLoading } = useJournal()
   const [localContent, setLocalContent] = useState("")
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savedIndicatorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Find or initialize the entry for this date
   const entry = doc?.entries[date]
@@ -39,11 +44,14 @@ export function EntryEditor({ date }: EntryEditorProps) {
     }
   }, [userMessage?.content, date])
 
-  // Cleanup debounce timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current)
+      }
+      if (savedIndicatorTimeoutRef.current) {
+        clearTimeout(savedIndicatorTimeoutRef.current)
       }
     }
   }, [])
@@ -88,6 +96,19 @@ export function EntryEditor({ date }: EntryEditorProps) {
           existingEntry.messages.push(newMessage)
         }
       })
+
+      // Show "Saved" indicator
+      setSaveStatus("saved")
+
+      // Clear any existing saved indicator timeout
+      if (savedIndicatorTimeoutRef.current) {
+        clearTimeout(savedIndicatorTimeoutRef.current)
+      }
+
+      // Hide the indicator after a delay
+      savedIndicatorTimeoutRef.current = setTimeout(() => {
+        setSaveStatus("idle")
+      }, SAVED_INDICATOR_DURATION)
     },
     [doc, changeDoc, date],
   )
@@ -98,7 +119,15 @@ export function EntryEditor({ date }: EntryEditorProps) {
       const newContent = e.target.value
       setLocalContent(newContent)
 
-      // Clear existing timeout
+      // Show saving indicator
+      setSaveStatus("saving")
+
+      // Clear existing saved indicator timeout
+      if (savedIndicatorTimeoutRef.current) {
+        clearTimeout(savedIndicatorTimeoutRef.current)
+      }
+
+      // Clear existing debounce timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current)
       }
@@ -129,12 +158,23 @@ export function EntryEditor({ date }: EntryEditorProps) {
   }
 
   return (
-    <textarea
-      ref={textareaRef}
-      value={localContent}
-      onChange={handleChange}
-      className="bg-card focus:ring-ring min-h-[200px] w-full resize-none rounded-md border p-4 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none"
-      aria-label="Journal entry"
-    />
+    <div className="relative">
+      <textarea
+        ref={textareaRef}
+        value={localContent}
+        onChange={handleChange}
+        className="bg-card focus:ring-ring min-h-[200px] w-full resize-none rounded-md border p-4 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        aria-label="Journal entry"
+      />
+      {saveStatus !== "idle" && (
+        <div
+          className="text-muted-foreground absolute right-3 bottom-3 text-xs"
+          aria-live="polite"
+          data-testid="save-indicator"
+        >
+          {saveStatus === "saving" ? "Saving..." : "Saved"}
+        </div>
+      )}
+    </div>
   )
 }

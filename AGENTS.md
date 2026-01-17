@@ -45,7 +45,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `DatePicker` - Calendar component for selecting dates, shows days with entries marked
 - `DayView` - Main view displaying calendar events, LocationBadge (when position is captured), entry editor, and LLM section for a specific date. Automatically captures location when viewing today's entry (if geolocation is available and not denied)
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
-- `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge
+- `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge; displays save indicator ("Saving..." while debouncing, "Saved" briefly after save completes)
 - `LLMSection` - Submit button to ask LLM about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned). Provider-agnostic (supports Claude and OpenAI)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 - `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
