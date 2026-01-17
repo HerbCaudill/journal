@@ -62,18 +62,17 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
   const content = (
     <>
       <LocationIcon />
-      <span className="text-xs">{displayText}</span>
+      <span className="text-sm">{displayText}</span>
     </>
   )
 
-  const className =
-    "inline-flex items-center gap-1.5 px-2 py-1 bg-muted rounded-full text-foreground"
+  const className = "text-muted-foreground inline-flex items-center gap-1"
 
   if (onClick) {
     return (
       <button
         onClick={onClick}
-        className={`${className} hover:bg-muted/80 cursor-pointer transition-colors`}
+        className={`${className} hover:text-foreground cursor-pointer transition-colors`}
         aria-label={ariaLabel}
         title={tooltipText}
       >
@@ -93,8 +92,8 @@ function LocationIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
+      width="12"
+      height="12"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

@@ -74,7 +74,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `src/hooks/useGeolocation.ts` - React hook for accessing device geolocation with permission management
 - `src/hooks/useReverseGeocode.ts` - React hook for converting coordinates to locality names (uses geocoding library)
 - `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching, LRU eviction (max 100 entries), and rate limiting
-- `src/components/LocationBadge.tsx` - Compact badge displaying locality name (e.g., "Tamariu") with coordinates shown on hover
+- `src/components/LocationBadge.tsx` - Displays locality name (e.g., "Tamariu") with coordinates shown on hover; styled to match date text
 
 **Theme**
 
