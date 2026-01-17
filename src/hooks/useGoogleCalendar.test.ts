@@ -472,4 +472,42 @@ describe("useGoogleCalendar", () => {
       expect(result.current.error).toBeNull()
     })
   })
+
+  describe("memoization", () => {
+    it("returns the same object reference when values have not changed", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+
+      const { result, rerender } = renderHook(() => useGoogleCalendar())
+
+      // Get first render result
+      const firstResult = result.current
+
+      // Force re-render without changing any values
+      rerender()
+
+      // The return object should be the same reference (memoized)
+      expect(result.current).toBe(firstResult)
+    })
+
+    it("returns a new object reference when values change", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Get first render result
+      const firstResult = result.current
+
+      // Trigger a state change that should cause a new object reference
+      vi.mocked(googleCalendar.getAuthUrl).mockRejectedValue(new Error("Test error"))
+      await act(async () => {
+        await result.current.authenticate()
+      })
+
+      // The return object should be a new reference since error state changed
+      expect(result.current).not.toBe(firstResult)
+      expect(result.current.error).toBe("Test error")
+    })
+  })
 })

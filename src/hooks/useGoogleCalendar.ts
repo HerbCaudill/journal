@@ -262,15 +262,28 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
     setError(null)
   }, [])
 
-  return {
-    authState,
-    isLoading,
-    error,
-    events,
-    authenticate,
-    handleCallback,
-    fetchEvents,
-    signOut,
-    clearError,
-  }
+  return useMemo(
+    () => ({
+      authState,
+      isLoading,
+      error,
+      events,
+      authenticate,
+      handleCallback,
+      fetchEvents,
+      signOut,
+      clearError,
+    }),
+    [
+      authState,
+      isLoading,
+      error,
+      events,
+      authenticate,
+      handleCallback,
+      fetchEvents,
+      signOut,
+      clearError,
+    ],
+  )
 }
