@@ -37,13 +37,28 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,wasm}"],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB to accommodate the automerge WASM file
       },
     }),
   ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    target: "ES2022",
+    chunkSizeWarningLimit: 700, // Adjusted for app code after splitting vendors
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          automerge: ["@automerge/automerge", "@automerge/automerge-repo"],
+          icons: ["lucide-react", "@tabler/icons-react"],
+          anthropic: ["@anthropic-ai/sdk"],
+        },
+      },
     },
   },
 })
