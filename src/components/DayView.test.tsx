@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { DayView } from "./DayView"
 import * as JournalContext from "../context/JournalContext"
 import * as GeolocationHook from "../hooks/useGeolocation"
+import * as DatesLib from "../lib/dates"
 import type { JournalDoc } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
 
@@ -22,6 +23,15 @@ vi.mock("../hooks/useGeolocation", async () => {
   return {
     ...actual,
     useGeolocation: vi.fn(),
+  }
+})
+
+// Mock the dates module to control "today"
+vi.mock("../lib/dates", async () => {
+  const actual = await vi.importActual("../lib/dates")
+  return {
+    ...actual,
+    getToday: vi.fn(),
   }
 })
 
@@ -63,6 +73,7 @@ vi.mock("../hooks/useReverseGeocode", () => ({
 
 const mockUseJournal = vi.mocked(JournalContext.useJournal)
 const mockUseGeolocation = vi.mocked(GeolocationHook.useGeolocation)
+const mockGetToday = vi.mocked(DatesLib.getToday)
 
 type ChangeDocFn = (changeFn: ChangeFn<JournalDoc>, options?: ChangeOptions<JournalDoc>) => void
 
@@ -98,6 +109,9 @@ describe("DayView", () => {
       requestPosition: vi.fn().mockResolvedValue(null),
       clear: vi.fn(),
     })
+
+    // Default: viewing a past date (not today) to avoid auto-capture in most tests
+    mockGetToday.mockReturnValue("2024-01-20")
   })
 
   afterEach(() => {
@@ -261,31 +275,83 @@ describe("DayView", () => {
     })
   })
 
-  describe("Location capture", () => {
-    it("renders the Capture location button when geolocation is supported", () => {
-      render(<DayView date="2024-01-15" />)
+  describe("Auto location capture for today", () => {
+    it("automatically captures location when viewing today without position", async () => {
+      // Set today to be the date we're viewing
+      mockGetToday.mockReturnValue("2024-01-15")
 
-      const captureButton = screen.getByRole("button", { name: /capture location/i })
-      expect(captureButton).toBeInTheDocument()
-      expect(captureButton).toHaveTextContent("Capture location")
-    })
+      const mockPosition = {
+        latitude: 41.8781,
+        longitude: -87.6298,
+        accuracy: 10,
+        timestamp: 1705276800000,
+      }
+      const mockRequestPosition = vi.fn().mockResolvedValue(mockPosition)
 
-    it("does not render the button when geolocation is unavailable", () => {
       mockUseGeolocation.mockReturnValue({
         position: null,
         isLoading: false,
         error: null,
-        permission: "unavailable",
-        requestPosition: vi.fn().mockResolvedValue(null),
+        permission: "prompt",
+        requestPosition: mockRequestPosition,
         clear: vi.fn(),
       })
 
       render(<DayView date="2024-01-15" />)
 
-      expect(screen.queryByRole("button", { name: /capture location/i })).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(mockRequestPosition).toHaveBeenCalledTimes(1)
+      })
+
+      expect(mockChangeDoc).toHaveBeenCalled()
+
+      // Verify the changeDoc callback sets the position correctly
+      const changeDocCallback = mockChangeDoc.mock.calls[0][0]
+      const testDoc = {
+        entries: {},
+      } as JournalDoc
+      changeDocCallback(testDoc)
+
+      expect(testDoc.entries["2024-01-15"].position).toEqual(mockPosition)
     })
 
-    it("does not render the button when entry already has a position", () => {
+    it("does not auto-capture location for past dates", async () => {
+      // Today is a different date than what we're viewing
+      mockGetToday.mockReturnValue("2024-01-20")
+
+      const mockRequestPosition = vi.fn().mockResolvedValue(null)
+
+      mockUseGeolocation.mockReturnValue({
+        position: null,
+        isLoading: false,
+        error: null,
+        permission: "prompt",
+        requestPosition: mockRequestPosition,
+        clear: vi.fn(),
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Wait a bit to ensure no auto-capture happens
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(mockRequestPosition).not.toHaveBeenCalled()
+    })
+
+    it("does not auto-capture when entry already has a position", async () => {
+      mockGetToday.mockReturnValue("2024-01-15")
+
+      const mockRequestPosition = vi.fn().mockResolvedValue(null)
+
+      mockUseGeolocation.mockReturnValue({
+        position: null,
+        isLoading: false,
+        error: null,
+        permission: "prompt",
+        requestPosition: mockRequestPosition,
+        clear: vi.fn(),
+      })
+
       const docWithPosition = {
         entries: {
           "2024-01-15": {
@@ -318,60 +384,80 @@ describe("DayView", () => {
 
       render(<DayView date="2024-01-15" />)
 
-      expect(screen.queryByRole("button", { name: /capture location/i })).not.toBeInTheDocument()
+      // Wait a bit to ensure no auto-capture happens
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(mockRequestPosition).not.toHaveBeenCalled()
     })
 
-    it("shows loading state while capturing location", () => {
+    it("does not auto-capture when geolocation is unavailable", async () => {
+      mockGetToday.mockReturnValue("2024-01-15")
+
+      const mockRequestPosition = vi.fn().mockResolvedValue(null)
+
       mockUseGeolocation.mockReturnValue({
         position: null,
-        isLoading: true,
+        isLoading: false,
         error: null,
-        permission: "prompt",
-        requestPosition: vi.fn().mockResolvedValue(null),
+        permission: "unavailable",
+        requestPosition: mockRequestPosition,
         clear: vi.fn(),
       })
 
       render(<DayView date="2024-01-15" />)
 
-      const captureButton = screen.getByRole("button", { name: /capture location/i })
-      expect(captureButton).toHaveTextContent("Getting location...")
-      expect(captureButton).toBeDisabled()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(mockRequestPosition).not.toHaveBeenCalled()
     })
 
-    it("disables button when permission is denied", () => {
+    it("does not auto-capture when permission is denied", async () => {
+      mockGetToday.mockReturnValue("2024-01-15")
+
+      const mockRequestPosition = vi.fn().mockResolvedValue(null)
+
       mockUseGeolocation.mockReturnValue({
         position: null,
         isLoading: false,
         error: null,
         permission: "denied",
-        requestPosition: vi.fn().mockResolvedValue(null),
+        requestPosition: mockRequestPosition,
         clear: vi.fn(),
       })
 
       render(<DayView date="2024-01-15" />)
 
-      const captureButton = screen.getByRole("button", { name: /capture location/i })
-      expect(captureButton).toBeDisabled()
-      expect(screen.getByText("Location permission denied")).toBeInTheDocument()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(mockRequestPosition).not.toHaveBeenCalled()
     })
 
-    it("shows error message when location capture fails", () => {
+    it("does not save position when auto-capture returns null", async () => {
+      mockGetToday.mockReturnValue("2024-01-15")
+
+      const mockRequestPosition = vi.fn().mockResolvedValue(null)
+
       mockUseGeolocation.mockReturnValue({
         position: null,
         isLoading: false,
-        error: "Location information unavailable",
-        permission: "granted",
-        requestPosition: vi.fn().mockResolvedValue(null),
+        error: null,
+        permission: "prompt",
+        requestPosition: mockRequestPosition,
         clear: vi.fn(),
       })
 
       render(<DayView date="2024-01-15" />)
 
-      expect(screen.getByText("Location information unavailable")).toBeInTheDocument()
+      await waitFor(() => {
+        expect(mockRequestPosition).toHaveBeenCalledTimes(1)
+      })
+
+      expect(mockChangeDoc).not.toHaveBeenCalled()
     })
 
-    it("calls requestPosition and saves position on button click", async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    it("only attempts auto-capture once per mount", async () => {
+      mockGetToday.mockReturnValue("2024-01-15")
+
       const mockPosition = {
         latitude: 41.8781,
         longitude: -87.6298,
@@ -389,44 +475,19 @@ describe("DayView", () => {
         clear: vi.fn(),
       })
 
-      render(<DayView date="2024-01-15" />)
+      const { rerender } = render(<DayView date="2024-01-15" />)
 
-      const captureButton = screen.getByRole("button", { name: /capture location/i })
-      await user.click(captureButton)
-
-      expect(mockRequestPosition).toHaveBeenCalledTimes(1)
-      expect(mockChangeDoc).toHaveBeenCalled()
-
-      // Verify the changeDoc callback sets the position correctly
-      const changeDocCallback = mockChangeDoc.mock.calls[0][0]
-      const testDoc = {
-        entries: {},
-      } as JournalDoc
-      changeDocCallback(testDoc)
-
-      expect(testDoc.entries["2024-01-15"].position).toEqual(mockPosition)
-    })
-
-    it("does not save position when requestPosition returns null", async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      const mockRequestPosition = vi.fn().mockResolvedValue(null)
-
-      mockUseGeolocation.mockReturnValue({
-        position: null,
-        isLoading: false,
-        error: null,
-        permission: "prompt",
-        requestPosition: mockRequestPosition,
-        clear: vi.fn(),
+      await waitFor(() => {
+        expect(mockRequestPosition).toHaveBeenCalledTimes(1)
       })
 
-      render(<DayView date="2024-01-15" />)
+      // Rerender the same component - should not capture again
+      rerender(<DayView date="2024-01-15" />)
 
-      const captureButton = screen.getByRole("button", { name: /capture location/i })
-      await user.click(captureButton)
+      await vi.advanceTimersByTimeAsync(100)
 
+      // Still only called once
       expect(mockRequestPosition).toHaveBeenCalledTimes(1)
-      expect(mockChangeDoc).not.toHaveBeenCalled()
     })
   })
 
@@ -499,10 +560,8 @@ describe("DayView", () => {
 
       render(<DayView date="2024-01-15" />)
 
-      // LocationBadge should not be rendered - only capture location button should appear
+      // LocationBadge should not be rendered
       expect(screen.queryByText("Chicago")).not.toBeInTheDocument()
-      // But the capture button should be there
-      expect(screen.getByRole("button", { name: /capture location/i })).toBeInTheDocument()
     })
 
     it("LocationBadge is clickable to re-capture location", async () => {

@@ -1,10 +1,11 @@
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useJournal } from "../context/JournalContext"
 import { useGeolocation } from "../hooks/useGeolocation"
 import { EntryEditor } from "./EntryEditor"
 import { LLMSection } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
 import { LocationBadge } from "./LocationBadge"
+import { getToday } from "../lib/dates"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
@@ -110,6 +111,42 @@ export function DayView({ date }: DayViewProps) {
   const isGeolocationSupported = permission !== "unavailable"
   const isPermissionDenied = permission === "denied"
   const hasPosition = !!entry?.position
+  const isToday = date === getToday()
+
+  // Track if we've already attempted auto-capture to avoid repeated calls
+  const hasAttemptedAutoCapture = useRef(false)
+
+  // Auto-capture location for today's entry when:
+  // - It's today
+  // - Geolocation is supported
+  // - Permission is not denied
+  // - Entry doesn't already have a position
+  // - We haven't already attempted to capture
+  useEffect(() => {
+    if (
+      isToday &&
+      isGeolocationSupported &&
+      !isPermissionDenied &&
+      !hasPosition &&
+      !hasAttemptedAutoCapture.current &&
+      !isCapturingLocation
+    ) {
+      hasAttemptedAutoCapture.current = true
+      handleCaptureLocation()
+    }
+  }, [
+    isToday,
+    isGeolocationSupported,
+    isPermissionDenied,
+    hasPosition,
+    isCapturingLocation,
+    handleCaptureLocation,
+  ])
+
+  // Reset auto-capture attempt when date changes
+  useEffect(() => {
+    hasAttemptedAutoCapture.current = false
+  }, [date])
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
@@ -124,25 +161,6 @@ export function DayView({ date }: DayViewProps) {
         </div>
       )}
       <EntryEditor date={date} />
-      {isGeolocationSupported && !hasPosition && (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCaptureLocation}
-            disabled={isCapturingLocation || isPermissionDenied}
-            className="border-input bg-background text-foreground hover:bg-muted focus:ring-ring inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Capture location"
-          >
-            <LocationIcon />
-            {isCapturingLocation ? "Getting location..." : "Capture location"}
-          </button>
-          {isPermissionDenied && (
-            <span className="text-destructive text-sm">Location permission denied</span>
-          )}
-          {locationError && !isPermissionDenied && (
-            <span className="text-destructive text-sm">{locationError}</span>
-          )}
-        </div>
-      )}
       <LLMSection
         entryContent={entryContent}
         apiKey={apiKey}
@@ -151,25 +169,5 @@ export function DayView({ date }: DayViewProps) {
         onMessagesChange={handleMessagesChange}
       />
     </div>
-  )
-}
-
-function LocationIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
   )
 }
