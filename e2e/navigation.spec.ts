@@ -23,6 +23,54 @@ test.describe("Keyboard navigation", () => {
     await expect(page.getByRole("heading", { level: 1, name: /March 16, 2025/ })).toBeVisible()
   })
 
+  test("navigates to previous day with 'p' key", async ({ page }) => {
+    // Press 'p' key
+    await page.keyboard.press("p")
+
+    // Should navigate to March 14, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 14, 2025/ })).toBeVisible()
+  })
+
+  test("navigates to previous day with 'P' key (uppercase)", async ({ page }) => {
+    // Press 'P' key (shift+p)
+    await page.keyboard.press("Shift+p")
+
+    // Should navigate to March 14, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 14, 2025/ })).toBeVisible()
+  })
+
+  test("navigates to next day with 'n' key", async ({ page }) => {
+    // Press 'n' key
+    await page.keyboard.press("n")
+
+    // Should navigate to March 16, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 16, 2025/ })).toBeVisible()
+  })
+
+  test("navigates to next day with 'N' key (uppercase)", async ({ page }) => {
+    // Press 'N' key (shift+n)
+    await page.keyboard.press("Shift+n")
+
+    // Should navigate to March 16, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 16, 2025/ })).toBeVisible()
+  })
+
+  test("does not navigate with p/n keys when focus is in text editor", async ({ page }) => {
+    // Focus the text editor
+    const textarea = page.getByRole("textbox", { name: /journal entry/i })
+    await textarea.click()
+
+    // Type 'p' and 'n' - should type into the editor, not navigate
+    await page.keyboard.press("p")
+    await page.keyboard.press("n")
+
+    // Should still be on March 15, 2025
+    await expect(page.getByRole("heading", { level: 1, name: /March 15, 2025/ })).toBeVisible()
+
+    // And the 'pn' should be in the textarea
+    await expect(textarea).toHaveValue("pn")
+  })
+
   test("handles month transition with keyboard navigation", async ({ page }) => {
     await page.goto("/#/day/2025-03-01")
     await expect(page.getByRole("heading", { level: 1, name: /March 1, 2025/ })).toBeVisible()

@@ -46,6 +46,42 @@ describe("useKeyboardNavigation", () => {
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 
+  it("calls onPrevious when lowercase 'p' key is pressed", () => {
+    const onPrevious = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious }))
+
+    dispatchKeyDown("p")
+
+    expect(onPrevious).toHaveBeenCalledTimes(1)
+  })
+
+  it("calls onPrevious when uppercase 'P' key is pressed", () => {
+    const onPrevious = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onPrevious }))
+
+    dispatchKeyDown("P")
+
+    expect(onPrevious).toHaveBeenCalledTimes(1)
+  })
+
+  it("calls onNext when lowercase 'n' key is pressed", () => {
+    const onNext = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onNext }))
+
+    dispatchKeyDown("n")
+
+    expect(onNext).toHaveBeenCalledTimes(1)
+  })
+
+  it("calls onNext when uppercase 'N' key is pressed", () => {
+    const onNext = vi.fn()
+    renderHook(() => useKeyboardNavigation({ onNext }))
+
+    dispatchKeyDown("N")
+
+    expect(onNext).toHaveBeenCalledTimes(1)
+  })
+
   it("calls onToday when lowercase 't' key is pressed", () => {
     const onToday = vi.fn()
     renderHook(() => useKeyboardNavigation({ onToday }))
@@ -88,6 +124,8 @@ describe("useKeyboardNavigation", () => {
     dispatchKeyDown("ArrowLeft", input)
     dispatchKeyDown("ArrowRight", input)
     dispatchKeyDown("t", input)
+    dispatchKeyDown("p", input)
+    dispatchKeyDown("n", input)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
@@ -104,6 +142,8 @@ describe("useKeyboardNavigation", () => {
     dispatchKeyDown("ArrowLeft", textarea)
     dispatchKeyDown("ArrowRight", textarea)
     dispatchKeyDown("t", textarea)
+    dispatchKeyDown("p", textarea)
+    dispatchKeyDown("n", textarea)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
@@ -120,6 +160,8 @@ describe("useKeyboardNavigation", () => {
     dispatchKeyDown("ArrowLeft", editable)
     dispatchKeyDown("ArrowRight", editable)
     dispatchKeyDown("t", editable)
+    dispatchKeyDown("p", editable)
+    dispatchKeyDown("n", editable)
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
@@ -135,6 +177,8 @@ describe("useKeyboardNavigation", () => {
     dispatchKeyDown("ArrowLeft")
     dispatchKeyDown("ArrowRight")
     dispatchKeyDown("t")
+    dispatchKeyDown("p")
+    dispatchKeyDown("n")
 
     expect(onPrevious).not.toHaveBeenCalled()
     expect(onNext).not.toHaveBeenCalled()
@@ -149,6 +193,8 @@ describe("useKeyboardNavigation", () => {
       dispatchKeyDown("ArrowLeft")
       dispatchKeyDown("ArrowRight")
       dispatchKeyDown("t")
+      dispatchKeyDown("p")
+      dispatchKeyDown("n")
     }).not.toThrow()
   })
 

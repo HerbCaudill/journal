@@ -50,11 +50,11 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}): 
         return
       }
 
-      // Handle arrow keys and 't' for today
-      if (event.key === "ArrowLeft" && onPrevious) {
+      // Handle arrow keys, p/n keys, and 't' for today
+      if ((event.key === "ArrowLeft" || event.key === "p" || event.key === "P") && onPrevious) {
         event.preventDefault()
         onPrevious()
-      } else if (event.key === "ArrowRight" && onNext) {
+      } else if ((event.key === "ArrowRight" || event.key === "n" || event.key === "N") && onNext) {
         event.preventDefault()
         onNext()
       } else if ((event.key === "t" || event.key === "T") && onToday) {
