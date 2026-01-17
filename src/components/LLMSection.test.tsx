@@ -169,7 +169,7 @@ describe("LLMSection", () => {
       expect(screen.getByText("Follow-up message")).toBeInTheDocument()
     })
 
-    it("styles assistant messages with muted background and user messages with primary background", () => {
+    it("styles assistant messages with muted background and user messages with no background", () => {
       // Note: First user message is not displayed (shown by DayView), so we need a follow-up
       const messages: Message[] = [
         { id: "1", role: "user", content: "Initial entry", createdAt: Date.now() },
@@ -192,9 +192,11 @@ describe("LLMSection", () => {
       expect(assistantMessages).toHaveLength(1)
       expect(assistantMessages[0]).toHaveClass("bg-muted")
 
+      // User messages should have no background styling (matching original journal entry format)
       const userMessages = screen.getAllByTestId("user-message")
       expect(userMessages).toHaveLength(1) // Only the follow-up, first user skipped
-      expect(userMessages[0]).toHaveClass("bg-primary/10")
+      expect(userMessages[0]).not.toHaveClass("bg-primary/10")
+      expect(userMessages[0]).not.toHaveClass("bg-muted")
     })
 
     it("displays API error from useLLM", () => {
