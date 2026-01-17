@@ -122,6 +122,9 @@ export function LLMSection({
   const [followUpInput, setFollowUpInput] = useState("")
   const followUpInputRef = useRef<HTMLTextAreaElement>(null)
 
+  // Use a ref to store the latest handleSubmit to avoid circular update dependencies
+  const handleSubmitRef = useRef<() => void>(() => {})
+
   const providerName = getProviderDisplayName(provider)
 
   // Handle sending the journal entry to the LLM
@@ -149,6 +152,9 @@ export function LLMSection({
       onMessagesChange(response.messages)
     }
   }, [apiKey, entryContent, send, onMessagesChange, onConversationStart])
+
+  // Keep the ref updated with the latest handleSubmit
+  handleSubmitRef.current = handleSubmit
 
   // Handle sending a follow-up message
   const handleFollowUp = useCallback(async () => {
@@ -180,14 +186,15 @@ export function LLMSection({
   }, [isLoading, messages.length, apiKey])
 
   // Provide submit button props to parent via callback
+  // Use the ref for onClick to avoid circular dependencies that cause infinite loops
   useEffect(() => {
     onSubmitButtonProps?.({
-      onClick: handleSubmit,
+      onClick: () => handleSubmitRef.current(),
       disabled: isLoading || !apiKey,
       isLoading,
       ariaLabel: `Ask ${providerName}`,
     })
-  }, [onSubmitButtonProps, handleSubmit, isLoading, apiKey, providerName])
+  }, [onSubmitButtonProps, isLoading, apiKey, providerName])
 
   const displayError = localError || error
 

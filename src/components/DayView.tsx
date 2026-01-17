@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
+// Type for Automerge arrays which have special CRDT methods
+interface AutomergeArray<T> extends Array<T> {
+  insertAt(index: number, value: T): void
+  deleteAt(index: number): void
+}
+
 // Environment variable defaults for API keys
 const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
 const ENV_OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? ""
@@ -91,20 +97,29 @@ export function DayView({ date }: DayViewProps) {
         const existingEntry = d.entries[date]
         existingEntry.updatedAt = now
 
-        // Keep the first user message (journal entry managed by EntryEditor)
-        const firstUserMessage = existingEntry.messages.find(m => m.role === "user")
+        // Get the first user message index (journal entry managed by EntryEditor)
+        const firstUserMessageIndex = existingEntry.messages.findIndex(m => m.role === "user")
 
-        // Clear existing messages and rebuild in place (required for Automerge)
-        existingEntry.messages.splice(0, existingEntry.messages.length)
+        // Cast to AutomergeArray to access CRDT-specific methods
+        const msgs = existingEntry.messages as AutomergeArray<Message>
 
-        // Add back the first user message if it exists
-        if (firstUserMessage) {
-          existingEntry.messages.push(firstUserMessage)
+        // Delete all messages after the first user message (keep the journal entry)
+        while (msgs.length > (firstUserMessageIndex >= 0 ? 1 : 0)) {
+          msgs.deleteAt(firstUserMessageIndex >= 0 ? 1 : 0)
         }
 
-        // Add all conversation messages (follow-up user messages and assistant messages)
+        // Add all conversation messages using Automerge's insertAt
+        // Clone each message to ensure we're not inserting document references
+        let insertIndex = firstUserMessageIndex >= 0 ? 1 : 0
         for (const msg of messages) {
-          existingEntry.messages.push(msg)
+          const clonedMsg: Message = {
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            createdAt: msg.createdAt,
+          }
+          msgs.insertAt(insertIndex, clonedMsg)
+          insertIndex++
         }
       })
     },
