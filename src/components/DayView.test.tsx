@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import * as JournalContext from "../context/JournalContext"
 import type { JournalDoc } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
@@ -419,6 +420,331 @@ describe("DayView", () => {
       // EntryEditor should be rendered when there are no messages
       const textarea = screen.getByRole("textbox", { name: /journal entry/i })
       expect(textarea).toBeInTheDocument()
+    })
+
+    it("shows Edit button when conversation has started", async () => {
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Edit button should be visible
+      const editButton = screen.getByRole("button", { name: /edit journal entry/i })
+      expect(editButton).toBeInTheDocument()
+    })
+
+    it("does not show Edit button when no conversation has started", () => {
+      const docWithOnlyUserMessage = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithOnlyUserMessage,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Edit button should NOT be visible when there's no conversation
+      const editButton = screen.queryByRole("button", { name: /edit journal entry/i })
+      expect(editButton).not.toBeInTheDocument()
+    })
+
+    it("shows EntryEditor when Edit button is clicked", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Initially, EntryEditor should NOT be visible
+      expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
+
+      // Click the Edit button
+      const editButton = screen.getByRole("button", { name: /edit journal entry/i })
+      await user.click(editButton)
+
+      // Now EntryEditor should be visible
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+      expect(textarea).toHaveValue("My journal entry")
+    })
+
+    it("hides EntryEditor when Done button is clicked", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Click the Edit button to enter edit mode
+      const editButton = screen.getByRole("button", { name: /edit journal entry/i })
+      await user.click(editButton)
+
+      // EntryEditor should be visible
+      expect(screen.getByRole("textbox", { name: /journal entry/i })).toBeInTheDocument()
+
+      // Click the Done button
+      const doneButton = screen.getByRole("button", { name: /done editing/i })
+      await user.click(doneButton)
+
+      // EntryEditor should be hidden again
+      expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
+      // Edit button should be visible again
+      expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
+    })
+
+    it("hides Edit button while in edit mode", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "This is Claude's response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "This is Claude's response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Click the Edit button to enter edit mode
+      const editButton = screen.getByRole("button", { name: /edit journal entry/i })
+      await user.click(editButton)
+
+      // Edit button should be hidden while in edit mode
+      expect(screen.queryByRole("button", { name: /edit journal entry/i })).not.toBeInTheDocument()
+      // Done button should be visible
+      expect(screen.getByRole("button", { name: /done editing/i })).toBeInTheDocument()
     })
   })
 })

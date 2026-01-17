@@ -5,6 +5,7 @@ import { LLMSection, SubmitButtonIcon } from "./LLMSection"
 import type { LLMSubmitButtonProps } from "./LLMSection"
 import { CalendarEvents } from "./CalendarEvents"
 import { InputGroupButton } from "@/components/ui/input-group"
+import { Button } from "@/components/ui/button"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 
@@ -24,6 +25,7 @@ interface DayViewProps {
 export function DayView({ date }: DayViewProps) {
   const { doc, changeDoc } = useJournal()
   const [submitButtonProps, setSubmitButtonProps] = useState<LLMSubmitButtonProps | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
 
   const entry = doc?.entries[date]
   const userMessage = entry?.messages.find(m => m.role === "user")
@@ -44,6 +46,9 @@ export function DayView({ date }: DayViewProps) {
 
   // Hide EntryEditor once conversation has started (has assistant messages)
   const hasConversation = assistantMessages.length > 0
+
+  // Show EntryEditor when: no conversation yet, OR in edit mode
+  const showEditor = !hasConversation || isEditing
 
   // Handle when Claude conversation changes
   const handleMessagesChange = useCallback(
@@ -94,10 +99,46 @@ export function DayView({ date }: DayViewProps) {
     </InputGroupButton>
   )
 
+  // Edit button footer for when editing during conversation
+  const editModeFooter = (
+    <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} aria-label="Done editing">
+      Done
+    </Button>
+  )
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <CalendarEvents date={date} />
-      {!hasConversation && <EntryEditor date={date} footer={submitButton} />}
+
+      {/* Edit button - show when conversation started but not in edit mode */}
+      {hasConversation && !isEditing && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsEditing(true)}
+          className="self-start"
+          aria-label="Edit journal entry"
+        >
+          <svg
+            className="mr-1 h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+          </svg>
+          Edit entry
+        </Button>
+      )}
+
+      {/* EntryEditor - show when no conversation yet, or when in edit mode */}
+      {showEditor && (
+        <EntryEditor date={date} footer={hasConversation ? editModeFooter : submitButton} />
+      )}
+
       <LLMSection
         entryContent={entryContent}
         apiKey={apiKey}
@@ -106,7 +147,7 @@ export function DayView({ date }: DayViewProps) {
         onMessagesChange={handleMessagesChange}
         bio={bio}
         additionalInstructions={additionalInstructions}
-        onSubmitButtonProps={setSubmitButtonProps}
+        onSubmitButtonProps={hasConversation ? undefined : setSubmitButtonProps}
       />
     </div>
   )
