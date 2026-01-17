@@ -297,4 +297,160 @@ describe("useKeyboardNavigation", () => {
     expect(onPrevious1).toHaveBeenCalledTimes(1) // Not called again
     expect(onPrevious2).toHaveBeenCalledTimes(1)
   })
+
+  describe("state transitions", () => {
+    describe("rapid navigation", () => {
+      it("handles rapid consecutive key presses", () => {
+        const onPrevious = vi.fn()
+        const onNext = vi.fn()
+        renderHook(() => useKeyboardNavigation({ onPrevious, onNext }))
+
+        // Rapid consecutive presses
+        dispatchKeyDown("ArrowLeft")
+        dispatchKeyDown("ArrowLeft")
+        dispatchKeyDown("ArrowLeft")
+        dispatchKeyDown("ArrowRight")
+        dispatchKeyDown("ArrowRight")
+
+        // All presses should be registered
+        expect(onPrevious).toHaveBeenCalledTimes(3)
+        expect(onNext).toHaveBeenCalledTimes(2)
+      })
+
+      it("handles alternating between navigation keys rapidly", () => {
+        const onPrevious = vi.fn()
+        const onNext = vi.fn()
+        const onToday = vi.fn()
+        renderHook(() => useKeyboardNavigation({ onPrevious, onNext, onToday }))
+
+        // Alternate between all navigation keys
+        dispatchKeyDown("ArrowLeft")
+        dispatchKeyDown("t")
+        dispatchKeyDown("ArrowRight")
+        dispatchKeyDown("p")
+        dispatchKeyDown("T")
+        dispatchKeyDown("n")
+
+        expect(onPrevious).toHaveBeenCalledTimes(2) // ArrowLeft and p
+        expect(onNext).toHaveBeenCalledTimes(2) // ArrowRight and n
+        expect(onToday).toHaveBeenCalledTimes(2) // t and T
+      })
+    })
+
+    describe("enabled state changes", () => {
+      it("stops responding to keys when disabled mid-session", () => {
+        const onPrevious = vi.fn()
+        const { rerender } = renderHook(
+          ({ enabled }) => useKeyboardNavigation({ onPrevious, enabled }),
+          { initialProps: { enabled: true } },
+        )
+
+        // First key press should work
+        dispatchKeyDown("ArrowLeft")
+        expect(onPrevious).toHaveBeenCalledTimes(1)
+
+        // Disable the hook
+        rerender({ enabled: false })
+
+        // Key presses should be ignored now
+        dispatchKeyDown("ArrowLeft")
+        dispatchKeyDown("ArrowLeft")
+        expect(onPrevious).toHaveBeenCalledTimes(1) // Still just 1
+      })
+
+      it("resumes responding to keys when re-enabled", () => {
+        const onNext = vi.fn()
+        const { rerender } = renderHook(
+          ({ enabled }) => useKeyboardNavigation({ onNext, enabled }),
+          { initialProps: { enabled: false } },
+        )
+
+        // Initially disabled - no response
+        dispatchKeyDown("ArrowRight")
+        expect(onNext).toHaveBeenCalledTimes(0)
+
+        // Enable the hook
+        rerender({ enabled: true })
+
+        // Now should respond
+        dispatchKeyDown("ArrowRight")
+        expect(onNext).toHaveBeenCalledTimes(1)
+      })
+
+      it("handles rapid enable/disable toggling", () => {
+        const onPrevious = vi.fn()
+        const { rerender } = renderHook(
+          ({ enabled }) => useKeyboardNavigation({ onPrevious, enabled }),
+          { initialProps: { enabled: true } },
+        )
+
+        // Toggle rapidly
+        rerender({ enabled: false })
+        rerender({ enabled: true })
+        rerender({ enabled: false })
+        rerender({ enabled: true })
+
+        // Should respond when finally enabled
+        dispatchKeyDown("ArrowLeft")
+        expect(onPrevious).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe("callback changes during operation", () => {
+      it("uses latest callback when navigation key is pressed", () => {
+        const onPrevious1 = vi.fn()
+        const onPrevious2 = vi.fn()
+
+        const { rerender } = renderHook(({ onPrevious }) => useKeyboardNavigation({ onPrevious }), {
+          initialProps: { onPrevious: onPrevious1 },
+        })
+
+        // Update callback
+        rerender({ onPrevious: onPrevious2 })
+
+        // Only the new callback should be called
+        dispatchKeyDown("ArrowLeft")
+        expect(onPrevious1).not.toHaveBeenCalled()
+        expect(onPrevious2).toHaveBeenCalledTimes(1)
+      })
+
+      it("handles callback being set to undefined", () => {
+        const onPrevious = vi.fn()
+
+        const { rerender } = renderHook(({ onPrevious }) => useKeyboardNavigation({ onPrevious }), {
+          initialProps: { onPrevious: onPrevious as (() => void) | undefined },
+        })
+
+        dispatchKeyDown("ArrowLeft")
+        expect(onPrevious).toHaveBeenCalledTimes(1)
+
+        // Remove the callback
+        rerender({ onPrevious: undefined })
+
+        // Should not throw, just silently do nothing
+        expect(() => dispatchKeyDown("ArrowLeft")).not.toThrow()
+        expect(onPrevious).toHaveBeenCalledTimes(1) // Still just 1
+      })
+
+      it("handles adding callbacks after initial render", () => {
+        const onPrevious = vi.fn()
+        const onNext = vi.fn()
+
+        // Start with only onPrevious
+        const { rerender } = renderHook(
+          ({ onPrevious, onNext }) => useKeyboardNavigation({ onPrevious, onNext }),
+          { initialProps: { onPrevious, onNext: undefined as (() => void) | undefined } },
+        )
+
+        dispatchKeyDown("ArrowRight")
+        expect(onNext).not.toHaveBeenCalled() // Not defined yet
+
+        // Add onNext callback
+        rerender({ onPrevious, onNext })
+
+        dispatchKeyDown("ArrowRight")
+        expect(onNext).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
 })

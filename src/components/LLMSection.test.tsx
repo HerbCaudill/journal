@@ -781,6 +781,141 @@ describe("LLMSection", () => {
     })
   })
 
+  describe("state transitions", () => {
+    describe("API key removal mid-conversation", () => {
+      it("hides follow-up input when API key is removed mid-conversation", () => {
+        const messages: Message[] = [
+          { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+          { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+        ]
+
+        mockUseLLM.mockReturnValue({
+          messages,
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        const { rerender } = render(
+          <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+        )
+
+        // Follow-up input should be visible
+        expect(screen.getByRole("textbox", { name: /follow-up message/i })).toBeInTheDocument()
+
+        // Remove the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Follow-up input should be hidden, but conversation should still be visible
+        expect(
+          screen.queryByRole("textbox", { name: /follow-up message/i }),
+        ).not.toBeInTheDocument()
+        expect(screen.getByText("Hi there!")).toBeInTheDocument()
+        // Should show the API key prompt
+        expect(screen.getByText(/please add your api key/i)).toBeInTheDocument()
+      })
+
+      it("disables submit button when API key is removed before initial submission", () => {
+        const { rerender } = render(
+          <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+        )
+
+        // Submit button should be enabled
+        expect(screen.getByRole("button", { name: /ask claude/i })).toBeEnabled()
+
+        // Remove the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Submit button should be disabled
+        expect(screen.getByRole("button", { name: /ask claude/i })).toBeDisabled()
+      })
+
+      it("shows API key prompt when key is removed after conversation started", () => {
+        const messages: Message[] = [
+          { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+          { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+        ]
+
+        mockUseLLM.mockReturnValue({
+          messages,
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        const { rerender } = render(
+          <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+        )
+
+        // Remove the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Should show both the conversation and the API key prompt
+        expect(screen.getByText("Hi there!")).toBeInTheDocument()
+        expect(screen.getByRole("link", { name: /settings/i })).toBeInTheDocument()
+      })
+
+      it("re-enables follow-up input when API key is restored", () => {
+        const messages: Message[] = [
+          { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+          { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+        ]
+
+        mockUseLLM.mockReturnValue({
+          messages,
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        const { rerender } = render(
+          <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+        )
+
+        // Remove the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Follow-up input should be hidden
+        expect(
+          screen.queryByRole("textbox", { name: /follow-up message/i }),
+        ).not.toBeInTheDocument()
+
+        // Restore the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="new-key" provider="claude" />)
+
+        // Follow-up input should be visible again
+        expect(screen.getByRole("textbox", { name: /follow-up message/i })).toBeInTheDocument()
+      })
+    })
+
+    describe("rapid input changes", () => {
+      it("handles rapid entry content changes correctly", async () => {
+        const user = userEvent.setup()
+        mockSend.mockResolvedValue({ content: "Response", success: true })
+
+        const { rerender } = render(
+          <LLMSection entryContent="Initial" apiKey="test-key" provider="claude" />,
+        )
+
+        // Change entry content rapidly
+        rerender(<LLMSection entryContent="Second" apiKey="test-key" provider="claude" />)
+        rerender(<LLMSection entryContent="Third" apiKey="test-key" provider="claude" />)
+        rerender(<LLMSection entryContent="Final content" apiKey="test-key" provider="claude" />)
+
+        // Submit should send the latest content
+        await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+        expect(mockSend).toHaveBeenCalledWith("Final content")
+      })
+    })
+  })
+
   describe("follow-up messages", () => {
     it("shows follow-up input after initial conversation", () => {
       const messages: Message[] = [
