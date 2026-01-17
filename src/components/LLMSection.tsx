@@ -76,7 +76,7 @@ export function LLMSection({
   onConversationStart,
   conversationKey,
 }: LLMSectionProps) {
-  const { messages, isLoading, error, send } = useLLM({
+  const { messages, isLoading, error, send, editAndResend } = useLLM({
     provider,
     apiKey,
     initialMessages,
@@ -88,6 +88,9 @@ export function LLMSection({
   const [localError, setLocalError] = useState<string | null>(null)
   const [followUpInput, setFollowUpInput] = useState("")
   const followUpInputRef = useRef<HTMLTextAreaElement>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState("")
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Use a ref to store the latest handleSubmit to avoid circular update dependencies
   const handleSubmitRef = useRef<() => void>(() => {})
@@ -144,6 +147,50 @@ export function LLMSection({
     }
   }, [followUpInput, send, onMessagesChange])
 
+  // Start editing a message
+  const handleStartEdit = useCallback((messageId: string, content: string) => {
+    setEditingMessageId(messageId)
+    setEditingContent(content)
+  }, [])
+
+  // Cancel editing
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessageId(null)
+    setEditingContent("")
+  }, [])
+
+  // Submit edited message (resend from that point)
+  const handleSubmitEdit = useCallback(async () => {
+    if (!editingMessageId || !editingContent.trim()) {
+      return
+    }
+
+    const response = await editAndResend(editingMessageId, editingContent.trim())
+
+    if (response.success && onMessagesChange && response.messages) {
+      onMessagesChange(response.messages)
+    }
+
+    setEditingMessageId(null)
+    setEditingContent("")
+  }, [editingMessageId, editingContent, editAndResend, onMessagesChange])
+
+  // Focus the edit textarea when starting to edit
+  useEffect(() => {
+    if (editingMessageId && editTextareaRef.current) {
+      editTextareaRef.current.focus()
+      // Move cursor to end
+      const len = editTextareaRef.current.value.length
+      editTextareaRef.current.setSelectionRange(len, len)
+    }
+  }, [editingMessageId])
+
+  // Reset editing state when conversationKey changes (navigating to different day)
+  useEffect(() => {
+    setEditingMessageId(null)
+    setEditingContent("")
+  }, [conversationKey])
+
   // Auto-focus the follow-up input when a response is received
   useEffect(() => {
     // Focus when loading finishes and there are messages (conversation has started)
@@ -199,7 +246,68 @@ export function LLMSection({
             >
               {message.role === "assistant" ?
                 <Markdown>{message.content}</Markdown>
-              : <p className="text-foreground font-serif whitespace-pre-wrap">{message.content}</p>}
+              : editingMessageId === message.id ?
+                /* Inline edit mode for user messages */
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editingContent}
+                    onChange={e => setEditingContent(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Escape") {
+                        e.preventDefault()
+                        handleCancelEdit()
+                      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault()
+                        handleSubmitEdit()
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="text-foreground bg-background border-input focus:ring-ring min-h-20 w-full resize-none rounded-md border p-2 font-serif text-base leading-relaxed focus:outline-none focus:ring-2"
+                    aria-label="Edit message"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSubmitEdit}
+                      disabled={isLoading || !editingContent.trim()}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 rounded-md px-3 py-1 text-sm"
+                      aria-label="Save and resend"
+                    >
+                      {isLoading ? "Sending..." : "Send"}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isLoading}
+                      className="text-muted-foreground hover:text-foreground rounded-md px-3 py-1 text-sm"
+                      aria-label="Cancel edit"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              : /* Regular display mode for user messages */
+                <div className="group/message">
+                  <p className="text-foreground font-serif whitespace-pre-wrap">{message.content}</p>
+                  <button
+                    onClick={() => handleStartEdit(message.id, message.content)}
+                    className="text-muted-foreground/40 hover:text-muted-foreground mt-1 p-1 transition-opacity md:opacity-0 md:group-hover/message:opacity-100 md:focus:opacity-100"
+                    aria-label="Edit message"
+                    disabled={isLoading}
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                  </button>
+                </div>
+              }
             </div>
           ))}
         </div>

@@ -206,6 +206,7 @@ describe("Conversation Persistence", () => {
       send: mockSend,
       reset: vi.fn(),
       setMessages: mockSetMessages,
+      editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
     })
 
     mockSend.mockImplementation(async (content: string) => {

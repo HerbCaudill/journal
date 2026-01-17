@@ -41,6 +41,8 @@ export interface UseLLMReturn {
   reset: () => void
   /** Set messages directly (useful for loading saved conversations) */
   setMessages: (messages: Message[]) => void
+  /** Edit a message and resend from that point, discarding all subsequent messages */
+  editAndResend: (messageId: string, newContent: string) => Promise<LLMResponse>
 }
 
 /**
@@ -195,6 +197,74 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
     setIsLoading(false)
   }, [])
 
+  const editAndResend = useCallback(
+    async (messageId: string, newContent: string): Promise<LLMResponse> => {
+      if (!newContent.trim()) {
+        return {
+          content: "",
+          success: false,
+          error: "Message content cannot be empty",
+        }
+      }
+
+      // Find the message index
+      const messageIndex = messagesRef.current.findIndex(m => m.id === messageId)
+      if (messageIndex === -1) {
+        return {
+          content: "",
+          success: false,
+          error: "Message not found",
+        }
+      }
+
+      const messageToEdit = messagesRef.current[messageIndex]
+      if (messageToEdit.role !== "user") {
+        return {
+          content: "",
+          success: false,
+          error: "Can only edit user messages",
+        }
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      // Create the updated user message
+      const updatedMessage: Message = {
+        ...messageToEdit,
+        content: newContent.trim(),
+        createdAt: Date.now(),
+      }
+
+      // Truncate all messages after and including this one, then add the updated message
+      const messagesBeforeEdit = messagesRef.current.slice(0, messageIndex)
+      messagesRef.current = [...messagesBeforeEdit, updatedMessage]
+      setMessages(messagesRef.current)
+
+      // Get the conversation history for the API call (messages before the edited one)
+      const response = await llmProvider.sendMessage(messagesBeforeEdit, newContent.trim())
+
+      if (response.success) {
+        // Add the assistant's response
+        const assistantMessage: Message = {
+          id: generateId(),
+          role: "assistant",
+          content: response.content,
+          createdAt: Date.now(),
+        }
+        messagesRef.current = [...messagesRef.current, assistantMessage]
+        setMessages(messagesRef.current)
+      } else {
+        // On error, keep the edited message but show the error
+        setError(response.error ?? "An unknown error occurred")
+      }
+
+      setIsLoading(false)
+      return { ...response, messages: messagesRef.current }
+    },
+    [llmProvider],
+  )
+
   return {
     messages,
     isLoading,
@@ -202,5 +272,6 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
     send,
     reset,
     setMessages,
+    editAndResend,
   }
 }

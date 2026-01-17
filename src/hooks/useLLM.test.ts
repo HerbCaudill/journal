@@ -678,4 +678,217 @@ describe("useLLM", () => {
     // when the conversationKey hasn't changed
     expect(result.current.messages).toHaveLength(2)
   })
+
+  describe("editAndResend", () => {
+    it("edits a message and resends from that point", async () => {
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "First response", success: true })
+        .mockResolvedValueOnce({ content: "Second response", success: true })
+        .mockResolvedValueOnce({ content: "New response after edit", success: true })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      // Build a conversation
+      await act(async () => {
+        await result.current.send("First question")
+        await result.current.send("Second question")
+      })
+
+      expect(result.current.messages).toHaveLength(4)
+      const secondUserMessageId = result.current.messages[2].id
+
+      // Edit the second user message
+      await act(async () => {
+        await result.current.editAndResend(secondUserMessageId, "Edited second question")
+      })
+
+      // Should have: first question, first response, edited question, new response
+      expect(result.current.messages).toHaveLength(4)
+      expect(result.current.messages[0].content).toBe("First question")
+      expect(result.current.messages[1].content).toBe("First response")
+      expect(result.current.messages[2].content).toBe("Edited second question")
+      expect(result.current.messages[3].content).toBe("New response after edit")
+    })
+
+    it("truncates all messages after the edited message", async () => {
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "Response 1", success: true })
+        .mockResolvedValueOnce({ content: "Response 2", success: true })
+        .mockResolvedValueOnce({ content: "Response 3", success: true })
+        .mockResolvedValueOnce({ content: "New response after edit", success: true })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      // Build a conversation with 3 exchanges
+      await act(async () => {
+        await result.current.send("Question 1")
+        await result.current.send("Question 2")
+        await result.current.send("Question 3")
+      })
+
+      expect(result.current.messages).toHaveLength(6)
+      const firstUserMessageId = result.current.messages[0].id
+
+      // Edit the first user message - should discard all subsequent messages
+      await act(async () => {
+        await result.current.editAndResend(firstUserMessageId, "Edited first question")
+      })
+
+      // Should only have the edited question and its response
+      expect(result.current.messages).toHaveLength(2)
+      expect(result.current.messages[0].content).toBe("Edited first question")
+      expect(result.current.messages[1].content).toBe("New response after edit")
+    })
+
+    it("returns error for empty content", async () => {
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      let response: LLMResponse
+      await act(async () => {
+        response = await result.current.editAndResend("some-id", "   ")
+      })
+
+      expect(response!.success).toBe(false)
+      expect(response!.error).toBe("Message content cannot be empty")
+    })
+
+    it("returns error for non-existent message", async () => {
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      let response: LLMResponse
+      await act(async () => {
+        response = await result.current.editAndResend("non-existent-id", "New content")
+      })
+
+      expect(response!.success).toBe(false)
+      expect(response!.error).toBe("Message not found")
+    })
+
+    it("returns error when trying to edit assistant message", async () => {
+      mockSendMessage.mockResolvedValue({ content: "Response", success: true })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      await act(async () => {
+        await result.current.send("Hello")
+      })
+
+      const assistantMessageId = result.current.messages[1].id
+
+      let response: LLMResponse
+      await act(async () => {
+        response = await result.current.editAndResend(assistantMessageId, "Trying to edit assistant")
+      })
+
+      expect(response!.success).toBe(false)
+      expect(response!.error).toBe("Can only edit user messages")
+    })
+
+    it("trims content before sending", async () => {
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "First response", success: true })
+        .mockResolvedValueOnce({ content: "Edited response", success: true })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      await act(async () => {
+        await result.current.send("First question")
+      })
+
+      const userMessageId = result.current.messages[0].id
+
+      await act(async () => {
+        await result.current.editAndResend(userMessageId, "  Trimmed content  ")
+      })
+
+      expect(result.current.messages[0].content).toBe("Trimmed content")
+      expect(mockSendMessage).toHaveBeenLastCalledWith([], "Trimmed content")
+    })
+
+    it("handles API error on resend", async () => {
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "First response", success: true })
+        .mockResolvedValueOnce({ content: "", success: false, error: "API error" })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      await act(async () => {
+        await result.current.send("First question")
+      })
+
+      const userMessageId = result.current.messages[0].id
+
+      await act(async () => {
+        await result.current.editAndResend(userMessageId, "Edited question")
+      })
+
+      // Edited message should still be there, but error should be set
+      expect(result.current.messages).toHaveLength(1)
+      expect(result.current.messages[0].content).toBe("Edited question")
+      expect(result.current.error).toBe("API error")
+    })
+
+    it("sets isLoading during edit operation", async () => {
+      let resolvePromise: (value: LLMResponse) => void
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "First response", success: true })
+        .mockImplementationOnce(
+          () =>
+            new Promise(resolve => {
+              resolvePromise = resolve
+            }),
+        )
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      await act(async () => {
+        await result.current.send("First question")
+      })
+
+      const userMessageId = result.current.messages[0].id
+
+      act(() => {
+        result.current.editAndResend(userMessageId, "Edited question")
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(true)
+      })
+
+      await act(async () => {
+        resolvePromise!({ content: "New response", success: true })
+      })
+
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it("passes correct message history to API", async () => {
+      mockSendMessage
+        .mockResolvedValueOnce({ content: "Response 1", success: true })
+        .mockResolvedValueOnce({ content: "Response 2", success: true })
+        .mockResolvedValueOnce({ content: "New response", success: true })
+
+      const { result } = renderHook(() => useLLM(defaultOptions))
+
+      await act(async () => {
+        await result.current.send("Question 1")
+        await result.current.send("Question 2")
+      })
+
+      // Get the second user message (index 2)
+      const secondUserMessageId = result.current.messages[2].id
+
+      // Edit second message
+      await act(async () => {
+        await result.current.editAndResend(secondUserMessageId, "Edited question 2")
+      })
+
+      // API should receive messages before the edited one
+      const lastCall = mockSendMessage.mock.calls[mockSendMessage.mock.calls.length - 1]
+      expect(lastCall[0]).toHaveLength(2) // Question 1 and Response 1
+      expect(lastCall[0][0].content).toBe("Question 1")
+      expect(lastCall[0][1].content).toBe("Response 1")
+      expect(lastCall[1]).toBe("Edited question 2")
+    })
+  })
 })

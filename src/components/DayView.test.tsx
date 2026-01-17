@@ -75,6 +75,7 @@ vi.mock("../hooks/useLLM", () => ({
     send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
     reset: vi.fn(),
     setMessages: vi.fn(),
+    editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
   })),
 }))
 
@@ -233,6 +234,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithApiKey = {
@@ -300,6 +302,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -439,6 +442,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -545,6 +549,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -618,6 +623,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -695,6 +701,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -1198,6 +1205,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithConversation = {
@@ -1257,6 +1265,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const emptyDoc = {
@@ -1318,6 +1327,7 @@ describe("DayView", () => {
         send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
         reset: vi.fn(),
         setMessages: vi.fn(),
+        editAndResend: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
       })
 
       const docWithFullConversation = {

@@ -17,6 +17,7 @@ describe("LLMSection", () => {
   const mockSend = vi.fn<(content: string) => Promise<LLMResponse>>()
   const mockReset = vi.fn<() => void>()
   const mockSetMessages = vi.fn<(messages: Message[]) => void>()
+  const mockEditAndResend = vi.fn<(messageId: string, newContent: string) => Promise<LLMResponse>>()
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -28,6 +29,7 @@ describe("LLMSection", () => {
       send: mockSend,
       reset: mockReset,
       setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
     })
   })
 
@@ -111,6 +113,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -137,6 +140,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -159,6 +163,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -184,6 +189,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -207,6 +213,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -333,6 +340,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -359,6 +367,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -374,6 +383,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -389,6 +399,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -404,6 +415,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -419,6 +431,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -434,6 +447,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -450,6 +464,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -466,6 +481,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       const { rerender } = render(
@@ -485,6 +501,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -506,6 +523,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({
@@ -528,6 +546,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       // Force rerender to pick up error state
@@ -552,6 +571,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       // Simulate a failed send that should restore the input
@@ -584,6 +604,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -603,6 +624,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -765,6 +787,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
@@ -808,6 +831,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -875,6 +899,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -905,6 +930,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       // First send succeeds
@@ -985,6 +1011,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1008,6 +1035,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       const { rerender } = render(
@@ -1024,6 +1052,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1049,6 +1078,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1098,6 +1128,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1125,6 +1156,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1183,6 +1215,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1210,6 +1243,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
@@ -1230,6 +1264,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1252,6 +1287,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1279,6 +1315,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1305,6 +1342,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1332,6 +1370,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1359,6 +1398,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1387,6 +1427,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1408,6 +1449,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1434,6 +1476,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       // Mock send to return the updated messages array (as useLLM now does)
@@ -1486,6 +1529,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1507,6 +1551,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1532,6 +1577,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
+      editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1546,6 +1592,351 @@ describe("LLMSection", () => {
       const input = screen.getByRole("textbox", { name: /follow-up message/i })
       expect(input).toHaveValue("")
       expect(input).toBeDisabled()
+    })
+  })
+
+  describe("editing messages", () => {
+    it("shows edit button on user messages (except first)", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "First response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up question", createdAt: Date.now() },
+        { id: "4", role: "assistant", content: "Second response", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Should have edit button for follow-up user message
+      const editButtons = screen.getAllByRole("button", { name: /edit message/i })
+      expect(editButtons).toHaveLength(1) // Only the follow-up, first user is managed by DayView
+    })
+
+    it("does not show edit button on assistant messages", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // No edit buttons should be visible (first user message is skipped)
+      const editButtons = screen.queryAllByRole("button", { name: /edit message/i })
+      expect(editButtons).toHaveLength(0)
+    })
+
+    it("switches to edit mode when edit button is clicked", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const editButton = screen.getByRole("button", { name: /edit message/i })
+      await user.click(editButton)
+
+      // Should show edit textarea
+      expect(screen.getByRole("textbox", { name: /edit message/i })).toBeInTheDocument()
+      expect(screen.getByRole("textbox", { name: /edit message/i })).toHaveValue("Follow-up message")
+      // Should show Save and Cancel buttons
+      expect(screen.getByRole("button", { name: /save and resend/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /cancel edit/i })).toBeInTheDocument()
+    })
+
+    it("cancels edit mode when Cancel is clicked", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Type some changes
+      const editTextarea = screen.getByRole("textbox", { name: /edit message/i })
+      await user.clear(editTextarea)
+      await user.type(editTextarea, "Modified content")
+
+      // Cancel
+      await user.click(screen.getByRole("button", { name: /cancel edit/i }))
+
+      // Should return to normal display
+      expect(screen.queryByRole("textbox", { name: /edit message/i })).not.toBeInTheDocument()
+      expect(screen.getByText("Follow-up message")).toBeInTheDocument()
+    })
+
+    it("cancels edit mode when Escape is pressed", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Press Escape
+      await user.keyboard("{Escape}")
+
+      // Should return to normal display
+      expect(screen.queryByRole("textbox", { name: /edit message/i })).not.toBeInTheDocument()
+    })
+
+    it("calls editAndResend and onMessagesChange when Save is clicked", async () => {
+      const user = userEvent.setup()
+      const onMessagesChange = vi.fn()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      const updatedMessages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Edited message", createdAt: Date.now() },
+        { id: "4", role: "assistant", content: "New response", createdAt: Date.now() },
+      ]
+
+      mockEditAndResend.mockResolvedValue({
+        content: "New response",
+        success: true,
+        messages: updatedMessages,
+      })
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(
+        <LLMSection
+          entryContent="Test entry"
+          apiKey="test-key"
+          provider="claude"
+          onMessagesChange={onMessagesChange}
+        />,
+      )
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Change content
+      const editTextarea = screen.getByRole("textbox", { name: /edit message/i })
+      await user.clear(editTextarea)
+      await user.type(editTextarea, "Edited message")
+
+      // Save
+      await user.click(screen.getByRole("button", { name: /save and resend/i }))
+
+      await waitFor(() => {
+        expect(mockEditAndResend).toHaveBeenCalledWith("3", "Edited message")
+      })
+      expect(onMessagesChange).toHaveBeenCalledWith(updatedMessages)
+    })
+
+    it("submits edit when Cmd+Enter is pressed", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockEditAndResend.mockResolvedValue({
+        content: "New response",
+        success: true,
+        messages: [],
+      })
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Change content
+      const editTextarea = screen.getByRole("textbox", { name: /edit message/i })
+      await user.clear(editTextarea)
+      await user.type(editTextarea, "Edited with keyboard")
+
+      // Submit with Cmd+Enter
+      await user.keyboard("{Meta>}{Enter}{/Meta}")
+
+      await waitFor(() => {
+        expect(mockEditAndResend).toHaveBeenCalledWith("3", "Edited with keyboard")
+      })
+    })
+
+    it("disables edit button while loading", () => {
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const editButton = screen.getByRole("button", { name: /edit message/i })
+      expect(editButton).toBeDisabled()
+    })
+
+    it("disables Save button when edit content is empty", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Clear content
+      const editTextarea = screen.getByRole("textbox", { name: /edit message/i })
+      await user.clear(editTextarea)
+
+      // Save button should be disabled
+      expect(screen.getByRole("button", { name: /save and resend/i })).toBeDisabled()
+    })
+
+    it("shows loading state during edit submission", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up message", createdAt: Date.now() },
+      ]
+
+      // First render with isLoading: false
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      const { rerender } = render(
+        <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+      )
+
+      // Enter edit mode
+      await user.click(screen.getByRole("button", { name: /edit message/i }))
+
+      // Update mock to return loading state
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+        editAndResend: mockEditAndResend,
+      })
+
+      rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Should show loading state
+      expect(screen.getByRole("button", { name: /save and resend/i })).toHaveTextContent("Sending...")
+      expect(screen.getByRole("textbox", { name: /edit message/i })).toBeDisabled()
     })
   })
 })
