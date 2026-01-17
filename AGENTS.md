@@ -55,7 +55,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 **LLM Integration**
 
 - `src/lib/llm/types.ts` - Provider-agnostic interfaces: `LLMProvider`, `LLMConfig`, `LLMResponse`, `ProviderType`
-- `src/lib/llm/providers/claude.ts` - Claude provider implementing `LLMProvider` interface with dynamic system prompt builder
+- `src/lib/llm/providers/claude.ts` - Claude provider implementing `LLMProvider` interface with dynamic system prompt builder. User-provided content (bio, additionalInstructions) is wrapped in XML tags with security instructions to mitigate prompt injection risks.
 - `src/hooks/useLLM.ts` - Provider-agnostic React hook for managing LLM conversation state. Syncs with `initialMessages` prop changes to ensure each day has its own isolated conversation. Accepts bio and additionalInstructions for customizing the system prompt.
 - `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude") for backward compatibility
 - `src/components/LLMSection.tsx` - Provider-agnostic UI component with submit button, follow-up input, and response display
