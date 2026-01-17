@@ -147,55 +147,58 @@ export function LLMSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Submit button */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading || !apiKey}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label={`Ask ${providerName}`}
-        >
-          {isLoading ?
-            <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          : <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5M5 12l7-7 7 7" />
-            </svg>
-          }
-        </button>
-        {isLoading && <span className="text-muted-foreground text-sm">Thinking...</span>}
-
-        {messages.length > 0 && (
-          <button
-            onClick={handleReset}
-            disabled={isLoading}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border px-4 py-2 transition-colors disabled:opacity-50"
-            aria-label="Clear conversation"
-          >
-            Clear
-          </button>
+      {/* Submit button in input-like container */}
+      <div className="border-input bg-background relative flex min-h-[3rem] items-end rounded-lg border p-2">
+        {isLoading && (
+          <span className="text-muted-foreground absolute top-2 left-3 text-sm">Thinking...</span>
         )}
+        <div className="ml-auto flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={handleReset}
+              disabled={isLoading}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border px-3 py-1.5 text-sm transition-colors disabled:opacity-50"
+              aria-label="Clear conversation"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading || !apiKey}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={`Ask ${providerName}`}
+          >
+            {isLoading ?
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            : <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
+            }
+          </button>
+        </div>
       </div>
 
       {/* Error display */}
@@ -228,7 +231,7 @@ export function LLMSection({
 
       {/* Follow-up input - shown after initial conversation */}
       {messages.length > 0 && apiKey && (
-        <div className="flex gap-2">
+        <div className="border-input bg-background focus-within:ring-ring relative flex min-h-[3rem] items-end rounded-lg border p-2 focus-within:ring-2">
           <input
             ref={followUpInputRef}
             type="text"
@@ -241,13 +244,13 @@ export function LLMSection({
             }}
             placeholder="Ask a follow-up question..."
             disabled={isLoading}
-            className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring flex-1 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-foreground placeholder:text-muted-foreground mr-2 min-w-0 flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Follow-up message"
           />
           <button
             onClick={handleFollowUp}
             disabled={isLoading || !followUpInput.trim()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Send follow-up"
           >
             {isLoading ?

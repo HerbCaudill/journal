@@ -47,7 +47,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `App` - Main application component that handles routing, auto-captures location when viewing today's entry (if geolocation is available and not denied), and passes location data to Header
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge; displays save indicator ("Saving..." while debouncing, "Saved" briefly after save completes)
-- `LLMSection` - Submit button to ask LLM about journal entry, displays full conversation with user messages (right-aligned) and assistant messages (left-aligned). Provider-agnostic (supports Claude and OpenAI)
+- `LLMSection` - Claude chat-style input with submit button inside container (lower right). Displays full conversation with user messages (right-aligned) and assistant messages (left-aligned). Provider-agnostic (supports Claude and OpenAI)
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 - `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
 
