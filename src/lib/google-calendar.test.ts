@@ -377,6 +377,38 @@ describe("google-calendar", () => {
       expect(result.events[1].isAllDay).toBe(true)
     })
 
+    it("uses time bounds covering the full local day (start of day to start of next day)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: [] }),
+      })
+
+      await fetchEventsForDate(mockTokens, "2024-01-15")
+
+      // Extract the URL that was called
+      const fetchCall = mockFetch.mock.calls[0]
+      const url = new URL(fetchCall[0])
+      const timeMin = url.searchParams.get("timeMin")
+      const timeMax = url.searchParams.get("timeMax")
+
+      // Parse the times to verify the span
+      const startTime = new Date(timeMin!)
+      const endTime = new Date(timeMax!)
+
+      // The time span should be exactly 24 hours
+      const hoursDiff = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60)
+      expect(hoursDiff).toBe(24)
+
+      // The start time should be midnight local time for Jan 15
+      // When we create new Date("2024-01-15T00:00:00"), it's midnight in local timezone
+      const expectedStart = new Date("2024-01-15T00:00:00")
+      expect(startTime.getTime()).toBe(expectedStart.getTime())
+
+      // The end time should be midnight local time for Jan 16
+      const expectedEnd = new Date("2024-01-16T00:00:00")
+      expect(endTime.getTime()).toBe(expectedEnd.getTime())
+    })
+
     it("handles events without title", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,

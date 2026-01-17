@@ -385,9 +385,17 @@ export async function fetchEventsForDate(
   }
 
   try {
-    // Create time bounds for the date (full day in local timezone)
+    // Create time bounds for the date in the user's local timezone.
+    // We use local timezone because the user's "day" is defined by their local clock.
+    // For example, if a user in UTC-8 wants events for Jan 15:
+    //   - startOfDay: Jan 15 00:00:00 local = Jan 15 08:00:00 UTC
+    //   - endOfDay: Jan 16 00:00:00 local = Jan 16 08:00:00 UTC (exclusive)
+    // This ensures we capture all events that occur during the user's local day.
     const startOfDay = new Date(`${date}T00:00:00`)
-    const endOfDay = new Date(`${date}T23:59:59`)
+
+    // Calculate end of day as start of the next day (more precise than 23:59:59)
+    const endOfDay = new Date(startOfDay)
+    endOfDay.setDate(endOfDay.getDate() + 1)
 
     const params = new URLSearchParams({
       timeMin: startOfDay.toISOString(),
