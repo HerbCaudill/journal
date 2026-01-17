@@ -132,19 +132,21 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
           <h1 className="flex flex-col items-center text-center">
             <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
             <div className="flex items-center gap-2">
-              {showNavigation && (
+              {showNavigation ?
                 <button
                   ref={calendarButtonRef}
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                  className="text-muted-foreground hover:text-foreground rounded-full p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                   aria-expanded={isDatePickerOpen}
                   aria-haspopup="dialog"
-                  aria-label="Open calendar"
                 >
-                  <CalendarIcon />
+                  <CalendarIcon aria-label="Open calendar" />
+                  <span className="text-sm font-normal">{getMonthDay(date)}</span>
                 </button>
-              )}
-              <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+              : <span className="text-muted-foreground text-sm font-normal">
+                  {getMonthDay(date)}
+                </span>
+              }
               {position && <LocationBadge position={position} onClick={onLocationClick} />}
             </div>
           </h1>
@@ -212,7 +214,7 @@ function ChevronRightIcon() {
   )
 }
 
-function CalendarIcon() {
+function CalendarIcon({ "aria-label": ariaLabel }: { "aria-label"?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -224,6 +226,8 @@ function CalendarIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-label={ariaLabel}
+      aria-hidden={!ariaLabel}
     >
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
       <line x1="16" y1="2" x2="16" y2="6" />

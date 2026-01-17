@@ -140,6 +140,27 @@ describe("Header", () => {
       expect(screen.getByText("Go to Today")).toBeInTheDocument()
     })
 
+    it("opens date picker when date label is clicked", () => {
+      render(<Header date="2024-01-15" />)
+
+      // The date label is now part of the calendar button
+      // Use locale-aware formatting for expected values
+      const date = new Date(2024, 0, 15)
+      const expectedMonthDay = date.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+
+      // Find and click the button containing the date text
+      const calendarButton = screen.getByRole("button", { name: /open calendar/i })
+      expect(calendarButton).toHaveTextContent(expectedMonthDay)
+      fireEvent.click(calendarButton)
+
+      // Date picker should now be visible
+      expect(screen.getByText("Go to Today")).toBeInTheDocument()
+    })
+
     it("closes date picker when clicking outside", () => {
       render(<Header date="2024-01-15" />)
 
