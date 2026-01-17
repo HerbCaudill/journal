@@ -232,7 +232,7 @@ export function LLMSection({
                 handleFollowUp()
               }
             }}
-            placeholder="Ask a follow-up question..."
+            placeholder=""
             disabled={isLoading}
             rows={2}
             className="min-h-[80px] text-base leading-relaxed"
