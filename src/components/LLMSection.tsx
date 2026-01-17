@@ -199,7 +199,7 @@ export function LLMSection({
             >
               {message.role === "assistant" ?
                 <Markdown>{message.content}</Markdown>
-              : <p className="text-foreground whitespace-pre-wrap">{message.content}</p>}
+              : <p className="text-foreground font-serif whitespace-pre-wrap">{message.content}</p>}
             </div>
           ))}
         </div>
