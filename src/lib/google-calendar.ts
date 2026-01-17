@@ -38,6 +38,11 @@ const CALENDAR_SCOPES = [
 
 // Local storage keys for token persistence
 const TOKEN_STORAGE_KEY = "google_calendar_tokens"
+const TOKEN_ISSUED_AT_KEY = "google_calendar_token_issued_at"
+
+// Token rotation threshold - rotate tokens if older than 30 minutes
+// This limits the exposure window if tokens are compromised
+const TOKEN_ROTATION_THRESHOLD_MS = 30 * 60 * 1000
 
 // Rate limiting configuration for Google Calendar API
 // Google's Calendar API has a limit of 10 requests per second per user
@@ -279,11 +284,24 @@ export async function refreshAccessToken(
 
 /**
  * Store tokens in local storage (encrypted)
+ * Also records the timestamp when the tokens were issued/refreshed
  */
 export async function storeTokens(tokens: GoogleTokens): Promise<void> {
   const key = await deriveEncryptionKey()
   const encryptedData = await encrypt(JSON.stringify(tokens), key)
   localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(encryptedData))
+  // Record when tokens were stored for rotation tracking
+  localStorage.setItem(TOKEN_ISSUED_AT_KEY, Date.now().toString())
+}
+
+/**
+ * Get the timestamp when tokens were last issued/refreshed
+ */
+export function getTokenIssuedAt(): number | null {
+  const storedValue = localStorage.getItem(TOKEN_ISSUED_AT_KEY)
+  if (!storedValue) return null
+  const timestamp = parseInt(storedValue, 10)
+  return Number.isNaN(timestamp) ? null : timestamp
 }
 
 /**
@@ -324,6 +342,7 @@ export async function getStoredTokens(): Promise<GoogleTokens | null> {
  */
 export function clearStoredTokens(): void {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
+  localStorage.removeItem(TOKEN_ISSUED_AT_KEY)
 }
 
 /**
@@ -420,6 +439,85 @@ export async function getValidTokens(
   // No refresh token available, clear tokens
   clearStoredTokens()
   return null
+}
+
+/**
+ * Check if tokens should be proactively rotated based on their age.
+ * Returns true if tokens are older than the rotation threshold.
+ *
+ * @param issuedAt - Timestamp when tokens were issued (in milliseconds)
+ * @param thresholdMs - Rotation threshold in milliseconds (default: 30 minutes)
+ */
+export function shouldRotateTokens(
+  issuedAt: number | null,
+  thresholdMs: number = TOKEN_ROTATION_THRESHOLD_MS,
+): boolean {
+  // If no issue timestamp, assume we should rotate
+  if (issuedAt === null) return true
+
+  const age = Date.now() - issuedAt
+  return age >= thresholdMs
+}
+
+/**
+ * Result of a token rotation attempt
+ */
+export interface RotateTokensResult {
+  /** Whether rotation was performed */
+  rotated: boolean
+  /** New tokens if rotation was successful */
+  tokens?: GoogleTokens
+  /** Error message if rotation failed */
+  error?: string
+}
+
+/**
+ * Proactively rotate tokens if they're older than the rotation threshold.
+ * This limits the exposure window if tokens are compromised.
+ *
+ * Called on app startup to ensure tokens are fresh. Unlike getValidTokens,
+ * this function may refresh tokens even if they haven't expired yet.
+ *
+ * @param config - Google Calendar configuration
+ * @param thresholdMs - Rotation threshold in milliseconds (default: 30 minutes)
+ * @returns Result indicating whether rotation occurred and any errors
+ */
+export async function rotateTokensIfNeeded(
+  config: GoogleCalendarConfig = {},
+  thresholdMs: number = TOKEN_ROTATION_THRESHOLD_MS,
+): Promise<RotateTokensResult> {
+  const tokens = await getStoredTokens()
+
+  // No tokens stored, nothing to rotate
+  if (!tokens) {
+    return { rotated: false }
+  }
+
+  // No refresh token, can't rotate
+  if (!tokens.refreshToken) {
+    return { rotated: false }
+  }
+
+  const issuedAt = getTokenIssuedAt()
+
+  // Check if rotation is needed
+  if (!shouldRotateTokens(issuedAt, thresholdMs)) {
+    return { rotated: false }
+  }
+
+  // Perform rotation
+  try {
+    const newTokens = await refreshAccessToken(tokens.refreshToken, config)
+    await storeTokens(newTokens)
+    return { rotated: true, tokens: newTokens }
+  } catch (error) {
+    // Don't clear tokens on rotation failure - they may still be valid
+    // The user can still use existing tokens until they actually expire
+    return {
+      rotated: false,
+      error: error instanceof Error ? error.message : "Failed to rotate tokens",
+    }
+  }
 }
 
 /**

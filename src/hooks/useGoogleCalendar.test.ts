@@ -15,6 +15,7 @@ vi.mock("../lib/google-calendar", () => ({
   fetchAllEventsForDate: vi.fn(),
   isGoogleCalendarConfigured: vi.fn(),
   isAuthenticated: vi.fn().mockResolvedValue(false),
+  rotateTokensIfNeeded: vi.fn().mockResolvedValue({ rotated: false }),
 }))
 
 describe("useGoogleCalendar", () => {
@@ -62,6 +63,7 @@ describe("useGoogleCalendar", () => {
     vi.mocked(googleCalendar.getStoredTokens).mockResolvedValue(null)
     vi.mocked(googleCalendar.storeTokens).mockResolvedValue(undefined)
     vi.mocked(googleCalendar.revokeTokens).mockResolvedValue({ success: true })
+    vi.mocked(googleCalendar.rotateTokensIfNeeded).mockResolvedValue({ rotated: false })
 
     // Store and mock window.location.href
     originalHref = window.location.href
@@ -609,6 +611,82 @@ describe("useGoogleCalendar", () => {
       // The return object should be a new reference since error state changed
       expect(result.current).not.toBe(firstResult)
       expect(result.current.error).toBe("Test error")
+    })
+  })
+
+  describe("proactive token rotation", () => {
+    it("calls rotateTokensIfNeeded on initialization when configured", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+      vi.mocked(googleCalendar.rotateTokensIfNeeded).mockResolvedValue({ rotated: false })
+
+      renderHook(() => useGoogleCalendar())
+
+      await waitFor(() => {
+        expect(googleCalendar.rotateTokensIfNeeded).toHaveBeenCalled()
+      })
+    })
+
+    it("does not call rotateTokensIfNeeded when not configured", () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(false)
+
+      renderHook(() => useGoogleCalendar())
+
+      expect(googleCalendar.rotateTokensIfNeeded).not.toHaveBeenCalled()
+    })
+
+    it("becomes authenticated after successful rotation", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.rotateTokensIfNeeded).mockResolvedValue({
+        rotated: true,
+        tokens: mockTokens,
+      })
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      expect(googleCalendar.rotateTokensIfNeeded).toHaveBeenCalled()
+    })
+
+    it("remains authenticated even if rotation fails (tokens still valid)", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.rotateTokensIfNeeded).mockResolvedValue({
+        rotated: false,
+        error: "Network error",
+      })
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
+
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      // Rotation failed, but user should still be authenticated if tokens are valid
+      expect(googleCalendar.rotateTokensIfNeeded).toHaveBeenCalled()
+      expect(googleCalendar.getValidTokens).toHaveBeenCalled()
+    })
+
+    it("passes config to rotateTokensIfNeeded", async () => {
+      vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+      vi.mocked(googleCalendar.rotateTokensIfNeeded).mockResolvedValue({ rotated: false })
+
+      const customConfig = {
+        clientId: "custom-client-id",
+        redirectUri: "http://custom.com/callback",
+      }
+      renderHook(() => useGoogleCalendar(customConfig))
+
+      await waitFor(() => {
+        expect(googleCalendar.rotateTokensIfNeeded).toHaveBeenCalledWith(
+          expect.objectContaining(customConfig),
+        )
+      })
     })
   })
 })

@@ -13,6 +13,9 @@ import {
   fetchAllEventsForDate,
   isGoogleCalendarConfigured,
   isAuthenticated,
+  getTokenIssuedAt,
+  shouldRotateTokens,
+  rotateTokensIfNeeded,
   type GoogleTokens,
 } from "./google-calendar"
 
@@ -846,6 +849,251 @@ describe("google-calendar", () => {
       const parsed = JSON.parse(storedValue)
       expect(parsed).toHaveProperty("iv")
       expect(parsed).toHaveProperty("ciphertext")
+    })
+  })
+
+  describe("getTokenIssuedAt", () => {
+    it("returns null when no timestamp stored", () => {
+      expect(getTokenIssuedAt()).toBeNull()
+    })
+
+    it("returns timestamp when stored", () => {
+      const timestamp = Date.now()
+      mockLocalStorage["google_calendar_token_issued_at"] = timestamp.toString()
+      expect(getTokenIssuedAt()).toBe(timestamp)
+    })
+
+    it("returns null for invalid timestamp", () => {
+      mockLocalStorage["google_calendar_token_issued_at"] = "invalid"
+      expect(getTokenIssuedAt()).toBeNull()
+    })
+  })
+
+  describe("shouldRotateTokens", () => {
+    it("returns true when issuedAt is null", () => {
+      expect(shouldRotateTokens(null)).toBe(true)
+    })
+
+    it("returns true when tokens are older than threshold", () => {
+      const issuedAt = Date.now() - 31 * 60 * 1000 // 31 minutes ago
+      expect(shouldRotateTokens(issuedAt, 30 * 60 * 1000)).toBe(true)
+    })
+
+    it("returns false when tokens are newer than threshold", () => {
+      const issuedAt = Date.now() - 10 * 60 * 1000 // 10 minutes ago
+      expect(shouldRotateTokens(issuedAt, 30 * 60 * 1000)).toBe(false)
+    })
+
+    it("returns true when tokens are exactly at threshold", () => {
+      const issuedAt = Date.now() - 30 * 60 * 1000 // exactly 30 minutes ago
+      expect(shouldRotateTokens(issuedAt, 30 * 60 * 1000)).toBe(true)
+    })
+
+    it("uses default threshold when not specified", () => {
+      // Default threshold is 30 minutes
+      const issuedAt = Date.now() - 20 * 60 * 1000 // 20 minutes ago
+      expect(shouldRotateTokens(issuedAt)).toBe(false)
+
+      const olderIssuedAt = Date.now() - 35 * 60 * 1000 // 35 minutes ago
+      expect(shouldRotateTokens(olderIssuedAt)).toBe(true)
+    })
+  })
+
+  describe("rotateTokensIfNeeded", () => {
+    const mockTokensWithRefresh: GoogleTokens = {
+      accessToken: "old-access-token",
+      refreshToken: "refresh-token",
+      expiresAt: Date.now() + 3600000,
+      tokenType: "Bearer",
+    }
+
+    const mockTokensWithoutRefresh: GoogleTokens = {
+      accessToken: "access-token",
+      expiresAt: Date.now() + 3600000,
+      tokenType: "Bearer",
+    }
+
+    it("returns rotated: false when no tokens stored", async () => {
+      const result = await rotateTokensIfNeeded()
+      expect(result.rotated).toBe(false)
+      expect(result.error).toBeUndefined()
+    })
+
+    it("returns rotated: false when tokens have no refresh token", async () => {
+      await storeTokens(mockTokensWithoutRefresh)
+      // Set issued time to be old enough to trigger rotation
+      mockLocalStorage["google_calendar_token_issued_at"] = (Date.now() - 35 * 60 * 1000).toString()
+
+      const result = await rotateTokensIfNeeded()
+      expect(result.rotated).toBe(false)
+    })
+
+    it("returns rotated: false when tokens are fresh (below threshold)", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      // storeTokens already sets the issued at timestamp to now, which is fresh
+
+      const result = await rotateTokensIfNeeded()
+      expect(result.rotated).toBe(false)
+    })
+
+    it("rotates tokens when they are older than threshold", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      // Set issued time to be old enough to trigger rotation
+      mockLocalStorage["google_calendar_token_issued_at"] = (Date.now() - 35 * 60 * 1000).toString()
+
+      // Mock successful token refresh
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+
+      const result = await rotateTokensIfNeeded({ clientId: "test-client-id" })
+
+      expect(result.rotated).toBe(true)
+      expect(result.tokens?.accessToken).toBe("new-access-token")
+      expect(result.error).toBeUndefined()
+
+      // Verify new tokens are stored
+      const storedTokens = await getStoredTokens()
+      expect(storedTokens?.accessToken).toBe("new-access-token")
+    })
+
+    it("rotates tokens when issuedAt is missing (legacy tokens)", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      // Remove the issued at timestamp to simulate legacy tokens
+      delete mockLocalStorage["google_calendar_token_issued_at"]
+
+      // Mock successful token refresh
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+
+      const result = await rotateTokensIfNeeded({ clientId: "test-client-id" })
+
+      expect(result.rotated).toBe(true)
+      expect(result.tokens?.accessToken).toBe("new-access-token")
+    })
+
+    it("returns error but does not clear tokens when rotation fails", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      mockLocalStorage["google_calendar_token_issued_at"] = (Date.now() - 35 * 60 * 1000).toString()
+
+      // Mock failed token refresh
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error_description: "Token expired" }),
+      })
+
+      const result = await rotateTokensIfNeeded({ clientId: "test-client-id" })
+
+      expect(result.rotated).toBe(false)
+      expect(result.error).toBe("Token expired")
+
+      // Tokens should NOT be cleared - they may still be valid
+      const storedTokens = await getStoredTokens()
+      expect(storedTokens?.accessToken).toBe("old-access-token")
+    })
+
+    it("respects custom threshold parameter", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      // Set issued time to 10 minutes ago
+      mockLocalStorage["google_calendar_token_issued_at"] = (Date.now() - 10 * 60 * 1000).toString()
+
+      // With 5 minute threshold, should rotate
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+
+      const result = await rotateTokensIfNeeded({ clientId: "test-client-id" }, 5 * 60 * 1000)
+      expect(result.rotated).toBe(true)
+    })
+
+    it("preserves refresh token after rotation", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      mockLocalStorage["google_calendar_token_issued_at"] = (Date.now() - 35 * 60 * 1000).toString()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+
+      await rotateTokensIfNeeded({ clientId: "test-client-id" })
+
+      const storedTokens = await getStoredTokens()
+      expect(storedTokens?.refreshToken).toBe("refresh-token")
+    })
+
+    it("updates issuedAt timestamp after successful rotation", async () => {
+      await storeTokens(mockTokensWithRefresh)
+      const oldIssuedAt = Date.now() - 35 * 60 * 1000
+      mockLocalStorage["google_calendar_token_issued_at"] = oldIssuedAt.toString()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+
+      await rotateTokensIfNeeded({ clientId: "test-client-id" })
+
+      const newIssuedAt = getTokenIssuedAt()
+      expect(newIssuedAt).not.toBeNull()
+      expect(newIssuedAt).toBeGreaterThan(oldIssuedAt)
+    })
+  })
+
+  describe("storeTokens updates issuedAt", () => {
+    it("stores issuedAt timestamp when storing tokens", async () => {
+      const beforeStore = Date.now()
+      const tokens: GoogleTokens = {
+        accessToken: "access",
+        expiresAt: Date.now() + 3600000,
+        tokenType: "Bearer",
+      }
+
+      await storeTokens(tokens)
+
+      const issuedAt = getTokenIssuedAt()
+      expect(issuedAt).not.toBeNull()
+      expect(issuedAt).toBeGreaterThanOrEqual(beforeStore)
+      expect(issuedAt).toBeLessThanOrEqual(Date.now())
+    })
+  })
+
+  describe("clearStoredTokens clears issuedAt", () => {
+    it("clears issuedAt timestamp when clearing tokens", async () => {
+      const tokens: GoogleTokens = {
+        accessToken: "access",
+        expiresAt: Date.now() + 3600000,
+        tokenType: "Bearer",
+      }
+
+      await storeTokens(tokens)
+      expect(getTokenIssuedAt()).not.toBeNull()
+
+      clearStoredTokens()
+      expect(getTokenIssuedAt()).toBeNull()
     })
   })
 })

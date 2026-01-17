@@ -9,6 +9,7 @@ import {
   revokeTokens,
   fetchAllEventsForDate,
   isGoogleCalendarConfigured,
+  rotateTokensIfNeeded,
   type CalendarEvent,
   type GoogleCalendarConfig,
 } from "../lib/google-calendar"
@@ -116,20 +117,26 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
   eventsRef.current = events
 
   // Check authentication status on mount and when config changes
+  // Also proactively rotate tokens if they're older than the threshold
   useEffect(() => {
     if (!isGoogleCalendarConfigured(options.clientId)) {
       setAuthState("unconfigured")
       return
     }
 
-    // Check if we have valid tokens
-    const checkAuth = async () => {
+    // Check if we have valid tokens and proactively rotate if needed
+    const checkAuthAndRotate = async () => {
+      // First, attempt to rotate tokens if they're old (proactive security measure)
+      // This limits the exposure window if tokens are compromised
+      await rotateTokensIfNeeded(config)
+
+      // Then check for valid tokens (which may now be freshly rotated)
       const tokens = await getValidTokens(config)
       setAuthState(tokens ? "authenticated" : "unauthenticated")
     }
 
-    checkAuth()
-  }, [options.clientId])
+    checkAuthAndRotate()
+  }, [options.clientId, config])
 
   /**
    * Start the OAuth authentication flow
