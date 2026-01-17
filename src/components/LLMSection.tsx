@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { useLLM } from "../hooks/useLLM"
 import { SubmitButtonIcon } from "./Icons"
+import { Markdown } from "./Markdown"
 import type { Message } from "../types/journal"
 import type { ProviderType } from "../lib/llm/types"
 import {
@@ -196,7 +197,9 @@ export function LLMSection({
               className={message.role === "assistant" ? "bg-muted ml-4 rounded-md p-4" : ""}
               data-testid={message.role === "assistant" ? "assistant-response" : "user-message"}
             >
-              <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+              {message.role === "assistant" ?
+                <Markdown>{message.content}</Markdown>
+              : <p className="text-foreground whitespace-pre-wrap">{message.content}</p>}
             </div>
           ))}
         </div>
