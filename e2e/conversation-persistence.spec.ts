@@ -2,9 +2,6 @@ import { test, expect } from "@playwright/test"
 
 test.describe("Conversation persistence", () => {
   test("persists conversation after page reload", async ({ page }) => {
-    // Set up console logging from the browser
-    page.on("console", msg => console.log(`[Browser]`, msg.text()))
-
     const journalEntry = `Test journal entry for persistence ${Date.now()}`
     const TEST_DATE = "2025-09-20"
 
@@ -78,11 +75,6 @@ test.describe("Conversation persistence", () => {
     // Wait for Automerge to load data from IndexedDB
     await page.waitForTimeout(2000)
 
-    // Debug: Check what's in the DOM after reload
-    const bodyContent = await page.evaluate(() => document.body.innerHTML)
-    console.log("Body contains assistant:", bodyContent.includes("assistant"))
-    console.log("Body contains Claude response:", bodyContent.includes("Claude"))
-
     // Step 5: Verify conversation persisted
     // The journal entry should be visible (as plain text since conversation started)
     await expect(page.getByText(journalEntry)).toBeVisible()
@@ -98,9 +90,6 @@ test.describe("Conversation persistence", () => {
   })
 
   test("persists follow-up messages after reload", async ({ page }) => {
-    // Set up console logging from the browser
-    page.on("console", msg => console.log(`[Browser]`, msg.text()))
-
     const journalEntry = `Follow-up test entry ${Date.now()}`
     const TEST_DATE = "2025-09-21"
     let requestCount = 0
@@ -179,14 +168,6 @@ test.describe("Conversation persistence", () => {
     await page.reload()
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
     await page.waitForTimeout(2000)
-
-    // Debug: Check what's in the DOM
-    const bodyText = await page.evaluate(() => document.body.textContent)
-    console.log("Body text includes 'First response':", bodyText?.includes("First response"))
-    console.log(
-      "Body text includes 'follow-up question':",
-      bodyText?.includes("follow-up question"),
-    )
 
     // The original journal entry should be visible
     await expect(page.getByText(journalEntry)).toBeVisible()
