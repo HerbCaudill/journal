@@ -106,6 +106,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `e2e/app.spec.ts` - Basic app navigation tests
 - `e2e/date-picker.spec.ts` - Date picker functionality
 - `e2e/entry-editing.spec.ts` - Journal entry persistence
+- `e2e/error-states.spec.ts` - Error handling (invalid routes, API key validation errors, empty entry submission, error recovery)
 - `e2e/navigation.spec.ts` - Keyboard and swipe navigation
 - `e2e/settings.spec.ts` - Settings page functionality including theme selection, AI provider selection, API key management (save/load/clear/validation)
 
