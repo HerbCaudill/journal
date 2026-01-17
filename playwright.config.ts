@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
   projects: [
@@ -17,8 +17,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:5173",
+    // Use the preview server instead of dev server for stability
+    // The preview server serves the pre-built production files
+    command: "pnpm preview",
+    url: "http://localhost:4173",
     reuseExistingServer: !process.env.CI,
+    timeout: 60000, // 60 seconds to allow the server to start
   },
 })
