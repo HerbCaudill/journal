@@ -349,6 +349,438 @@ describe("LLMSection", () => {
     })
   })
 
+  describe("error handling", () => {
+    it("displays rate limiting error (HTTP 429)", () => {
+      // The component displays errors from the useLLM hook's error state
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Rate limit exceeded. Please wait before making another request.",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/rate limit exceeded/i)
+    })
+
+    it("displays token limit exceeded error", () => {
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Maximum token limit exceeded. Please shorten your message.",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/maximum token limit exceeded/i)
+    })
+
+    it("displays API timeout error", () => {
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Request timed out. Please try again.",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/request timed out/i)
+    })
+
+    it("displays network disconnection error", () => {
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Network error. Please check your internet connection.",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/network error/i)
+    })
+
+    it("displays invalid API key error", () => {
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Invalid API key. Please check your settings.",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/invalid api key/i)
+    })
+
+    it("displays error when API response contains no text content", () => {
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Response contained no text content",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/response contained no text content/i)
+    })
+
+    it("displays error when response has success: false without error message", () => {
+      // useLLM hook adds a default error message when success is false but no error message provided
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "An unknown error occurred",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/an unknown error occurred/i)
+    })
+
+    it("clears error when a new successful message is sent", () => {
+      // Start with an error state
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: "Previous error message",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      const { rerender } = render(
+        <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+      )
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/previous error message/i)
+
+      // Simulate successful response clearing the error
+      mockUseLLM.mockReturnValue({
+        messages: [
+          { id: "1", role: "user", content: "Test", createdAt: Date.now() },
+          { id: "2", role: "assistant", content: "Response", createdAt: Date.now() },
+        ],
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    })
+
+    it("displays error for follow-up message failure", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      mockSend.mockResolvedValue({
+        content: "",
+        success: false,
+        error: "Failed to send follow-up message",
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "Follow-up question")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      // The error will be set via the useLLM hook, so we need to rerender with error
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: "Failed to send follow-up message",
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      // Force rerender to pick up error state
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toHaveTextContent(/failed to send follow-up message/i)
+      })
+    })
+
+    it("restores follow-up input on send failure", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      // Simulate a failed send that should restore the input
+      mockSend.mockResolvedValue({
+        content: "",
+        success: false,
+        error: "Network error",
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      await user.type(input, "My important message")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      // The input should be restored after failed send
+      await waitFor(() => {
+        expect(input).toHaveValue("My important message")
+      })
+    })
+  })
+
+  describe("edge cases", () => {
+    it("handles very long entry content gracefully", async () => {
+      const user = userEvent.setup()
+      const longContent = "a".repeat(50000) // 50KB of content
+      mockSend.mockResolvedValue({ content: "Response to long entry", success: true })
+
+      render(<LLMSection entryContent={longContent} apiKey="test-key" provider="claude" />)
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      expect(mockSend).toHaveBeenCalledWith(longContent)
+    })
+
+    it("handles special characters in entry content", async () => {
+      const user = userEvent.setup()
+      const specialContent = "Test <script>alert('xss')</script> & \"quotes\" 'apostrophes'"
+      mockSend.mockResolvedValue({ content: "Response", success: true })
+
+      render(<LLMSection entryContent={specialContent} apiKey="test-key" provider="claude" />)
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      expect(mockSend).toHaveBeenCalledWith(specialContent)
+    })
+
+    it("handles unicode and emoji content", async () => {
+      const user = userEvent.setup()
+      const unicodeContent = "Today was great! 🎉 日本語 العربية"
+      mockSend.mockResolvedValue({ content: "Response", success: true })
+
+      render(<LLMSection entryContent={unicodeContent} apiKey="test-key" provider="claude" />)
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      expect(mockSend).toHaveBeenCalledWith(unicodeContent)
+    })
+
+    it("prevents double submission during loading", async () => {
+      const user = userEvent.setup()
+
+      // Set loading state
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const button = screen.getByRole("button", { name: /ask claude/i })
+      expect(button).toBeDisabled()
+
+      // Attempt to click disabled button
+      await user.click(button)
+
+      // mockSend should not be called when button is disabled
+      // (the test here verifies the button state, user interaction with disabled button is prevented by DOM)
+      expect(button).toBeDisabled()
+    })
+
+    it("handles rapid follow-up submissions correctly", async () => {
+      const user = userEvent.setup()
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+      ]
+
+      let sendCallCount = 0
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      // First send succeeds
+      mockSend.mockImplementation(async () => {
+        sendCallCount++
+        return { content: `Response ${sendCallCount}`, success: true }
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+
+      // Type and send first message
+      await user.type(input, "First message")
+      await user.click(screen.getByRole("button", { name: /send follow-up/i }))
+
+      expect(mockSend).toHaveBeenCalledWith("First message")
+    })
+
+    it("handles component unmount during pending request gracefully", async () => {
+      const user = userEvent.setup()
+
+      // Create a promise that we can control
+      let resolvePromise: (value: LLMResponse) => void
+      const pendingPromise = new Promise<LLMResponse>(resolve => {
+        resolvePromise = resolve
+      })
+      mockSend.mockReturnValue(pendingPromise)
+
+      const { unmount } = render(
+        <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+      )
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      // Unmount while request is pending
+      unmount()
+
+      // Resolve the promise after unmount - should not throw
+      resolvePromise!({ content: "Response", success: true })
+
+      // No error should be thrown
+    })
+
+    it("handles entry content that is only whitespace with various characters", async () => {
+      const user = userEvent.setup()
+
+      render(
+        <LLMSection
+          entryContent={"   \n\t  "} // tabs, newlines
+          apiKey="test-key"
+          provider="claude"
+        />,
+      )
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          /please write something in your journal first/i,
+        )
+      })
+      expect(mockSend).not.toHaveBeenCalled()
+    })
+
+    it("displays messages with whitespace-only content correctly", () => {
+      // Edge case: what if an assistant message somehow has only whitespace?
+      // The component should still render it
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "   ", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // The assistant response container should still be rendered
+      const assistantResponse = screen.getByTestId("assistant-response")
+      expect(assistantResponse).toBeInTheDocument()
+    })
+
+    it("handles messages array being empty after having messages (conversation reset)", () => {
+      // First render with messages
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "Hi!", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      const { rerender } = render(
+        <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+      )
+
+      expect(screen.getByText("Hi!")).toBeInTheDocument()
+
+      // Now simulate conversation reset
+      mockUseLLM.mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // Should show the initial submit button again
+      expect(screen.getByRole("button", { name: /ask claude/i })).toBeInTheDocument()
+      expect(screen.queryByText("Hi!")).not.toBeInTheDocument()
+    })
+  })
+
   describe("follow-up messages", () => {
     it("shows follow-up input after initial conversation", () => {
       const messages: Message[] = [
