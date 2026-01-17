@@ -4,7 +4,7 @@
 export function Footer() {
   return (
     <footer className="border-border border-t p-4">
-      <div className="mx-auto flex max-w-2xl items-center justify-center">
+      <div className="mx-auto flex max-w-2xl items-center justify-end">
         <a
           href="#/settings"
           className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"

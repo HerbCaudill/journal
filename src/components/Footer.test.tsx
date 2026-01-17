@@ -25,4 +25,11 @@ describe("Footer", () => {
     const footer = screen.getByRole("contentinfo")
     expect(footer).toHaveClass("border-t", "p-4")
   })
+
+  it("right-aligns the settings link", () => {
+    render(<Footer />)
+    const footer = screen.getByRole("contentinfo")
+    const container = footer.firstElementChild
+    expect(container).toHaveClass("justify-end")
+  })
 })
