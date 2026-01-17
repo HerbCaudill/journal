@@ -27,19 +27,18 @@ test.describe("Conversation persistence", () => {
       })
     })
 
-    // Step 1: Set up API key in settings
+    // Step 1: Set up API key in settings (with autosave)
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     const apiKeyInput = page.getByLabel("Claude API key")
     await apiKeyInput.fill("sk-ant-api03-valid-test-key-for-testing-123456789")
 
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
-    await saveButton.click()
-    await expect(saveButton).toBeDisabled()
+    // Wait for autosave to complete
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 3000 })
 
     // Step 2: Navigate to day view and create journal entry
     await page.goto(`/#/day/${TEST_DATE}`)
@@ -120,19 +119,18 @@ test.describe("Conversation persistence", () => {
       })
     })
 
-    // Step 1: Set up API key
+    // Step 1: Set up API key (with autosave)
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     const apiKeyInput = page.getByLabel("Claude API key")
     await apiKeyInput.fill("sk-ant-api03-valid-test-key-for-testing-123456789")
 
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
-    await saveButton.click()
-    await expect(saveButton).toBeDisabled()
+    // Wait for autosave to complete
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 3000 })
 
     // Step 2: Create journal entry
     await page.goto(`/#/day/${TEST_DATE}`)

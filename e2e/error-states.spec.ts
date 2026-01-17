@@ -44,55 +44,43 @@ test.describe("API key validation errors", () => {
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
       // Claude is now always shown (provider selection is hidden)
       await expect(page.getByRole("heading", { name: "Claude AI" })).toBeVisible()
+      // Wait for component to fully initialize
+      await page.waitForTimeout(150)
     })
 
-    test("shows error for empty API key when save is clicked", async ({ page }) => {
+    test("does not show error for empty API key (autosave skips empty values)", async ({
+      page,
+    }) => {
       const apiKeyInput = page.getByLabel("Claude API key")
-      // Find the save button within the Claude AI form section
-      const saveButton = page
-        .locator("form")
-        .filter({ has: apiKeyInput })
-        .getByRole("button", { name: "Save" })
 
-      // Clear any existing value and try to save empty
+      // Clear any existing value
       await apiKeyInput.fill("")
 
-      // Save button should be disabled for empty input
-      await expect(saveButton).toBeDisabled()
+      // Wait a bit and verify no validation error appears (empty is allowed)
+      await page.waitForTimeout(600)
+      await expect(page.getByRole("alert")).toBeHidden()
     })
 
-    test("shows error for API key with wrong prefix", async ({ page }) => {
+    test("shows error for API key with wrong prefix after autosave", async ({ page }) => {
       const apiKeyInput = page.getByLabel("Claude API key")
-      // Find the save button within the Claude AI form section
-      const saveButton = page
-        .locator("form")
-        .filter({ has: apiKeyInput })
-        .getByRole("button", { name: "Save" })
 
       // Enter an API key with wrong prefix
       await apiKeyInput.fill("wrong-prefix-12345678901234567890")
-      await saveButton.click()
 
-      // Should show validation error
-      await expect(page.getByRole("alert")).toBeVisible()
+      // Wait for debounced autosave to trigger validation
+      await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
       await expect(page.getByText(/Claude API key should start with 'sk-ant-'/)).toBeVisible()
     })
 
     test("error message is accessible with role alert", async ({ page }) => {
       const apiKeyInput = page.getByLabel("Claude API key")
-      // Find the save button within the Claude AI form section
-      const saveButton = page
-        .locator("form")
-        .filter({ has: apiKeyInput })
-        .getByRole("button", { name: "Save" })
 
-      // Trigger validation error
+      // Trigger validation error via autosave
       await apiKeyInput.fill("bad-key")
-      await saveButton.click()
 
-      // Error should be accessible
+      // Wait for debounced autosave to trigger validation
       const alert = page.getByRole("alert")
-      await expect(alert).toBeVisible()
+      await expect(alert).toBeVisible({ timeout: 3000 })
       await expect(alert).toHaveText(/Claude API key should start with 'sk-ant-'/)
     })
   })
@@ -152,49 +140,40 @@ test.describe("API key validation errors", () => {
     test("validation error clears when user starts typing again", async ({ page }) => {
       await page.goto("/#/settings")
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-      // Claude is now always shown (provider selection is hidden)
+      // Wait for component to fully initialize
+      await page.waitForTimeout(150)
 
       const apiKeyInput = page.getByLabel("Claude API key")
-      // Find the save button within the Claude AI form section
-      const saveButton = page
-        .locator("form")
-        .filter({ has: apiKeyInput })
-        .getByRole("button", { name: "Save" })
 
-      // Trigger validation error
+      // Trigger validation error via autosave
       await apiKeyInput.fill("invalid-key")
-      await saveButton.click()
-      await expect(page.getByRole("alert")).toBeVisible()
+      await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
 
-      // Start typing - error should clear
+      // Start typing - error should clear immediately
       await apiKeyInput.fill("sk-ant-")
       await expect(page.getByRole("alert")).toBeHidden()
     })
 
-    test("can successfully save after fixing validation error", async ({ page }) => {
+    test("can successfully autosave after fixing validation error", async ({ page }) => {
       await page.goto("/#/settings")
       await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-      // Claude is now always shown (provider selection is hidden)
+      // Wait for component to fully initialize
+      await page.waitForTimeout(150)
 
       const apiKeyInput = page.getByLabel("Claude API key")
-      // Find the save button within the Claude AI form section
-      const saveButton = page
-        .locator("form")
-        .filter({ has: apiKeyInput })
-        .getByRole("button", { name: "Save" })
 
       // First trigger a validation error
       await apiKeyInput.fill("invalid-key")
-      await saveButton.click()
-      await expect(page.getByRole("alert")).toBeVisible()
+      await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
 
-      // Fix the key and save again
+      // Fix the key - autosave will trigger
       await apiKeyInput.fill("sk-ant-api03-fixed-key-12345678901234567890")
-      await saveButton.click()
 
-      // Should show success message
-      await expect(page.getByText("API key saved successfully")).toBeVisible({ timeout: 2000 })
-      await expect(page.getByText("Claude API key configured")).toBeVisible()
+      // Error should clear immediately when typing
+      await expect(page.getByRole("alert")).toBeHidden()
+
+      // Wait for autosave to complete and show configured status
+      await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 4000 })
     })
   })
 })
@@ -296,20 +275,18 @@ test.describe("LLM Section - No API key state", () => {
 
 test.describe("Empty journal entry submission", () => {
   test.beforeEach(async ({ page }) => {
-    // Set up a valid API key first
+    // Set up a valid API key first (with autosave)
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
-    // Claude is now always shown (provider selection is hidden)
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     const apiKeyInput = page.getByLabel("Claude API key")
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
-    await saveButton.click()
-    await expect(page.getByText("API key saved successfully")).toBeVisible({ timeout: 2000 })
+
+    // Wait for autosave to complete
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 3000 })
   })
 
   test("shows error when trying to submit with empty journal entry", async ({ page }) => {

@@ -1,8 +1,11 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useJournal } from "../context/JournalContext"
 import { useGoogleCalendar } from "../hooks/useGoogleCalendar"
 import { useTheme } from "../hooks/useTheme"
 import type { LLMProviderType } from "../types/journal"
+
+// Debounce delay for autosave (in milliseconds)
+const AUTOSAVE_DELAY = 500
 
 // Environment variable defaults for API keys
 const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
@@ -64,12 +67,29 @@ export function SettingsView() {
   // const [openaiApiKey, setOpenaiApiKey] = useState("")
   const [bio, setBio] = useState("")
   const [additionalInstructions, setAdditionalInstructions] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  // Autosave status tracking for each field
+  const [bioSaveStatus, setBioSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const [instructionsSaveStatus, setInstructionsSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  )
+  const [claudeApiKeySaveStatus, setClaudeApiKeySaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  )
   const [claudeApiKeyError, setClaudeApiKeyError] = useState<string | null>(null)
   // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
   // const [openaiApiKeyError, setOpenaiApiKeyError] = useState<string | null>(null)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
   const { preference: themePreference, setTheme } = useTheme()
+
+  // Refs for debounce timeouts
+  const bioDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const instructionsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const claudeApiKeyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bioSaveStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const instructionsSaveStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const claudeApiKeySaveStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Track if this is the initial load to avoid autosave on mount
+  const isInitialLoadRef = useRef(true)
 
   // Sync local state with document on mount
   // Priority: saved value > env var default
@@ -84,6 +104,10 @@ export function SettingsView() {
       // setOpenaiApiKey(doc.settings.openaiApiKey || ENV_OPENAI_API_KEY)
       setBio(doc.settings.bio || "")
       setAdditionalInstructions(doc.settings.additionalInstructions || "")
+      // Mark initial load as complete after a short delay to allow state to settle
+      setTimeout(() => {
+        isInitialLoadRef.current = false
+      }, 100)
     }
   }, [
     doc?.settings?.llmProvider,
@@ -92,6 +116,20 @@ export function SettingsView() {
     doc?.settings?.bio,
     doc?.settings?.additionalInstructions,
   ])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (bioDebounceRef.current) clearTimeout(bioDebounceRef.current)
+      if (instructionsDebounceRef.current) clearTimeout(instructionsDebounceRef.current)
+      if (claudeApiKeyDebounceRef.current) clearTimeout(claudeApiKeyDebounceRef.current)
+      if (bioSaveStatusTimeoutRef.current) clearTimeout(bioSaveStatusTimeoutRef.current)
+      if (instructionsSaveStatusTimeoutRef.current)
+        clearTimeout(instructionsSaveStatusTimeoutRef.current)
+      if (claudeApiKeySaveStatusTimeoutRef.current)
+        clearTimeout(claudeApiKeySaveStatusTimeoutRef.current)
+    }
+  }, [])
 
   // Handle LLM provider change
   // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
@@ -109,50 +147,112 @@ export function SettingsView() {
   void llmProvider
   void setLlmProvider
 
-  // Save Claude API key to document
-  const handleSaveClaudeApiKey = useCallback(() => {
-    if (!doc) return
+  // Autosave bio with debounce
+  const autosaveBio = useCallback(
+    (value: string) => {
+      if (!doc || isInitialLoadRef.current) return
 
-    // Validate API key format
-    const validationError = validateClaudeApiKey(claudeApiKey)
-    if (validationError) {
-      setClaudeApiKeyError(validationError)
-      return
-    }
+      // Clear any existing debounce timeout
+      if (bioDebounceRef.current) {
+        clearTimeout(bioDebounceRef.current)
+      }
 
-    setClaudeApiKeyError(null)
-    setSaveStatus("saving")
-    changeDoc(d => {
-      d.settings.claudeApiKey = claudeApiKey.trim()
-    })
+      // Show saving indicator
+      setBioSaveStatus("saving")
 
-    // Show saved confirmation briefly
-    setSaveStatus("saved")
-    setTimeout(() => setSaveStatus("idle"), 2000)
-  }, [doc, changeDoc, claudeApiKey])
+      // Debounce the actual save
+      bioDebounceRef.current = setTimeout(() => {
+        changeDoc(d => {
+          d.settings.bio = value.trim()
+        })
 
-  // Save OpenAI API key to document
-  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
-  // const handleSaveOpenaiApiKey = useCallback(() => {
-  //   if (!doc) return
-  //
-  //   // Validate API key format
-  //   const validationError = validateOpenaiApiKey(openaiApiKey)
-  //   if (validationError) {
-  //     setOpenaiApiKeyError(validationError)
-  //     return
-  //   }
-  //
-  //   setOpenaiApiKeyError(null)
-  //   setSaveStatus("saving")
-  //   changeDoc(d => {
-  //     d.settings.openaiApiKey = openaiApiKey.trim()
-  //   })
-  //
-  //   // Show saved confirmation briefly
-  //   setSaveStatus("saved")
-  //   setTimeout(() => setSaveStatus("idle"), 2000)
-  // }, [doc, changeDoc, openaiApiKey])
+        // Show saved confirmation briefly
+        setBioSaveStatus("saved")
+        if (bioSaveStatusTimeoutRef.current) {
+          clearTimeout(bioSaveStatusTimeoutRef.current)
+        }
+        bioSaveStatusTimeoutRef.current = setTimeout(() => setBioSaveStatus("idle"), 2000)
+      }, AUTOSAVE_DELAY)
+    },
+    [doc, changeDoc],
+  )
+
+  // Autosave additional instructions with debounce
+  const autosaveAdditionalInstructions = useCallback(
+    (value: string) => {
+      if (!doc || isInitialLoadRef.current) return
+
+      // Clear any existing debounce timeout
+      if (instructionsDebounceRef.current) {
+        clearTimeout(instructionsDebounceRef.current)
+      }
+
+      // Show saving indicator
+      setInstructionsSaveStatus("saving")
+
+      // Debounce the actual save
+      instructionsDebounceRef.current = setTimeout(() => {
+        changeDoc(d => {
+          d.settings.additionalInstructions = value.trim()
+        })
+
+        // Show saved confirmation briefly
+        setInstructionsSaveStatus("saved")
+        if (instructionsSaveStatusTimeoutRef.current) {
+          clearTimeout(instructionsSaveStatusTimeoutRef.current)
+        }
+        instructionsSaveStatusTimeoutRef.current = setTimeout(
+          () => setInstructionsSaveStatus("idle"),
+          2000,
+        )
+      }, AUTOSAVE_DELAY)
+    },
+    [doc, changeDoc],
+  )
+
+  // Autosave Claude API key with debounce and validation
+  const autosaveClaudeApiKey = useCallback(
+    (value: string) => {
+      if (!doc || isInitialLoadRef.current) return
+
+      // Clear any existing debounce timeout
+      if (claudeApiKeyDebounceRef.current) {
+        clearTimeout(claudeApiKeyDebounceRef.current)
+      }
+
+      // Clear error when user types
+      setClaudeApiKeyError(null)
+
+      // Show saving indicator
+      setClaudeApiKeySaveStatus("saving")
+
+      // Debounce the actual save
+      claudeApiKeyDebounceRef.current = setTimeout(() => {
+        // Validate API key format
+        const validationError = validateClaudeApiKey(value)
+        if (validationError) {
+          setClaudeApiKeyError(validationError)
+          setClaudeApiKeySaveStatus("idle")
+          return
+        }
+
+        changeDoc(d => {
+          d.settings.claudeApiKey = value.trim()
+        })
+
+        // Show saved confirmation briefly
+        setClaudeApiKeySaveStatus("saved")
+        if (claudeApiKeySaveStatusTimeoutRef.current) {
+          clearTimeout(claudeApiKeySaveStatusTimeoutRef.current)
+        }
+        claudeApiKeySaveStatusTimeoutRef.current = setTimeout(
+          () => setClaudeApiKeySaveStatus("idle"),
+          2000,
+        )
+      }, AUTOSAVE_DELAY)
+    },
+    [doc, changeDoc],
+  )
 
   // Clear Claude API key
   const handleClearClaudeApiKey = useCallback(() => {
@@ -160,10 +260,11 @@ export function SettingsView() {
 
     // Clear the saved value - local state falls back to env variable if available
     setClaudeApiKey(ENV_CLAUDE_API_KEY)
+    setClaudeApiKeyError(null)
     changeDoc(d => {
       d.settings.claudeApiKey = ""
     })
-    setSaveStatus("idle")
+    setClaudeApiKeySaveStatus("idle")
   }, [doc, changeDoc])
 
   // Clear OpenAI API key
@@ -175,55 +276,37 @@ export function SettingsView() {
   //   changeDoc(d => {
   //     d.settings.openaiApiKey = ""
   //   })
-  //   setSaveStatus("idle")
   // }, [doc, changeDoc])
 
-  // Handle Claude form submission
-  const handleClaudeSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault()
-      handleSaveClaudeApiKey()
+  // Handle bio change with autosave
+  const handleBioChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value
+      setBio(value)
+      autosaveBio(value)
     },
-    [handleSaveClaudeApiKey],
+    [autosaveBio],
   )
 
-  // Handle OpenAI form submission
-  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
-  // const handleOpenaiSubmit = useCallback(
-  //   (e: React.FormEvent) => {
-  //     e.preventDefault()
-  //     handleSaveOpenaiApiKey()
-  //   },
-  //   [handleSaveOpenaiApiKey],
-  // )
+  // Handle additional instructions change with autosave
+  const handleAdditionalInstructionsChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value
+      setAdditionalInstructions(value)
+      autosaveAdditionalInstructions(value)
+    },
+    [autosaveAdditionalInstructions],
+  )
 
-  // Save bio to document
-  const handleSaveBio = useCallback(() => {
-    if (!doc) return
-
-    setSaveStatus("saving")
-    changeDoc(d => {
-      d.settings.bio = bio.trim()
-    })
-
-    // Show saved confirmation briefly
-    setSaveStatus("saved")
-    setTimeout(() => setSaveStatus("idle"), 2000)
-  }, [doc, changeDoc, bio])
-
-  // Save additional instructions to document
-  const handleSaveAdditionalInstructions = useCallback(() => {
-    if (!doc) return
-
-    setSaveStatus("saving")
-    changeDoc(d => {
-      d.settings.additionalInstructions = additionalInstructions.trim()
-    })
-
-    // Show saved confirmation briefly
-    setSaveStatus("saved")
-    setTimeout(() => setSaveStatus("idle"), 2000)
-  }, [doc, changeDoc, additionalInstructions])
+  // Handle Claude API key change with autosave
+  const handleClaudeApiKeyChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value
+      setClaudeApiKey(value)
+      autosaveClaudeApiKey(value)
+    },
+    [autosaveClaudeApiKey],
+  )
 
   if (isLoading) {
     return (
@@ -235,19 +318,6 @@ export function SettingsView() {
       </div>
     )
   }
-
-  // Determine effective saved value (saved or env var default)
-  const effectiveClaudeKey = doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
-  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
-  // const effectiveOpenaiKey = doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
-  const effectiveBio = doc?.settings?.bio || ""
-  const effectiveAdditionalInstructions = doc?.settings?.additionalInstructions || ""
-  const hasClaudeUnsavedChanges = claudeApiKey !== effectiveClaudeKey
-  // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
-  // const hasOpenaiUnsavedChanges = openaiApiKey !== effectiveOpenaiKey
-  const hasBioUnsavedChanges = bio !== effectiveBio
-  const hasAdditionalInstructionsUnsavedChanges =
-    additionalInstructions !== effectiveAdditionalInstructions
 
   // Track if key is from env var (for showing different UI indicator)
   const isClaudeFromEnv = !doc?.settings?.claudeApiKey && !!ENV_CLAUDE_API_KEY
@@ -361,35 +431,23 @@ export function SettingsView() {
           Tell the AI a bit about yourself. This helps personalize responses to your context.
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <textarea
             value={bio}
-            onChange={e => setBio(e.target.value)}
+            onChange={handleBioChange}
             placeholder="e.g., I'm a software engineer living in San Francisco. I enjoy hiking and reading science fiction..."
             className="bg-background focus:ring-ring min-h-[100px] w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
             aria-label="Bio"
           />
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSaveBio}
-              disabled={!hasBioUnsavedChanges || saveStatus === "saving"}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          {bioSaveStatus !== "idle" && (
+            <p
+              className={`text-sm ${bioSaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
+              data-testid="bio-save-status"
             >
-              {saveStatus === "saving" ?
-                "Saving..."
-              : saveStatus === "saved" ?
-                "Saved!"
-              : "Save"}
-            </button>
-
-            {saveStatus === "saved" && hasBioUnsavedChanges === false && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                Bio saved successfully
-              </span>
-            )}
-          </div>
+              {bioSaveStatus === "saving" ? "Saving..." : "Saved"}
+            </p>
+          )}
         </div>
       </section>
 
@@ -401,35 +459,23 @@ export function SettingsView() {
           conversation.
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <textarea
             value={additionalInstructions}
-            onChange={e => setAdditionalInstructions(e.target.value)}
+            onChange={handleAdditionalInstructionsChange}
             placeholder="e.g., Always respond in a casual tone. Focus on practical advice. Ask follow-up questions..."
             className="bg-background focus:ring-ring min-h-[100px] w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
             aria-label="Additional instructions"
           />
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSaveAdditionalInstructions}
-              disabled={!hasAdditionalInstructionsUnsavedChanges || saveStatus === "saving"}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          {instructionsSaveStatus !== "idle" && (
+            <p
+              className={`text-sm ${instructionsSaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
+              data-testid="instructions-save-status"
             >
-              {saveStatus === "saving" ?
-                "Saving..."
-              : saveStatus === "saved" ?
-                "Saved!"
-              : "Save"}
-            </button>
-
-            {saveStatus === "saved" && hasAdditionalInstructionsUnsavedChanges === false && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                Instructions saved successfully
-              </span>
-            )}
-          </div>
+              {instructionsSaveStatus === "saving" ? "Saving..." : "Saved"}
+            </p>
+          )}
         </div>
       </section>
 
@@ -449,53 +495,30 @@ export function SettingsView() {
             </a>
           </p>
 
-          <form onSubmit={handleClaudeSubmit} className="flex flex-col gap-3">
-            <input
-              type="text"
-              value={claudeApiKey}
-              onChange={e => {
-                setClaudeApiKey(e.target.value)
-                setClaudeApiKeyError(null) // Clear error when user types
-              }}
-              placeholder="sk-ant-..."
-              className={`bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
-                claudeApiKeyError ? "border-destructive" : ""
-              }`}
-              aria-label="Claude API key"
-              aria-invalid={!!claudeApiKeyError}
-              aria-describedby={claudeApiKeyError ? "claude-api-key-error" : undefined}
-              autoComplete="off"
-            />
-
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={
-                  !claudeApiKey.trim() || !hasClaudeUnsavedChanges || saveStatus === "saving"
-                }
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saveStatus === "saving" ?
-                  "Saving..."
-                : saveStatus === "saved" ?
-                  "Saved!"
-                : "Save"}
-              </button>
+              <input
+                type="text"
+                value={claudeApiKey}
+                onChange={handleClaudeApiKeyChange}
+                placeholder="sk-ant-..."
+                className={`bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                  claudeApiKeyError ? "border-destructive" : ""
+                }`}
+                aria-label="Claude API key"
+                aria-invalid={!!claudeApiKeyError}
+                aria-describedby={claudeApiKeyError ? "claude-api-key-error" : undefined}
+                autoComplete="off"
+              />
 
               {claudeApiKey && (
                 <button
                   type="button"
                   onClick={handleClearClaudeApiKey}
-                  className="text-muted-foreground hover:text-destructive hover:border-destructive rounded-md border px-4 py-2 transition-colors"
+                  className="text-muted-foreground hover:text-destructive hover:border-destructive flex-shrink-0 rounded-md border px-4 py-2 transition-colors"
                 >
                   Clear
                 </button>
-              )}
-
-              {saveStatus === "saved" && (
-                <span className="text-sm text-green-600 dark:text-green-400">
-                  API key saved successfully
-                </span>
               )}
             </div>
 
@@ -509,16 +532,25 @@ export function SettingsView() {
                 {claudeApiKeyError}
               </p>
             )}
-          </form>
 
-          {claudeApiKey && !hasClaudeUnsavedChanges && (
-            <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-              <CheckIcon />
-              {isClaudeFromEnv ?
-                "Claude API key configured (from environment)"
-              : "Claude API key configured"}
-            </p>
-          )}
+            {claudeApiKeySaveStatus !== "idle" && !claudeApiKeyError && (
+              <p
+                className={`text-sm ${claudeApiKeySaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
+                data-testid="claude-api-key-save-status"
+              >
+                {claudeApiKeySaveStatus === "saving" ? "Saving..." : "Saved"}
+              </p>
+            )}
+
+            {claudeApiKey && claudeApiKeySaveStatus === "idle" && !claudeApiKeyError && (
+              <p className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                <CheckIcon />
+                {isClaudeFromEnv ?
+                  "Claude API key configured (from environment)"
+                : "Claude API key configured"}
+              </p>
+            )}
+          </div>
         </section>
       )}
 

@@ -127,78 +127,70 @@ test.describe("Claude API key management", () => {
     await expect(page.getByRole("heading", { name: "Claude AI" })).toBeVisible()
   })
 
-  test("can enter and save a valid Claude API key", async ({ page }) => {
+  test("autosaves a valid Claude API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     // Enter a valid API key format
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
 
-    // Save button should be enabled
-    await expect(saveButton).toBeEnabled()
-    await saveButton.click()
+    // Should show saving status, then saved status
+    await expect(page.getByTestId("claude-api-key-save-status")).toContainText("Saving...")
 
-    // Should show saved confirmation
-    await expect(page.getByText("API key saved successfully")).toBeVisible({ timeout: 2000 })
+    // Wait for autosave to complete
+    await expect(page.getByTestId("claude-api-key-save-status")).toContainText("Saved", {
+      timeout: 3000,
+    })
 
-    // Should show configured status
-    await expect(page.getByText("Claude API key configured")).toBeVisible()
+    // Should show configured status after save status disappears
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 4000 })
   })
 
-  test("shows validation error for invalid Claude API key format", async ({ page }) => {
+  test("shows validation error for invalid Claude API key format after debounce", async ({
+    page,
+  }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     // Enter an invalid API key (doesn't start with sk-ant-)
     await apiKeyInput.fill("invalid-api-key-format")
-    await saveButton.click()
 
-    // Should show validation error
-    await expect(page.getByRole("alert")).toBeVisible()
+    // Wait for debounced validation to trigger (500ms debounce + buffer)
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
     await expect(page.getByText("Claude API key should start with 'sk-ant-'")).toBeVisible()
   })
 
   test("shows validation error for API key that is too short", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     // Enter an API key that's too short
     await apiKeyInput.fill("sk-ant-short")
-    await saveButton.click()
 
-    // Should show validation error
-    await expect(page.getByRole("alert")).toBeVisible()
+    // Wait for debounced validation
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
     await expect(page.getByText("Claude API key appears to be too short")).toBeVisible()
   })
 
   test("clears validation error when user types", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
+
+    // Wait for component to fully initialize
+    await page.waitForTimeout(150)
 
     // Enter an invalid API key
     await apiKeyInput.fill("invalid-key")
-    await saveButton.click()
 
-    // Validation error should be visible
-    await expect(page.getByRole("alert")).toBeVisible()
+    // Wait for debounced validation
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 3000 })
 
-    // Type something new - error should clear
+    // Type something new - error should clear immediately
     await apiKeyInput.fill("sk-ant-")
     await expect(page.getByRole("alert")).toBeHidden()
   })
@@ -215,19 +207,11 @@ test.describe("Claude API key management", () => {
 
   test("can clear saved API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
 
-    // Wait for settings to fully load by checking if the input value has stabilized
-    // The "(from environment)" text is shown when env variable is configured
-    // We need to wait a moment for the useEffect to populate state from env var
-    await page.waitForTimeout(100)
+    // Wait for settings to fully load
+    await page.waitForTimeout(150)
 
     // Check if env variable is configured by looking for the "from environment" indicator
-    // or by checking if the input has a value starting with "sk-ant-"
     const initialValue = await apiKeyInput.inputValue()
     const hasEnvVariable =
       initialValue.startsWith("sk-ant-") ||
@@ -236,10 +220,11 @@ test.describe("Claude API key management", () => {
         .isVisible()
         .catch(() => false))
 
-    // Enter and save a valid API key (different from env variable)
+    // Enter a valid API key (different from env variable)
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
-    await saveButton.click()
-    await expect(page.getByText("Claude API key configured")).toBeVisible()
+
+    // Wait for autosave
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 3000 })
 
     // Click clear button
     const clearButton = page.getByRole("button", { name: "Clear" })
@@ -248,7 +233,6 @@ test.describe("Claude API key management", () => {
     // After clearing, the input should show the env variable value (if set) or be empty
     if (hasEnvVariable) {
       // Env variable fallback - input shows env value and configured status
-      // Wait for the state to update
       await expect(page.getByText("Claude API key configured")).toBeVisible()
       // Input should have some value (the env variable)
       const clearedValue = await apiKeyInput.inputValue()
@@ -263,17 +247,22 @@ test.describe("Claude API key management", () => {
 
   test("saved API key persists across navigation", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    // Find the save button within the Claude AI form section
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
 
-    // Enter and save a valid API key
-    const testKey = "sk-ant-api03-test-key-12345678901234567890"
+    // Wait for component to initialize and note the initial value
+    await page.waitForTimeout(150)
+    const initialValue = await apiKeyInput.inputValue()
+
+    // Enter a valid API key (different from initial value)
+    const testKey = "sk-ant-api03-unique-test-key-xyz123456789"
     await apiKeyInput.fill(testKey)
-    await saveButton.click()
-    await expect(page.getByText("Claude API key configured")).toBeVisible()
+
+    // Wait for autosave to complete - we should see the "Saved" status first
+    await expect(page.getByTestId("claude-api-key-save-status")).toContainText("Saved", {
+      timeout: 3000,
+    })
+
+    // Then the configured status should show
+    await expect(page.getByText("Claude API key configured")).toBeVisible({ timeout: 4000 })
 
     // Navigate away to home page
     await page.goto("/#/")
@@ -283,21 +272,24 @@ test.describe("Claude API key management", () => {
     await page.goto("/#/settings")
     await expect(page.getByRole("heading", { name: /Settings/ })).toBeVisible()
 
-    // Claude is now always shown (provider selection is hidden)
+    // Wait for settings to load
+    await page.waitForTimeout(150)
 
-    // API key should still be there
-    await expect(page.getByLabel("Claude API key")).toHaveValue(testKey)
+    // API key should be persisted (not reset to initial value)
+    const persistedValue = await apiKeyInput.inputValue()
+
+    // If there was no initial env variable, the test key should persist
+    // If there was an env variable, the saved key might be shown instead
+    // Either way, the key should be configured
     await expect(page.getByText("Claude API key configured")).toBeVisible()
-  })
 
-  test("Save button is disabled when no changes made", async ({ page }) => {
-    // Initially all save buttons should be disabled
-    const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page
-      .locator("form")
-      .filter({ has: apiKeyInput })
-      .getByRole("button", { name: "Save" })
-    await expect(saveButton).toBeDisabled()
+    // If no env variable was set initially, verify the exact value persisted
+    if (!initialValue) {
+      expect(persistedValue).toBe(testKey)
+    } else {
+      // With env variable, the saved key should persist (different from initial)
+      expect(persistedValue).toBe(testKey)
+    }
   })
 })
 

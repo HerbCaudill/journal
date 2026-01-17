@@ -314,7 +314,7 @@ describe("SettingsView", () => {
     expect(screen.getByText(/api key configured/i)).toBeInTheDocument()
   })
 
-  it("saves API key when form is submitted", () => {
+  it("autosaves API key after typing", async () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -324,20 +324,29 @@ describe("SettingsView", () => {
 
     render(<SettingsView />)
 
+    // Wait for initial load flag to be cleared
+    await act(async () => {
+      vi.advanceTimersByTime(100)
+    })
+
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
-    // Find the save button that's in the form containing the Claude API key input
-    const form = input.closest("form")!
-    const saveButton = form.querySelector('button[type="submit"]')!
-    fireEvent.click(saveButton)
+    // Should show saving status
+    expect(screen.getByTestId("claude-api-key-save-status")).toHaveTextContent("Saving...")
+
+    // Advance timers to trigger debounced save
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+    })
 
     expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId("claude-api-key-save-status")).toHaveTextContent("Saved")
   })
 
-  it("disables save button when there are no unsaved changes", () => {
+  it("shows configured status when API key is set", () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
-      doc: createMockDoc("sk-ant-existing"),
+      doc: createMockDoc("sk-ant-existing-key-12345"),
       changeDoc: mockChangeDoc,
       handle: undefined,
       isLoading: false,
@@ -345,30 +354,7 @@ describe("SettingsView", () => {
 
     render(<SettingsView />)
 
-    // Find the save button that's in the form containing the Claude API key input
-    const input = screen.getByLabelText(/claude api key/i)
-    const form = input.closest("form")!
-    const saveButton = form.querySelector('button[type="submit"]')!
-    expect(saveButton).toBeDisabled()
-  })
-
-  it("enables save button when API key is changed", () => {
-    vi.mocked(JournalContext.useJournal).mockReturnValue({
-      doc: createMockDoc("sk-ant-existing"),
-      changeDoc: mockChangeDoc,
-      handle: undefined,
-      isLoading: false,
-    })
-
-    render(<SettingsView />)
-
-    const input = screen.getByLabelText(/claude api key/i)
-    fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
-
-    // Find the save button that's in the form containing the Claude API key input
-    const form = input.closest("form")!
-    const saveButton = form.querySelector('button[type="submit"]')!
-    expect(saveButton).not.toBeDisabled()
+    expect(screen.getByText(/claude api key configured/i)).toBeInTheDocument()
   })
 
   it("shows clear button when API key exists", () => {
@@ -405,7 +391,7 @@ describe("SettingsView", () => {
     expect(mockChangeDoc).toHaveBeenCalledTimes(1)
   })
 
-  it("shows saved confirmation after saving", async () => {
+  it("shows saved confirmation after autosave and then hides it", async () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -415,21 +401,26 @@ describe("SettingsView", () => {
 
     render(<SettingsView />)
 
+    // Wait for initial load flag to be cleared
+    await act(async () => {
+      vi.advanceTimersByTime(100)
+    })
+
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
-    // Find the save button that's in the form containing the Claude API key input
-    const form = input.closest("form")!
-    const saveButton = form.querySelector('button[type="submit"]')!
-    fireEvent.click(saveButton)
+    // Advance timers to trigger debounced save
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+    })
 
-    expect(screen.getAllByText(/api key saved successfully/i)[0]).toBeInTheDocument()
+    expect(screen.getByTestId("claude-api-key-save-status")).toHaveTextContent("Saved")
 
     // Confirmation should disappear after timeout
     await act(async () => {
       vi.advanceTimersByTime(2000)
     })
-    expect(screen.queryByText(/api key saved successfully/i)).not.toBeInTheDocument()
+    expect(screen.queryByTestId("claude-api-key-save-status")).not.toBeInTheDocument()
   })
 
   // Note: LLM Provider selection tests and OpenAI API key section tests are commented out
@@ -739,7 +730,7 @@ describe("SettingsView", () => {
     })
 
     describe("Claude API key validation UI", () => {
-      it("shows validation error when saving invalid Claude API key", () => {
+      it("shows validation error when autosaving invalid Claude API key", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -749,13 +740,18 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        // Find the save button that's in the form containing the Claude API key input
-        const form = input.closest("form")!
-        const saveButton = form.querySelector('button[type="submit"]')!
-        fireEvent.click(saveButton)
+        // Advance timers to trigger debounced save and validation
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(screen.getByRole("alert")).toHaveTextContent(
           "Claude API key should start with 'sk-ant-'",
@@ -763,7 +759,7 @@ describe("SettingsView", () => {
         expect(mockChangeDoc).not.toHaveBeenCalled()
       })
 
-      it("shows validation error for short Claude API key", () => {
+      it("shows validation error for short Claude API key", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -773,13 +769,18 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "sk-ant-short" } })
 
-        // Find the save button that's in the form containing the Claude API key input
-        const form = input.closest("form")!
-        const saveButton = form.querySelector('button[type="submit"]')!
-        fireEvent.click(saveButton)
+        // Advance timers to trigger debounced save and validation
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(screen.getByRole("alert")).toHaveTextContent(
           "Claude API key appears to be too short",
@@ -787,7 +788,7 @@ describe("SettingsView", () => {
         expect(mockChangeDoc).not.toHaveBeenCalled()
       })
 
-      it("clears validation error when user types", () => {
+      it("clears validation error when user types", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -797,23 +798,28 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        // Find the save button that's in the form containing the Claude API key input
-        const form = input.closest("form")!
-        const saveButton = form.querySelector('button[type="submit"]')!
-        fireEvent.click(saveButton)
+        // Advance timers to trigger debounced save and validation
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(screen.getByRole("alert")).toBeInTheDocument()
 
-        // Type to clear the error
+        // Type to clear the error - error should clear immediately on typing
         fireEvent.change(input, { target: { value: "sk-ant-" } })
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument()
       })
 
-      it("saves valid Claude API key successfully", () => {
+      it("autosaves valid Claude API key successfully", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -823,19 +829,24 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "sk-ant-api03-validkey12345678" } })
 
-        // Find the save button that's in the form containing the Claude API key input
-        const form = input.closest("form")!
-        const saveButton = form.querySelector('button[type="submit"]')!
-        fireEvent.click(saveButton)
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument()
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
       })
 
-      it("sets aria-invalid on input when validation fails", () => {
+      it("sets aria-invalid on input when validation fails", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -845,13 +856,18 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        // Find the save button that's in the form containing the Claude API key input
-        const form = input.closest("form")!
-        const saveButton = form.querySelector('button[type="submit"]')!
-        fireEvent.click(saveButton)
+        // Advance timers to trigger debounced save and validation
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(input).toHaveAttribute("aria-invalid", "true")
       })
@@ -922,7 +938,7 @@ describe("SettingsView", () => {
         expect(instructionsInput.value).toBe("Always be concise")
       })
 
-      it("saves bio when save button is clicked", () => {
+      it("autosaves bio when typing", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -931,19 +947,28 @@ describe("SettingsView", () => {
         })
 
         render(<SettingsView />)
+
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
 
         const bioInput = screen.getByLabelText(/bio/i)
         fireEvent.change(bioInput, { target: { value: "I love coding" } })
 
-        // Find the save button that's in the bio section (using the heading)
-        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
-        const saveButton = bioSection.querySelector("button")!
-        fireEvent.click(saveButton)
+        // Should show saving status
+        expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saving...")
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+        expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saved")
       })
 
-      it("saves additional instructions when save button is clicked", () => {
+      it("autosaves additional instructions when typing", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
           doc: createMockDoc(),
           changeDoc: mockChangeDoc,
@@ -953,24 +978,29 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
+        })
+
         const instructionsInput = screen.getByLabelText(/additional instructions/i)
         fireEvent.change(instructionsInput, { target: { value: "Be friendly" } })
 
-        // Find the save button that's in the additional instructions section
-        const instructionsSection = screen
-          .getByRole("heading", { name: /additional instructions/i })
-          .closest("section")!
-        const saveButton = instructionsSection.querySelector("button")!
-        fireEvent.click(saveButton)
+        // Should show saving status
+        expect(screen.getByTestId("instructions-save-status")).toHaveTextContent("Saving...")
+
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
 
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+        expect(screen.getByTestId("instructions-save-status")).toHaveTextContent("Saved")
       })
 
-      it("disables bio save button when there are no unsaved changes", () => {
-        const mockDoc = createMockDoc()
-        mockDoc.settings.bio = "Existing bio"
+      it("hides save status after timeout", async () => {
         vi.mocked(JournalContext.useJournal).mockReturnValue({
-          doc: mockDoc,
+          doc: createMockDoc(),
           changeDoc: mockChangeDoc,
           handle: undefined,
           isLoading: false,
@@ -978,29 +1008,27 @@ describe("SettingsView", () => {
 
         render(<SettingsView />)
 
-        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
-        const saveButton = bioSection.querySelector("button")!
-        expect(saveButton).toBeDisabled()
-      })
-
-      it("enables bio save button when bio is changed", () => {
-        const mockDoc = createMockDoc()
-        mockDoc.settings.bio = "Existing bio"
-        vi.mocked(JournalContext.useJournal).mockReturnValue({
-          doc: mockDoc,
-          changeDoc: mockChangeDoc,
-          handle: undefined,
-          isLoading: false,
+        // Wait for initial load flag to be cleared
+        await act(async () => {
+          vi.advanceTimersByTime(100)
         })
-
-        render(<SettingsView />)
 
         const bioInput = screen.getByLabelText(/bio/i)
         fireEvent.change(bioInput, { target: { value: "New bio" } })
 
-        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
-        const saveButton = bioSection.querySelector("button")!
-        expect(saveButton).not.toBeDisabled()
+        // Advance timers to trigger debounced save
+        await act(async () => {
+          vi.advanceTimersByTime(500)
+        })
+
+        expect(screen.getByTestId("bio-save-status")).toHaveTextContent("Saved")
+
+        // Advance timers to hide the status
+        await act(async () => {
+          vi.advanceTimersByTime(2000)
+        })
+
+        expect(screen.queryByTestId("bio-save-status")).not.toBeInTheDocument()
       })
     })
 
