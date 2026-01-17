@@ -49,8 +49,11 @@ export function DayView({ date }: DayViewProps) {
   const bio = doc?.settings?.bio ?? ""
   const additionalInstructions = doc?.settings?.additionalInstructions ?? ""
 
-  // Get assistant messages for initial conversation state
-  const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []
+  // Get conversation messages (excluding the initial user message which is managed by EntryEditor)
+  // The first user message is the journal entry content, subsequent messages are the conversation
+  const allMessages = entry?.messages ?? []
+  const conversationMessages = allMessages.slice(1) // Skip the first user message (journal entry)
+  const assistantMessages = conversationMessages.filter(m => m.role === "assistant")
 
   // Hide EntryEditor once conversation has started (has assistant messages)
   // Use both persisted state (assistantMessages) and local state (conversationStarted)
@@ -88,22 +91,19 @@ export function DayView({ date }: DayViewProps) {
         const existingEntry = d.entries[date]
         existingEntry.updatedAt = now
 
-        // Keep the existing user message and update assistant messages
-        const existingUserMessage = existingEntry.messages.find(m => m.role === "user")
-
-        // Filter assistant messages from incoming messages
-        const assistantMsgs = messages.filter(m => m.role === "assistant")
+        // Keep the first user message (journal entry managed by EntryEditor)
+        const firstUserMessage = existingEntry.messages.find(m => m.role === "user")
 
         // Clear existing messages and rebuild in place (required for Automerge)
         existingEntry.messages.splice(0, existingEntry.messages.length)
 
-        // Add back user message if it exists
-        if (existingUserMessage) {
-          existingEntry.messages.push(existingUserMessage)
+        // Add back the first user message if it exists
+        if (firstUserMessage) {
+          existingEntry.messages.push(firstUserMessage)
         }
 
-        // Add all assistant messages
-        for (const msg of assistantMsgs) {
+        // Add all conversation messages (follow-up user messages and assistant messages)
+        for (const msg of messages) {
           existingEntry.messages.push(msg)
         }
       })
@@ -168,7 +168,7 @@ export function DayView({ date }: DayViewProps) {
         entryContent={entryContent}
         apiKey={apiKey}
         provider={llmProvider}
-        initialMessages={assistantMessages}
+        initialMessages={conversationMessages}
         onMessagesChange={handleMessagesChange}
         bio={bio}
         additionalInstructions={additionalInstructions}

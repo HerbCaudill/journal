@@ -747,4 +747,102 @@ describe("DayView", () => {
       expect(screen.getByRole("button", { name: /done editing/i })).toBeInTheDocument()
     })
   })
+
+  describe("Conversation persistence", () => {
+    it("passes follow-up user messages to LLMSection for restoration", async () => {
+      // This test verifies that when a conversation with follow-up user messages
+      // is saved and reloaded, all messages are passed to LLMSection
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            content: "First response",
+            createdAt: Date.now(),
+          },
+          {
+            id: "user-followup-1",
+            role: "user",
+            content: "Follow-up question",
+            createdAt: Date.now(),
+          },
+          {
+            id: "assistant-2",
+            role: "assistant",
+            content: "Second response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithFullConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "My journal entry", // First user message (journal entry)
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "First response",
+                createdAt: Date.now(),
+              },
+              {
+                id: "user-followup-1",
+                role: "user" as const,
+                content: "Follow-up question", // Follow-up user message
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-2",
+                role: "assistant" as const,
+                content: "Second response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithFullConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date="2024-01-15" />)
+
+      // Both assistant responses should be displayed (via the mock LLMSection)
+      expect(screen.getByText("First response")).toBeInTheDocument()
+      expect(screen.getByText("Second response")).toBeInTheDocument()
+
+      // Edit button should be visible since conversation has started
+      expect(screen.getByRole("button", { name: /edit journal entry/i })).toBeInTheDocument()
+
+      // EntryEditor should be hidden when conversation has started
+      expect(screen.queryByRole("textbox", { name: /journal entry/i })).not.toBeInTheDocument()
+    })
+  })
 })

@@ -30,6 +30,6 @@ When you complete a task:
 - Run `ppnpm format`.
 - Run `pnpm build && pnpm test:all`.
 - Close the issue: `bd close <id>`.
-- Commit and push your work.
-- Output `🚀 <task name>`.
+- Commit and push your work. Include the issue id
+- Output `✅ <task name>`.
 - End your turn.
