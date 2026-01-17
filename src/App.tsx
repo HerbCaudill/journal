@@ -5,6 +5,7 @@ import { SettingsView } from "./components/SettingsView"
 import { SwipeContainer } from "./components/SwipeContainer"
 import { getToday } from "./lib/dates"
 import { useGoogleCalendar } from "./hooks/useGoogleCalendar"
+import { useTheme } from "./hooks/useTheme"
 
 type Route = { type: "day"; date: string } | { type: "settings" } | { type: "oauth-callback" }
 
@@ -152,6 +153,8 @@ function OAuthCallbackHandler() {
 
 export function App() {
   const route = useHashRoute()
+  // Initialize theme from settings and apply dark class to document
+  useTheme()
 
   // Handle OAuth callback route separately (no header needed)
   if (route.type === "oauth-callback") {

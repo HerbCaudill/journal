@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react"
 import { SettingsView } from "./SettingsView"
 import * as JournalContext from "../context/JournalContext"
 import * as GoogleCalendarHook from "../hooks/useGoogleCalendar"
+import * as ThemeHook from "../hooks/useTheme"
 import type { Doc } from "@automerge/automerge"
 import type { JournalDoc } from "../types/journal"
 
@@ -16,10 +17,16 @@ vi.mock("../hooks/useGoogleCalendar", () => ({
   useGoogleCalendar: vi.fn(),
 }))
 
+// Mock the useTheme hook
+vi.mock("../hooks/useTheme", () => ({
+  useTheme: vi.fn(),
+}))
+
 const mockChangeDoc = vi.fn()
 const mockAuthenticate = vi.fn()
 const mockSignOut = vi.fn()
 const mockClearError = vi.fn()
+const mockSetTheme = vi.fn()
 
 const createMockDoc = (
   claudeApiKey = "",
@@ -55,12 +62,20 @@ const createMockGoogleCalendar = (
   clearError: mockClearError,
 })
 
+const createMockTheme = (preference: "light" | "dark" | "system" = "system") => ({
+  preference,
+  resolved: preference === "system" ? "light" : preference,
+  setTheme: mockSetTheme,
+})
+
 describe("SettingsView", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     // Default to unconfigured state for most tests
     vi.mocked(GoogleCalendarHook.useGoogleCalendar).mockReturnValue(createMockGoogleCalendar())
+    // Default to system theme
+    vi.mocked(ThemeHook.useTheme).mockReturnValue(createMockTheme())
   })
 
   afterEach(() => {
@@ -553,4 +568,135 @@ describe("SettingsView", () => {
   // Note: Environment variable defaults (VITE_CLAUDE_API_KEY, VITE_OPENAI_API_KEY) are tested
   // manually since import.meta.env is evaluated at module load time, making unit testing complex.
   // The implementation uses env vars as fallbacks when no saved value exists in document settings.
+
+  describe("Theme selection", () => {
+    it("renders Theme section with all options", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      expect(screen.getByRole("heading", { name: /^theme$/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /light/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /dark/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /system/i })).toBeInTheDocument()
+    })
+
+    it("shows System as selected by default", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+      vi.mocked(ThemeHook.useTheme).mockReturnValue(createMockTheme("system"))
+
+      render(<SettingsView />)
+
+      const systemButton = screen.getByRole("button", { name: /system/i })
+      expect(systemButton).toHaveAttribute("aria-pressed", "true")
+
+      const lightButton = screen.getByRole("button", { name: /light/i })
+      expect(lightButton).toHaveAttribute("aria-pressed", "false")
+
+      const darkButton = screen.getByRole("button", { name: /dark/i })
+      expect(darkButton).toHaveAttribute("aria-pressed", "false")
+    })
+
+    it("shows Light as selected when preference is light", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+      vi.mocked(ThemeHook.useTheme).mockReturnValue(createMockTheme("light"))
+
+      render(<SettingsView />)
+
+      const lightButton = screen.getByRole("button", { name: /light/i })
+      expect(lightButton).toHaveAttribute("aria-pressed", "true")
+    })
+
+    it("shows Dark as selected when preference is dark", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+      vi.mocked(ThemeHook.useTheme).mockReturnValue(createMockTheme("dark"))
+
+      render(<SettingsView />)
+
+      const darkButton = screen.getByRole("button", { name: /dark/i })
+      expect(darkButton).toHaveAttribute("aria-pressed", "true")
+    })
+
+    it("calls setTheme with 'light' when Light button is clicked", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const lightButton = screen.getByRole("button", { name: /light/i })
+      fireEvent.click(lightButton)
+
+      expect(mockSetTheme).toHaveBeenCalledWith("light")
+    })
+
+    it("calls setTheme with 'dark' when Dark button is clicked", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      const darkButton = screen.getByRole("button", { name: /dark/i })
+      fireEvent.click(darkButton)
+
+      expect(mockSetTheme).toHaveBeenCalledWith("dark")
+    })
+
+    it("calls setTheme with 'system' when System button is clicked", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+      vi.mocked(ThemeHook.useTheme).mockReturnValue(createMockTheme("dark"))
+
+      render(<SettingsView />)
+
+      const systemButton = screen.getByRole("button", { name: /system/i })
+      fireEvent.click(systemButton)
+
+      expect(mockSetTheme).toHaveBeenCalledWith("system")
+    })
+
+    it("displays theme description text", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc(),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<SettingsView />)
+
+      expect(screen.getByText(/choose your preferred color scheme/i)).toBeInTheDocument()
+    })
+  })
 })

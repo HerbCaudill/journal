@@ -74,6 +74,13 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `src/lib/geocoding.ts` - Reverse geocoding using OpenStreetMap Nominatim API with 24-hour caching, LRU eviction (max 100 entries), and rate limiting
 - `src/components/LocationBadge.tsx` - Compact badge displaying locality name (e.g., "Tamariu") with coordinates shown on hover
 
+**Theme**
+
+- `src/hooks/useTheme.ts` - React hook for managing theme state (light/dark/system). Applies the `dark` class to `<html>` based on user preference, handles system preference detection via `prefers-color-scheme` media query
+- Theme toggle UI in SettingsView with Light, Dark, and System options
+- Theme preference stored in `settings.theme` in the Automerge document
+- Dark theme CSS variables defined in `src/index.css` (`.dark` class)
+
 **Utilities**
 
 - `src/lib/dates.ts` - Date utilities using "YYYY-MM-DD" format throughout

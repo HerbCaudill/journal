@@ -16,6 +16,21 @@ vi.mock("./lib/dates", async () => {
 // Store original location for restoration
 const originalLocation = window.location
 
+// Mock matchMedia for useTheme hook
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+
 // Mock the JournalContext to avoid IndexedDB issues
 vi.mock("./context/JournalContext", () => ({
   JournalProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
