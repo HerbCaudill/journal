@@ -209,8 +209,9 @@ export function LLMSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Submit button - only rendered here if parent doesn't handle it via onSubmitButtonProps */}
-      {!onSubmitButtonProps && (
+      {/* Submit button - only rendered here if parent doesn't handle it via onSubmitButtonProps
+          and no conversation has started yet (messages.length === 0) */}
+      {!onSubmitButtonProps && messages.length === 0 && (
         <InputGroupButton
           onClick={handleSubmit}
           disabled={isLoading || !apiKey}

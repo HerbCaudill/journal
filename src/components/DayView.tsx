@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useJournal } from "../context/JournalContext"
 import { EntryEditor } from "./EntryEditor"
 import { LLMSection, SubmitButtonIcon } from "./LLMSection"
@@ -26,6 +26,14 @@ export function DayView({ date }: DayViewProps) {
   const { doc, changeDoc } = useJournal()
   const [submitButtonProps, setSubmitButtonProps] = useState<LLMSubmitButtonProps | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  // Track conversation start locally to immediately hide editor (bypass Automerge state timing)
+  const [conversationStarted, setConversationStarted] = useState(false)
+
+  // Reset local conversation state when navigating to a different date
+  useEffect(() => {
+    setConversationStarted(false)
+    setIsEditing(false)
+  }, [date])
 
   const entry = doc?.entries[date]
   const userMessage = entry?.messages.find(m => m.role === "user")
@@ -45,7 +53,9 @@ export function DayView({ date }: DayViewProps) {
   const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []
 
   // Hide EntryEditor once conversation has started (has assistant messages)
-  const hasConversation = assistantMessages.length > 0
+  // Use both persisted state (assistantMessages) and local state (conversationStarted)
+  // to ensure immediate UI update when conversation starts
+  const hasConversation = assistantMessages.length > 0 || conversationStarted
 
   // Show EntryEditor when: no conversation yet, OR in edit mode
   const showEditor = !hasConversation || isEditing
@@ -53,6 +63,12 @@ export function DayView({ date }: DayViewProps) {
   // Handle when Claude conversation changes
   const handleMessagesChange = useCallback(
     (messages: Message[]) => {
+      // Check if there are assistant messages - if so, mark conversation as started
+      const hasAssistant = messages.some(m => m.role === "assistant")
+      if (hasAssistant) {
+        setConversationStarted(true)
+      }
+
       if (!doc) return
 
       changeDoc(d => {
@@ -74,13 +90,22 @@ export function DayView({ date }: DayViewProps) {
 
         // Keep the existing user message and update assistant messages
         const existingUserMessage = existingEntry.messages.find(m => m.role === "user")
-        const newMessages: Message[] = existingUserMessage ? [existingUserMessage] : []
 
-        // Add all assistant messages from the new messages array
+        // Filter assistant messages from incoming messages
         const assistantMsgs = messages.filter(m => m.role === "assistant")
-        newMessages.push(...assistantMsgs)
 
-        existingEntry.messages = newMessages
+        // Clear existing messages and rebuild in place (required for Automerge)
+        existingEntry.messages.splice(0, existingEntry.messages.length)
+
+        // Add back user message if it exists
+        if (existingUserMessage) {
+          existingEntry.messages.push(existingUserMessage)
+        }
+
+        // Add all assistant messages
+        for (const msg of assistantMsgs) {
+          existingEntry.messages.push(msg)
+        }
       })
     },
     [doc, changeDoc, date],
