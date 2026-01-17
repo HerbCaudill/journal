@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
-import { parseDate, addDays } from "../lib/dates"
+import { parseDate, addDays, getToday, isFutureDate } from "../lib/dates"
 import { DatePicker } from "./DatePicker"
 import { LocationBadge } from "./LocationBadge"
 import type { GeoPosition } from "../hooks/useGeolocation"
@@ -71,8 +71,13 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
 
   const handleNextDay = useCallback(() => {
     const nextDay = addDays(date, 1)
+    // Prevent navigation to future dates
+    if (isFutureDate(nextDay)) return
     window.location.hash = `#/day/${nextDay}`
   }, [date])
+
+  // Check if we're viewing today (to disable next day button)
+  const isToday = date === getToday()
 
   const handleClose = useCallback(() => {
     setIsDatePickerOpen(false)
@@ -166,8 +171,14 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
           {showNavigation && (
             <button
               onClick={handleNextDay}
-              className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              disabled={isToday}
+              className={`rounded-full p-2 transition-colors ${
+                isToday ?
+                  "cursor-not-allowed text-gray-300 dark:text-gray-700"
+                : "text-muted-foreground hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
               aria-label="Next day"
+              aria-disabled={isToday}
             >
               <ChevronRightIcon />
             </button>

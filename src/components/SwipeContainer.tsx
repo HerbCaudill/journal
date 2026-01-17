@@ -1,7 +1,7 @@
 import { type ReactNode, useCallback } from "react"
 import { useSwipeNavigation } from "../hooks/useSwipeNavigation"
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation"
-import { addDays, getToday } from "../lib/dates"
+import { addDays, getToday, isFutureDate } from "../lib/dates"
 
 interface SwipeContainerProps {
   /** The current date in YYYY-MM-DD format */
@@ -31,6 +31,8 @@ export function SwipeContainer({ date, children, enabled = true }: SwipeContaine
   const handleSwipeLeft = useCallback(() => {
     // Swipe left = go to next day
     const nextDay = addDays(date, 1)
+    // Prevent navigation to future dates
+    if (isFutureDate(nextDay)) return
     navigateToDay(nextDay)
   }, [date, navigateToDay])
 

@@ -4,7 +4,7 @@ import { Footer } from "./components/Footer"
 import { DayView } from "./components/DayView"
 import { SettingsView } from "./components/SettingsView"
 import { SwipeContainer } from "./components/SwipeContainer"
-import { getToday, isValidDate } from "./lib/dates"
+import { getToday, isValidDate, isFutureDate } from "./lib/dates"
 import { useGoogleCalendar } from "./hooks/useGoogleCalendar"
 import { useTheme } from "./hooks/useTheme"
 import { useJournal } from "./context/JournalContext"
@@ -52,10 +52,11 @@ function parseHash(hash: string): Route {
   if (dayMatch) {
     const date = dayMatch[1]
     // Validate that the date is actually valid (e.g., 2025-13-45 would fail)
-    if (isValidDate(date)) {
+    // Also prevent navigation to future dates
+    if (isValidDate(date) && !isFutureDate(date)) {
       return { type: "day", date }
     }
-    // Invalid date - fall through to default
+    // Invalid or future date - fall through to default
   }
 
   // Match /#/settings

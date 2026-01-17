@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { parseDate, formatDate, getToday } from "../lib/dates"
+import { parseDate, formatDate, getToday, isFutureDate } from "../lib/dates"
 import { useJournal } from "../context/JournalContext"
 
 interface DatePickerProps {
@@ -131,6 +131,8 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
   }
 
   const handleDateClick = (date: string) => {
+    // Prevent navigation to future dates
+    if (isFutureDate(date)) return
     onDateSelect(date)
     onClose?.()
   }
@@ -181,17 +183,28 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
           const isSelected = date === selectedDate
           const isToday = date === today
           const hasEntry = datesWithEntries.has(date)
+          const isFuture = isFutureDate(date)
 
           return (
             <button
               key={date}
               onClick={() => handleDateClick(date)}
-              className={`relative rounded p-2 text-sm transition-colors ${!isCurrentMonth ? "text-muted-foreground/50" : "text-foreground"} ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent"} ${isToday && !isSelected ? "ring-primary ring-1" : ""} `}
+              disabled={isFuture}
+              className={`relative rounded p-2 text-sm transition-colors ${
+                isFuture ? "cursor-not-allowed text-gray-300 dark:text-gray-700"
+                : !isCurrentMonth ? "text-muted-foreground/50"
+                : "text-foreground"
+              } ${
+                isSelected && !isFuture ? "bg-primary text-primary-foreground"
+                : !isFuture ? "hover:bg-accent"
+                : ""
+              } ${isToday && !isSelected ? "ring-primary ring-1" : ""} `}
               aria-label={date}
               aria-current={isToday ? "date" : undefined}
+              aria-disabled={isFuture}
             >
               {parseDate(date).getDate()}
-              {hasEntry && (
+              {hasEntry && !isFuture && (
                 <span
                   className={`absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
                     isSelected ? "bg-primary-foreground" : "bg-primary"

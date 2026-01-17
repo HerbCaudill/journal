@@ -73,6 +73,15 @@ export function getToday(): string {
 }
 
 /**
+ * Checks if a date is in the future (after today)
+ * @param dateString - ISO date string in YYYY-MM-DD format
+ * @returns true if the date is after today, false otherwise
+ */
+export function isFutureDate(dateString: string): boolean {
+  return dateString > getToday()
+}
+
+/**
  * Adds (or subtracts) days from a date
  * @param dateString - ISO date string in YYYY-MM-DD format
  * @param days - Number of days to add (negative to subtract)

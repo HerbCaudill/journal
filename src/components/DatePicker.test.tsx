@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { DatePicker } from "./DatePicker"
@@ -217,5 +217,73 @@ describe("DatePicker", () => {
       year: "numeric",
     })
     expect(screen.getByText(expectedDec2023)).toBeInTheDocument()
+  })
+
+  describe("future date prevention", () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("disables future dates", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0)) // June 15, 2024
+
+      render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
+
+      // Future dates should be disabled
+      const june16Button = screen.getByRole("button", { name: "2024-06-16" })
+      expect(june16Button).toBeDisabled()
+      expect(june16Button).toHaveAttribute("aria-disabled", "true")
+
+      const june20Button = screen.getByRole("button", { name: "2024-06-20" })
+      expect(june20Button).toBeDisabled()
+    })
+
+    it("does not call onDateSelect when clicking future date", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0)) // June 15, 2024
+
+      const onDateSelect = vi.fn()
+
+      render(<DatePicker selectedDate="2024-06-15" onDateSelect={onDateSelect} />)
+
+      // Try to click on future date
+      const june20Button = screen.getByRole("button", { name: "2024-06-20" })
+      june20Button.click()
+
+      expect(onDateSelect).not.toHaveBeenCalled()
+    })
+
+    it("allows clicking today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0)) // June 15, 2024
+
+      const onDateSelect = vi.fn()
+
+      render(<DatePicker selectedDate="2024-06-10" onDateSelect={onDateSelect} />)
+
+      // Today should be clickable
+      const todayButton = screen.getByRole("button", { name: "2024-06-15" })
+      expect(todayButton).not.toBeDisabled()
+
+      todayButton.click()
+      expect(onDateSelect).toHaveBeenCalledWith("2024-06-15")
+    })
+
+    it("allows clicking past dates", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0)) // June 15, 2024
+
+      const onDateSelect = vi.fn()
+
+      render(<DatePicker selectedDate="2024-06-15" onDateSelect={onDateSelect} />)
+
+      // Past dates should be clickable
+      const june10Button = screen.getByRole("button", { name: "2024-06-10" })
+      expect(june10Button).not.toBeDisabled()
+
+      june10Button.click()
+      expect(onDateSelect).toHaveBeenCalledWith("2024-06-10")
+    })
   })
 })

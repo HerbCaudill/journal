@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { formatDate, parseDate, getToday, addDays, isValidDate } from "./dates"
+import { formatDate, parseDate, getToday, addDays, isValidDate, isFutureDate } from "./dates"
 
 describe("dates", () => {
   describe("formatDate", () => {
@@ -104,6 +104,37 @@ describe("dates", () => {
 
     it("should handle adding zero days", () => {
       expect(addDays("2026-01-16", 0)).toBe("2026-01-16")
+    })
+  })
+
+  describe("isFutureDate", () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("should return true for dates after today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      expect(isFutureDate("2026-01-17")).toBe(true)
+      expect(isFutureDate("2026-02-01")).toBe(true)
+      expect(isFutureDate("2027-01-01")).toBe(true)
+    })
+
+    it("should return false for today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      expect(isFutureDate("2026-01-16")).toBe(false)
+    })
+
+    it("should return false for dates before today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      expect(isFutureDate("2026-01-15")).toBe(false)
+      expect(isFutureDate("2025-12-31")).toBe(false)
+      expect(isFutureDate("2020-01-01")).toBe(false)
     })
   })
 })

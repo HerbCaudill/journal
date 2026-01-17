@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { Header } from "./Header"
 import type { GeoPosition } from "../hooks/useGeolocation"
@@ -255,6 +255,45 @@ describe("Header", () => {
       fireEvent.click(locationButton)
 
       expect(handleLocationClick).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("future date prevention", () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("disables next day button when viewing today", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      render(<Header date="2026-01-16" />)
+
+      const nextButton = screen.getByRole("button", { name: /next day/i })
+      expect(nextButton).toBeDisabled()
+      expect(nextButton).toHaveAttribute("aria-disabled", "true")
+    })
+
+    it("enables next day button when viewing a past date", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      render(<Header date="2026-01-15" />)
+
+      const nextButton = screen.getByRole("button", { name: /next day/i })
+      expect(nextButton).not.toBeDisabled()
+    })
+
+    it("does not navigate when clicking disabled next day button", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 16, 12, 0, 0)) // January 16, 2026
+
+      render(<Header date="2026-01-16" />)
+
+      const nextButton = screen.getByRole("button", { name: /next day/i })
+      fireEvent.click(nextButton)
+
+      expect(window.location.hash).toBe("")
     })
   })
 })
