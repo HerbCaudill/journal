@@ -174,6 +174,7 @@ export function DayView({ date }: DayViewProps) {
         additionalInstructions={additionalInstructions}
         onSubmitButtonProps={hasConversation ? undefined : setSubmitButtonProps}
         onConversationStart={() => setConversationStarted(true)}
+        conversationKey={date}
       />
     </div>
   )

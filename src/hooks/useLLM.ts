@@ -21,6 +21,8 @@ export interface UseLLMOptions {
   bio?: string
   /** Additional instructions for customizing AI behavior */
   additionalInstructions?: string
+  /** Unique key to identify the conversation context (e.g., date). When this changes, messages reset. */
+  conversationKey?: string
 }
 
 /**
@@ -93,6 +95,7 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
     initialMessages = [],
     bio,
     additionalInstructions,
+    conversationKey,
   } = options
 
   const [messages, setMessages] = useState<Message[]>(initialMessages)
@@ -108,14 +111,15 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
   // This prevents infinite loops when initialMessages is recreated each render
   const initialMessagesKey = JSON.stringify(initialMessages.map(m => m.id))
 
-  // Sync internal state when initialMessages changes (e.g., when navigating between days)
+  // Sync internal state when initialMessages or conversationKey changes (e.g., when navigating between days)
   // This ensures each day has its own isolated conversation
+  // The conversationKey is essential for detecting when we navigate between days that both have empty messages
   useEffect(() => {
     setMessages(initialMessages)
     messagesRef.current = initialMessages
     setError(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMessagesKey])
+  }, [initialMessagesKey, conversationKey])
 
   // Create the provider instance, memoized based on config
   const llmProvider = useMemo(() => {

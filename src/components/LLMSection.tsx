@@ -36,6 +36,8 @@ interface LLMSectionProps {
   onSubmitButtonProps?: (props: LLMSubmitButtonProps) => void
   /** Callback when conversation starts (user submits first message) */
   onConversationStart?: () => void
+  /** Unique key to identify the conversation context (e.g., date). When this changes, conversation resets. */
+  conversationKey?: string
 }
 
 /**
@@ -105,6 +107,7 @@ export function LLMSection({
   additionalInstructions,
   onSubmitButtonProps,
   onConversationStart,
+  conversationKey,
 }: LLMSectionProps) {
   const { messages, isLoading, error, send } = useLLM({
     provider,
@@ -112,6 +115,7 @@ export function LLMSection({
     initialMessages,
     bio,
     additionalInstructions,
+    conversationKey,
   })
 
   const [localError, setLocalError] = useState<string | null>(null)

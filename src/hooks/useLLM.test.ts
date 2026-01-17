@@ -405,4 +405,64 @@ describe("useLLM", () => {
     expect(result.current.error).toBeNull()
     expect(result.current.messages).toEqual(newMessages)
   })
+
+  it("resets messages when conversationKey changes even if initialMessages are the same", async () => {
+    mockSendMessage.mockResolvedValue({
+      content: "Response",
+      success: true,
+    })
+
+    // Start with empty messages on day 1
+    const { result, rerender } = renderHook(
+      ({ initialMessages, conversationKey }) =>
+        useLLM({ ...defaultOptions, initialMessages, conversationKey }),
+      { initialProps: { initialMessages: [] as Message[], conversationKey: "2024-01-15" } },
+    )
+
+    expect(result.current.messages).toEqual([])
+
+    // Add a message on day 1
+    await act(async () => {
+      await result.current.send("Hello from day 1")
+    })
+
+    expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[0].content).toBe("Hello from day 1")
+
+    // Navigate to day 2 with empty initial messages
+    // Even though both days have empty initialMessages, the conversationKey change should reset
+    rerender({ initialMessages: [], conversationKey: "2024-01-16" })
+
+    // Messages should be reset to empty because we navigated to a different day
+    expect(result.current.messages).toEqual([])
+  })
+
+  it("preserves messages when conversationKey stays the same", async () => {
+    mockSendMessage.mockResolvedValue({
+      content: "Response",
+      success: true,
+    })
+
+    // Start with empty messages
+    const { result, rerender } = renderHook(
+      ({ initialMessages, conversationKey }) =>
+        useLLM({ ...defaultOptions, initialMessages, conversationKey }),
+      { initialProps: { initialMessages: [] as Message[], conversationKey: "2024-01-15" } },
+    )
+
+    // Add a message
+    await act(async () => {
+      await result.current.send("Hello")
+    })
+
+    expect(result.current.messages).toHaveLength(2)
+
+    // Rerender with same conversationKey but different (still empty) initialMessages reference
+    rerender({ initialMessages: [], conversationKey: "2024-01-15" })
+
+    // Messages should be preserved since we're still on the same day
+    // Note: This test verifies that the hook doesn't unnecessarily reset
+    // when the conversationKey hasn't changed
+    expect(result.current.messages).toHaveLength(2)
+  })
 })
