@@ -749,6 +749,313 @@ describe("DayView", () => {
     })
   })
 
+  describe("error handling", () => {
+    it("handles undefined doc gracefully", () => {
+      mockUseJournal.mockReturnValue({
+        doc: undefined,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      // Should not crash when doc is undefined
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Component should render with empty state
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+      expect(textarea).toHaveValue("")
+    })
+
+    it("handles null settings gracefully", () => {
+      const docWithNullSettings = {
+        entries: {},
+        settings: null,
+      } as unknown as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithNullSettings,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      // Should not crash when settings is null
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+    })
+
+    // Note: Test for handling entry with undefined messages is tracked as bug j-61j
+    // Currently the component crashes in this scenario
+
+    it("handles missing LLM provider setting gracefully", () => {
+      const docWithoutProvider = {
+        entries: {},
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          // llmProvider is intentionally missing
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithoutProvider,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      // Should render with default provider (Claude)
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toBeInTheDocument()
+      // Ask Claude button should exist (default provider)
+      const askButton = screen.getByRole("button", { name: /ask claude/i })
+      expect(askButton).toBeInTheDocument()
+    })
+
+    it("handles empty string API key correctly", () => {
+      const docWithEmptyApiKey = {
+        entries: {},
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "", // empty string
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithEmptyApiKey,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Button should be disabled with empty API key
+      const askButton = screen.getByRole("button", { name: /ask claude/i })
+      expect(askButton).toBeDisabled()
+    })
+  })
+
+  describe("edge cases", () => {
+    it("handles date with only whitespace user message", () => {
+      const docWithWhitespaceEntry = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "msg-1",
+                role: "user" as const,
+                content: "   ",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithWhitespaceEntry,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Should show editor with the whitespace content
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toHaveValue("   ")
+    })
+
+    it("handles rapid date changes preserving local state correctly", () => {
+      const docWithMultipleEntries = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "msg-1",
+                role: "user" as const,
+                content: "Entry for Jan 15",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          "2024-01-16": {
+            id: "entry-2",
+            date: "2024-01-16",
+            messages: [
+              {
+                id: "msg-2",
+                role: "user" as const,
+                content: "Entry for Jan 16",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithMultipleEntries,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      const { rerender } = render(<DayView date={toDateString("2024-01-15")} />)
+
+      const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+      expect(textarea).toHaveValue("Entry for Jan 15")
+
+      // Rapid date changes
+      rerender(<DayView date={toDateString("2024-01-16")} />)
+      expect(textarea).toHaveValue("Entry for Jan 16")
+
+      rerender(<DayView date={toDateString("2024-01-15")} />)
+      expect(textarea).toHaveValue("Entry for Jan 15")
+
+      rerender(<DayView date={toDateString("2024-01-16")} />)
+      expect(textarea).toHaveValue("Entry for Jan 16")
+    })
+
+    it("resets edit mode when navigating to a new date", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [
+          {
+            id: "msg-1",
+            role: "assistant",
+            content: "Response",
+            createdAt: Date.now(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const docWithConversation = {
+        entries: {
+          "2024-01-15": {
+            id: "entry-1",
+            date: "2024-01-15",
+            messages: [
+              {
+                id: "user-1",
+                role: "user" as const,
+                content: "Journal entry",
+                createdAt: Date.now(),
+              },
+              {
+                id: "assistant-1",
+                role: "assistant" as const,
+                content: "Response",
+                createdAt: Date.now(),
+              },
+            ],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+          claudeApiKey: "sk-ant-test123",
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: docWithConversation,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      const { rerender } = render(<DayView date={toDateString("2024-01-15")} />)
+
+      // Enter edit mode
+      const editButton = screen.getByRole("button", { name: /edit journal entry/i })
+      await user.click(editButton)
+
+      // Should be in edit mode
+      expect(screen.getByRole("textbox", { name: /journal entry/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /done editing/i })).toBeInTheDocument()
+
+      // Reset the mock for a different date with no conversation
+      vi.mocked(useLLM).mockReturnValue({
+        messages: [],
+        isLoading: false,
+        error: null,
+        send: vi.fn().mockResolvedValue({ content: "Mock response", success: true }),
+        reset: vi.fn(),
+        setMessages: vi.fn(),
+      })
+
+      const emptyDoc = {
+        entries: {},
+        settings: {
+          displayName: "",
+          timezone: "UTC",
+          theme: "system" as const,
+          llmProvider: "claude" as const,
+        },
+      } as Doc<JournalDoc>
+
+      mockUseJournal.mockReturnValue({
+        doc: emptyDoc,
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      // Navigate to a different date
+      rerender(<DayView date={toDateString("2024-01-16")} />)
+
+      // Edit mode should be reset (no Done button should be visible)
+      expect(screen.queryByRole("button", { name: /done editing/i })).not.toBeInTheDocument()
+    })
+
+    // Note: Test for handling undefined entries object is tracked as bug j-mn1
+    // Currently the component crashes in this scenario
+  })
+
   describe("Conversation persistence", () => {
     it("passes follow-up user messages to LLMSection for restoration", async () => {
       // This test verifies that when a conversation with follow-up user messages
