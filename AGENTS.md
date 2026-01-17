@@ -101,6 +101,14 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - **E2e tests**: Playwright (Chromium only), auto-starts dev server on port 5173
 - Run single test: `pnpm test -- dates` or `pnpm test:pw app.spec.ts`
 
+**E2E test files:**
+
+- `e2e/app.spec.ts` - Basic app navigation tests
+- `e2e/date-picker.spec.ts` - Date picker functionality
+- `e2e/entry-editing.spec.ts` - Journal entry persistence
+- `e2e/navigation.spec.ts` - Keyboard and swipe navigation
+- `e2e/settings.spec.ts` - Settings page functionality including theme selection, AI provider selection, API key management (save/load/clear/validation)
+
 ---
 
 ## Issue Tracking
