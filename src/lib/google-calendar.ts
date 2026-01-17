@@ -11,6 +11,12 @@ import {
   type EncryptedData,
 } from "./crypto"
 import { isValidDate } from "./dates"
+import {
+  withConcurrencyAndRetry,
+  RateLimitError,
+  type ConcurrencyConfig,
+  type RetryConfig,
+} from "./rate-limiter"
 
 // Google OAuth configuration
 // These should be set up in a Google Cloud project with Calendar API enabled
@@ -31,6 +37,22 @@ const CALENDAR_SCOPES = [
 
 // Local storage keys for token persistence
 const TOKEN_STORAGE_KEY = "google_calendar_tokens"
+
+// Rate limiting configuration for Google Calendar API
+// Google's Calendar API has a limit of 10 requests per second per user
+// We use conservative defaults to stay well under this limit
+const DEFAULT_CALENDAR_CONCURRENCY: ConcurrencyConfig = {
+  maxConcurrent: 3, // Max parallel calendar requests
+  delayBetweenRequestsMs: 100, // Small delay between starting requests
+}
+
+const DEFAULT_CALENDAR_RETRY: RetryConfig = {
+  maxRetries: 3, // Retry up to 3 times
+  initialDelayMs: 1000, // Start with 1 second delay
+  maxDelayMs: 30000, // Cap at 30 seconds
+  backoffMultiplier: 2, // Double the delay each retry
+  jitterFactor: 0.1, // Add 10% jitter
+}
 
 /**
  * OAuth tokens returned from Google
@@ -421,6 +443,16 @@ export async function fetchEventsForDate(
           error: "Authentication expired. Please reconnect your Google account.",
         }
       }
+      // Handle rate limiting (429) and server errors (5xx) with retryable errors
+      if (response.status === 429 || response.status >= 500) {
+        const retryAfter = response.headers.get("Retry-After")
+        const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined
+        throw new RateLimitError(
+          `API rate limit or server error (${response.status})`,
+          response.status,
+          Number.isNaN(retryAfterSeconds) ? undefined : retryAfterSeconds,
+        )
+      }
       const errorData = await response.json().catch(() => ({}))
       return {
         events: [],
@@ -474,15 +506,30 @@ export async function fetchEventsForDate(
 }
 
 /**
- * Fetch events from all accessible calendars for a specific date
+ * Options for fetching events with rate limiting
+ */
+export interface FetchAllEventsOptions {
+  /** Override default concurrency settings */
+  concurrency?: ConcurrencyConfig
+  /** Override default retry settings */
+  retry?: RetryConfig
+}
+
+/**
+ * Fetch events from all accessible calendars for a specific date.
+ *
+ * Uses controlled concurrency and exponential backoff to avoid hitting
+ * Google's API rate limits (10 requests/second per user).
  *
  * @param tokens - Valid OAuth tokens
  * @param date - Date in YYYY-MM-DD format
+ * @param options - Optional rate limiting configuration
  * @returns Array of calendar events from all calendars
  */
 export async function fetchAllEventsForDate(
   tokens: GoogleTokens,
   date: string,
+  options: FetchAllEventsOptions = {},
 ): Promise<CalendarEventsResponse> {
   // Validate date format
   if (!isValidDate(date)) {
@@ -492,6 +539,9 @@ export async function fetchAllEventsForDate(
       error: `Invalid date format: ${date}. Expected YYYY-MM-DD`,
     }
   }
+
+  const concurrencyConfig = { ...DEFAULT_CALENDAR_CONCURRENCY, ...options.concurrency }
+  const retryConfig = { ...DEFAULT_CALENDAR_RETRY, ...options.retry }
 
   try {
     // First, get the list of calendars
@@ -509,6 +559,16 @@ export async function fetchAllEventsForDate(
           error: "Authentication expired. Please reconnect your Google account.",
         }
       }
+      // Handle rate limiting on calendar list fetch
+      if (calendarListResponse.status === 429 || calendarListResponse.status >= 500) {
+        const retryAfter = calendarListResponse.headers.get("Retry-After")
+        const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined
+        throw new RateLimitError(
+          `API rate limit or server error (${calendarListResponse.status})`,
+          calendarListResponse.status,
+          Number.isNaN(retryAfterSeconds) ? undefined : retryAfterSeconds,
+        )
+      }
       return {
         events: [],
         success: false,
@@ -519,19 +579,51 @@ export async function fetchAllEventsForDate(
     const calendarListData = await calendarListResponse.json()
     const calendars: { id: string }[] = calendarListData.items ?? []
 
-    // Fetch events from all calendars in parallel
-    const eventPromises = calendars.map(calendar => fetchEventsForDate(tokens, date, calendar.id))
-    const results = await Promise.all(eventPromises)
+    // If no calendars, return empty success
+    if (calendars.length === 0) {
+      return {
+        events: [],
+        success: true,
+      }
+    }
+
+    // Fetch events from all calendars with rate limiting and retries
+    // Each task is a function that fetches events for one calendar
+    const tasks = calendars.map(calendar => async () => {
+      const result = await fetchEventsForDate(tokens, date, calendar.id)
+      // If fetchEventsForDate returns an error (not a thrown exception),
+      // convert it to a thrown error so the retry logic can handle it
+      if (!result.success && result.error) {
+        // Only throw for transient errors, not for auth or validation errors
+        if (
+          result.error.includes("rate limit") ||
+          result.error.includes("server error") ||
+          result.error.includes("429") ||
+          result.error.includes("5")
+        ) {
+          throw new Error(result.error)
+        }
+      }
+      return result
+    })
+
+    const results = await withConcurrencyAndRetry(tasks, concurrencyConfig, retryConfig)
 
     // Combine all events
     const allEvents: CalendarEvent[] = []
     const errors: string[] = []
 
     for (const result of results) {
-      if (result.success) {
-        allEvents.push(...result.events)
+      if (result.success && result.value) {
+        // Result from successful rate-limited call
+        if (result.value.success) {
+          allEvents.push(...result.value.events)
+        } else if (result.value.error) {
+          errors.push(result.value.error)
+        }
       } else if (result.error) {
-        errors.push(result.error)
+        // Result from failed rate-limited call (after all retries)
+        errors.push(result.error.message)
       }
     }
 

@@ -440,17 +440,34 @@ describe("google-calendar", () => {
       expect(result.error).toBe("Authentication expired. Please reconnect your Google account.")
     })
 
-    it("returns error on API failure", async () => {
+    it("returns error on API failure (5xx)", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
+        headers: { get: () => null },
         json: async () => ({ error: { message: "Server error" } }),
       })
 
       const result = await fetchEventsForDate(mockTokens, "2024-01-15")
 
+      // 500 errors are now retryable and throw RateLimitError, which is caught
+      // and converted to an error response
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Server error")
+      expect(result.error).toContain("rate limit or server error")
+      expect(result.error).toContain("500")
+    })
+
+    it("returns error on API failure (4xx non-401)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: { message: "Bad request" } }),
+      })
+
+      const result = await fetchEventsForDate(mockTokens, "2024-01-15")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Bad request")
     })
 
     it("handles network errors", async () => {
@@ -577,6 +594,109 @@ describe("google-calendar", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe("Invalid date format: 2024/01/15. Expected YYYY-MM-DD")
       expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("returns empty success for no calendars", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: [] }),
+      })
+
+      const result = await fetchAllEventsForDate(mockTokens, "2024-01-15")
+
+      expect(result.success).toBe(true)
+      expect(result.events).toHaveLength(0)
+    })
+
+    it("uses rate limiting with configured concurrency", async () => {
+      // Track the timing of fetch calls to verify rate limiting
+      const callTimes: number[] = []
+
+      // First call: get calendar list with 5 calendars
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [{ id: "cal1" }, { id: "cal2" }, { id: "cal3" }, { id: "cal4" }, { id: "cal5" }],
+        }),
+      })
+
+      // Mock 5 calendar event requests
+      for (let i = 0; i < 5; i++) {
+        mockFetch.mockImplementationOnce(async () => {
+          callTimes.push(Date.now())
+          return {
+            ok: true,
+            json: async () => ({ items: [] }),
+          }
+        })
+      }
+
+      await fetchAllEventsForDate(mockTokens, "2024-01-15", {
+        concurrency: { maxConcurrent: 2, delayBetweenRequestsMs: 50 },
+      })
+
+      // Verify calls were made (1 calendar list + 5 events)
+      expect(mockFetch).toHaveBeenCalledTimes(6)
+
+      // With maxConcurrent: 2 and 5 calendars, requests should be staggered
+      // Check that there's at least some spacing between calls
+      if (callTimes.length >= 2) {
+        const timeDiff = callTimes[1] - callTimes[0]
+        expect(timeDiff).toBeGreaterThanOrEqual(40) // Allow some timing variance
+      }
+    })
+
+    it("handles rate limit errors on calendar list fetch", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: { get: () => "5" },
+        json: async () => ({}),
+      })
+
+      const result = await fetchAllEventsForDate(mockTokens, "2024-01-15")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain("rate limit")
+    })
+
+    it("continues fetching other calendars when one fails", async () => {
+      // First call: get calendar list
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [{ id: "cal1" }, { id: "cal2" }],
+        }),
+      })
+
+      // First calendar succeeds
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: "event-1",
+              summary: "Event 1",
+              start: { dateTime: "2024-01-15T10:00:00Z" },
+              end: { dateTime: "2024-01-15T11:00:00Z" },
+            },
+          ],
+        }),
+      })
+
+      // Second calendar fails with 403 (non-retryable)
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({ error: { message: "Forbidden" } }),
+      })
+
+      const result = await fetchAllEventsForDate(mockTokens, "2024-01-15")
+
+      // Should succeed with partial results
+      expect(result.success).toBe(true)
+      expect(result.events).toHaveLength(1)
+      expect(result.events[0].summary).toBe("Event 1")
     })
   })
 
