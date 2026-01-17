@@ -229,20 +229,22 @@ export function LLMSection({
         </div>
       )}
 
-      {/* Conversation display - only show assistant responses */}
-      {messages.filter(m => m.role === "assistant").length > 0 && (
+      {/* Conversation display - show all messages */}
+      {messages.length > 0 && (
         <div className="flex flex-col gap-3">
-          {messages
-            .filter(message => message.role === "assistant")
-            .map(message => (
-              <div
-                key={message.id}
-                className="bg-muted rounded-md p-4"
-                data-testid="assistant-response"
-              >
-                <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
-              </div>
-            ))}
+          {messages.map(message => (
+            <div
+              key={message.id}
+              className={
+                message.role === "assistant" ?
+                  "bg-muted rounded-md p-4"
+                : "bg-primary/10 rounded-md p-4"
+              }
+              data-testid={message.role === "assistant" ? "assistant-response" : "user-message"}
+            >
+              <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+            </div>
+          ))}
         </div>
       )}
 

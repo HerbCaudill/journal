@@ -48,7 +48,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `App` - Main application component that handles routing, auto-captures location when viewing today's entry (if geolocation is available and not denied), passes location data to Header, and includes Footer on day view (not on settings)
 - `CalendarEvents` - Displays Google Calendar events for the current day (shown at top of DayView)
 - `EntryEditor` - Textarea with 500ms debounced auto-save to Automerge; displays save indicator ("Saving..." while debouncing, "Saved" briefly after save completes)
-- `LLMSection` - Claude chat-style input with submit button inside container (lower right). Displays only assistant responses (not user messages, since the journal entry is already visible). Provider-agnostic (supports Claude and OpenAI). Auto-focuses the follow-up input when a response is received.
+- `LLMSection` - Claude chat-style input with submit button inside container (lower right). Displays all conversation messages (both user and assistant) with distinct styling. Provider-agnostic (supports Claude and OpenAI). Auto-focuses the follow-up input when a response is received.
 - `SwipeContainer` - Wrapper providing swipe and keyboard navigation between days
 - `ErrorBoundary` - React error boundary wrapping the app; catches runtime errors and displays a user-friendly error page with recovery options (reload/go home)
 
