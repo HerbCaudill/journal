@@ -300,5 +300,26 @@ describe("DatePicker", () => {
       june10Button.click()
       expect(onDateSelect).toHaveBeenCalledWith("2024-06-10")
     })
+
+    it("shows tooltip explaining why future dates are disabled", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2024, 5, 15, 12, 0, 0)) // June 15, 2024
+
+      render(<DatePicker selectedDate="2024-06-15" onDateSelect={vi.fn()} />)
+
+      // Future dates should have a tooltip explaining why they can't be selected
+      const june16Button = screen.getByRole("button", { name: "2024-06-16" })
+      expect(june16Button).toHaveAttribute("title", "Cannot select future dates")
+
+      const june20Button = screen.getByRole("button", { name: "2024-06-20" })
+      expect(june20Button).toHaveAttribute("title", "Cannot select future dates")
+
+      // Today and past dates should not have this tooltip
+      const todayButton = screen.getByRole("button", { name: "2024-06-15" })
+      expect(todayButton).not.toHaveAttribute("title")
+
+      const june10Button = screen.getByRole("button", { name: "2024-06-10" })
+      expect(june10Button).not.toHaveAttribute("title")
+    })
   })
 })

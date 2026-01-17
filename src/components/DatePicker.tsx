@@ -206,6 +206,7 @@ export function DatePicker({ selectedDate, onDateSelect, onClose }: DatePickerPr
               key={date}
               onClick={() => handleDateClick(date)}
               disabled={isFuture}
+              title={isFuture ? "Cannot select future dates" : undefined}
               className={`relative rounded p-2 text-sm transition-colors ${
                 isFuture ? "cursor-not-allowed text-gray-300 dark:text-gray-700"
                 : !isCurrentMonth ? "text-muted-foreground/50"
