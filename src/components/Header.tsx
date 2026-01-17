@@ -132,8 +132,6 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
           <h1 className="flex flex-col items-center text-center">
             <span className="text-2xl leading-tight font-bold">{getDayOfWeek(date)}</span>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
-              {position && <LocationBadge position={position} onClick={onLocationClick} />}
               {showNavigation && (
                 <button
                   ref={calendarButtonRef}
@@ -146,6 +144,8 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
                   <CalendarIcon />
                 </button>
               )}
+              <span className="text-muted-foreground text-sm font-normal">{getMonthDay(date)}</span>
+              {position && <LocationBadge position={position} onClick={onLocationClick} />}
             </div>
           </h1>
           {showNavigation && isDatePickerOpen && (
@@ -216,8 +216,8 @@ function CalendarIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
+      width="12"
+      height="12"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
