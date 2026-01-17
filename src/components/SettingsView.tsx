@@ -19,6 +19,28 @@ import {
   SETTINGS_INITIAL_LOAD_DELAY,
 } from "@/lib/timing"
 
+/**
+ * Displays a save status indicator for autosaved fields.
+ * Shows "Saving..." when saving, "Saved" when complete, or nothing when idle.
+ */
+function SaveStatusIndicator({
+  status,
+  testId,
+}: {
+  status: "idle" | "saving" | "saved"
+  testId?: string
+}) {
+  if (status === "idle") return null
+  return (
+    <p
+      className={`text-sm ${status === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
+      data-testid={testId}
+    >
+      {status === "saving" ? "Saving..." : "Saved"}
+    </p>
+  )
+}
+
 // Environment variable defaults for API keys
 const ENV_CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY ?? ""
 // TODO: Uncomment when OpenAI functionality is implemented (j-3q0)
@@ -455,14 +477,7 @@ export function SettingsView() {
             aria-label="Bio"
           />
 
-          {bioSaveStatus !== "idle" && (
-            <p
-              className={`text-sm ${bioSaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
-              data-testid="bio-save-status"
-            >
-              {bioSaveStatus === "saving" ? "Saving..." : "Saved"}
-            </p>
-          )}
+          <SaveStatusIndicator status={bioSaveStatus} testId="bio-save-status" />
         </div>
       </section>
 
@@ -483,14 +498,7 @@ export function SettingsView() {
             aria-label="Additional instructions"
           />
 
-          {instructionsSaveStatus !== "idle" && (
-            <p
-              className={`text-sm ${instructionsSaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
-              data-testid="instructions-save-status"
-            >
-              {instructionsSaveStatus === "saving" ? "Saving..." : "Saved"}
-            </p>
-          )}
+          <SaveStatusIndicator status={instructionsSaveStatus} testId="instructions-save-status" />
         </div>
       </section>
 
@@ -548,13 +556,11 @@ export function SettingsView() {
               </p>
             )}
 
-            {claudeApiKeySaveStatus !== "idle" && !claudeApiKeyError && (
-              <p
-                className={`text-sm ${claudeApiKeySaveStatus === "saving" ? "text-muted-foreground" : "text-green-600 dark:text-green-400"}`}
-                data-testid="claude-api-key-save-status"
-              >
-                {claudeApiKeySaveStatus === "saving" ? "Saving..." : "Saved"}
-              </p>
+            {!claudeApiKeyError && (
+              <SaveStatusIndicator
+                status={claudeApiKeySaveStatus}
+                testId="claude-api-key-save-status"
+              />
             )}
 
             {claudeApiKey && claudeApiKeySaveStatus === "idle" && !claudeApiKeyError && (
