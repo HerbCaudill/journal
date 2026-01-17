@@ -158,7 +158,8 @@ export function SettingsView() {
   const handleClearClaudeApiKey = useCallback(() => {
     if (!doc) return
 
-    setClaudeApiKey("")
+    // Clear the saved value - local state falls back to env variable if available
+    setClaudeApiKey(ENV_CLAUDE_API_KEY)
     changeDoc(d => {
       d.settings.claudeApiKey = ""
     })
