@@ -208,23 +208,23 @@ export function LLMSection({
         </div>
       )}
 
-      {/* Conversation display */}
-      {messages.length > 0 && (
+      {/* Conversation display - only show assistant responses */}
+      {messages.filter(m => m.role === "assistant").length > 0 && (
         <div className="flex flex-col gap-3">
-          {messages.map(message => (
-            <div
-              key={message.id}
-              className={`rounded-md p-4 ${
-                message.role === "user" ? "bg-primary/10 ml-8 text-right" : "bg-muted mr-8"
-              }`}
-              data-testid={message.role === "user" ? "user-message" : "assistant-response"}
-            >
-              <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
-              <span className="text-muted-foreground mt-2 block text-xs">
-                {formatTime(message.createdAt)}
-              </span>
-            </div>
-          ))}
+          {messages
+            .filter(message => message.role === "assistant")
+            .map(message => (
+              <div
+                key={message.id}
+                className="bg-muted rounded-md p-4"
+                data-testid="assistant-response"
+              >
+                <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+                <span className="text-muted-foreground mt-2 block text-xs">
+                  {formatTime(message.createdAt)}
+                </span>
+              </div>
+            ))}
         </div>
       )}
 

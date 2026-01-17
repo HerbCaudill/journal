@@ -144,7 +144,7 @@ describe("LLMSection", () => {
       expect(screen.getByText("Hi there! How can I help?")).toBeInTheDocument()
     })
 
-    it("displays both user and assistant messages", () => {
+    it("displays only assistant messages, not user messages", () => {
       const messages: Message[] = [
         { id: "1", role: "user", content: "User message", createdAt: Date.now() },
         { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
@@ -161,11 +161,11 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      expect(screen.getByText("User message")).toBeInTheDocument()
+      expect(screen.queryByText("User message")).not.toBeInTheDocument()
       expect(screen.getByText("Assistant message")).toBeInTheDocument()
     })
 
-    it("styles user messages differently from assistant messages", () => {
+    it("styles assistant messages with muted background", () => {
       const messages: Message[] = [
         { id: "1", role: "user", content: "User message", createdAt: Date.now() },
         { id: "2", role: "assistant", content: "Assistant message", createdAt: Date.now() },
@@ -182,12 +182,9 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      const userMessage = screen.getByTestId("user-message")
-      const assistantMessage = screen.getByTestId("assistant-response")
-
-      expect(userMessage).toHaveClass("text-right")
-      expect(userMessage).toHaveClass("ml-8")
-      expect(assistantMessage).toHaveClass("mr-8")
+      const assistantMessages = screen.getAllByTestId("assistant-response")
+      expect(assistantMessages).toHaveLength(1)
+      expect(assistantMessages[0]).toHaveClass("bg-muted")
     })
 
     it("shows Clear button when there are messages", () => {
@@ -332,7 +329,7 @@ describe("LLMSection", () => {
       })
     })
 
-    it("displays full conversation with multiple messages", () => {
+    it("displays only assistant responses from multi-turn conversation", () => {
       const messages: Message[] = [
         { id: "1", role: "user", content: "First question", createdAt: 1000 },
         { id: "2", role: "assistant", content: "First response", createdAt: 1001 },
@@ -351,13 +348,11 @@ describe("LLMSection", () => {
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
-      const userMessages = screen.getAllByTestId("user-message")
       const assistantMessages = screen.getAllByTestId("assistant-response")
-      expect(userMessages).toHaveLength(2)
       expect(assistantMessages).toHaveLength(2)
-      expect(screen.getByText("First question")).toBeInTheDocument()
+      expect(screen.queryByText("First question")).not.toBeInTheDocument()
       expect(screen.getByText("First response")).toBeInTheDocument()
-      expect(screen.getByText("Second question")).toBeInTheDocument()
+      expect(screen.queryByText("Second question")).not.toBeInTheDocument()
       expect(screen.getByText("Second response")).toBeInTheDocument()
     })
   })
