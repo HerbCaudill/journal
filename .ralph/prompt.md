@@ -2,8 +2,7 @@ Before doing anything, run `pnpm build && pnpm test:all`.
 
 If there are build errors or test failures:
 
-- Fix them until the build succeeds and all tests pass.
-- Commit your changes.
+- File an issue describing the errors.
 - End your turn.
 
 If there are no errors:
