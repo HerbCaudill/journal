@@ -15,4 +15,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Clear env variables for tests to ensure consistent test behavior
+    "import.meta.env.VITE_CLAUDE_API_KEY": JSON.stringify(""),
+    "import.meta.env.VITE_OPENAI_API_KEY": JSON.stringify(""),
+    "import.meta.env.VITE_GOOGLE_CLIENT_ID": JSON.stringify(""),
+  },
 })

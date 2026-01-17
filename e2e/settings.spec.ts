@@ -214,7 +214,11 @@ test.describe("Claude API key management", () => {
     const apiKeyInput = page.getByLabel("Claude API key")
     const saveButton = page.getByRole("button", { name: "Save" })
 
-    // Enter and save a valid API key
+    // Get the initial value to check if env variable is set
+    const initialValue = await apiKeyInput.inputValue()
+    const hasEnvVariable = initialValue.startsWith("sk-ant-")
+
+    // Enter and save a valid API key (different from env variable)
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
     await saveButton.click()
     await expect(page.getByText("Claude API key configured")).toBeVisible()
@@ -223,11 +227,18 @@ test.describe("Claude API key management", () => {
     const clearButton = page.getByRole("button", { name: "Clear" })
     await clearButton.click()
 
-    // Input should be empty
-    await expect(apiKeyInput).toHaveValue("")
-
-    // Configured status should be gone
-    await expect(page.getByText("Claude API key configured")).toBeHidden()
+    // After clearing, the input should show the env variable value (if set) or be empty
+    if (hasEnvVariable) {
+      // Env variable fallback - input shows env value
+      await expect(apiKeyInput).toHaveValue(initialValue)
+      // Configured status should still show (from env variable)
+      await expect(page.getByText("Claude API key configured")).toBeVisible()
+    } else {
+      // No env variable - input should be empty
+      await expect(apiKeyInput).toHaveValue("")
+      // Configured status should be gone
+      await expect(page.getByText("Claude API key configured")).toBeHidden()
+    }
   })
 
   test("saved API key persists across navigation", async ({ page }) => {
@@ -322,7 +333,11 @@ test.describe("OpenAI API key management", () => {
     const apiKeyInput = page.getByLabel("OpenAI API key")
     const saveButton = page.getByRole("button", { name: "Save" })
 
-    // Enter and save a valid API key
+    // Get the initial value to check if env variable is set
+    const initialValue = await apiKeyInput.inputValue()
+    const hasEnvVariable = initialValue.startsWith("sk-")
+
+    // Enter and save a valid API key (different from env variable)
     await apiKeyInput.fill("sk-proj-test-key-123456789012345678901234567890")
     await saveButton.click()
     await expect(page.getByText("OpenAI API key configured")).toBeVisible()
@@ -331,11 +346,18 @@ test.describe("OpenAI API key management", () => {
     const clearButton = page.getByRole("button", { name: "Clear" })
     await clearButton.click()
 
-    // Input should be empty
-    await expect(apiKeyInput).toHaveValue("")
-
-    // Configured status should be gone
-    await expect(page.getByText("OpenAI API key configured")).toBeHidden()
+    // After clearing, the input should show the env variable value (if set) or be empty
+    if (hasEnvVariable) {
+      // Env variable fallback - input shows env value
+      await expect(apiKeyInput).toHaveValue(initialValue)
+      // Configured status should still show (from env variable)
+      await expect(page.getByText("OpenAI API key configured")).toBeVisible()
+    } else {
+      // No env variable - input should be empty
+      await expect(apiKeyInput).toHaveValue("")
+      // Configured status should be gone
+      await expect(page.getByText("OpenAI API key configured")).toBeHidden()
+    }
   })
 
   // Note: OpenAI API key persistence to home page is not tested because

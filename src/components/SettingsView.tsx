@@ -346,7 +346,9 @@ export function SettingsView() {
             <div className="flex items-center gap-2">
               <button
                 type="submit"
-                disabled={!hasClaudeUnsavedChanges || saveStatus === "saving"}
+                disabled={
+                  !claudeApiKey.trim() || !hasClaudeUnsavedChanges || saveStatus === "saving"
+                }
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saveStatus === "saving" ?
@@ -447,7 +449,9 @@ export function SettingsView() {
             <div className="flex items-center gap-2">
               <button
                 type="submit"
-                disabled={!hasOpenaiUnsavedChanges || saveStatus === "saving"}
+                disabled={
+                  !openaiApiKey.trim() || !hasOpenaiUnsavedChanges || saveStatus === "saving"
+                }
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saveStatus === "saving" ?
