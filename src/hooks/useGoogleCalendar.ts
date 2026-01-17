@@ -7,7 +7,6 @@ import {
   clearStoredTokens,
   fetchAllEventsForDate,
   isGoogleCalendarConfigured,
-  isAuthenticated as checkIsAuthenticated,
   type CalendarEvent,
   type GoogleCalendarConfig,
 } from "../lib/google-calendar"
@@ -93,11 +92,13 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
     [options.clientId, options.redirectUri],
   )
 
+  // Start with 'unauthenticated' and let useEffect determine the actual state
+  // since checkIsAuthenticated is now async
   const [authState, setAuthState] = useState<GoogleCalendarAuthState>(() => {
     if (!isGoogleCalendarConfigured(options.clientId)) {
       return "unconfigured"
     }
-    return checkIsAuthenticated() ? "authenticated" : "unauthenticated"
+    return "unauthenticated"
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -177,7 +178,7 @@ export function useGoogleCalendar(options: UseGoogleCalendarOptions = {}): UseGo
 
         // Exchange code for tokens
         const tokens = await exchangeCodeForTokens(code, storedVerifier, config)
-        storeTokens(tokens)
+        await storeTokens(tokens)
 
         setAuthState("authenticated")
         return true

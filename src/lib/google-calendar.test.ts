@@ -19,25 +19,6 @@ import {
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
-// Mock crypto
-const mockGetRandomValues = vi.fn((array: Uint8Array) => {
-  for (let i = 0; i < array.length; i++) {
-    array[i] = i % 256
-  }
-  return array
-})
-
-const mockDigest = vi.fn(async () => new ArrayBuffer(32))
-
-Object.defineProperty(global, "crypto", {
-  value: {
-    getRandomValues: mockGetRandomValues,
-    subtle: {
-      digest: mockDigest,
-    },
-  },
-})
-
 // Mock localStorage
 const mockLocalStorage: Record<string, string> = {}
 const localStorageMock = {
@@ -187,33 +168,65 @@ describe("google-calendar", () => {
       tokenType: "Bearer",
     }
 
-    it("stores and retrieves tokens", () => {
-      storeTokens(mockTokens)
+    it("stores and retrieves tokens (encrypted)", async () => {
+      await storeTokens(mockTokens)
 
+      // Verify something was stored (encrypted format)
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         "google_calendar_tokens",
-        JSON.stringify(mockTokens),
+        expect.any(String),
       )
 
-      const retrieved = getStoredTokens()
+      // The stored value should be encrypted (JSON with iv, ciphertext, version)
+      const storedValue = mockLocalStorage["google_calendar_tokens"]
+      const parsed = JSON.parse(storedValue)
+      expect(parsed).toHaveProperty("iv")
+      expect(parsed).toHaveProperty("ciphertext")
+      expect(parsed).toHaveProperty("version", 1)
+
+      const retrieved = await getStoredTokens()
       expect(retrieved).toEqual(mockTokens)
     })
 
-    it("returns null when no tokens stored", () => {
-      const tokens = getStoredTokens()
+    it("returns null when no tokens stored", async () => {
+      const tokens = await getStoredTokens()
       expect(tokens).toBeNull()
     })
 
-    it("returns null for invalid JSON", () => {
+    it("returns null and clears storage for corrupted data", async () => {
       mockLocalStorage["google_calendar_tokens"] = "invalid json"
-      const tokens = getStoredTokens()
+      const tokens = await getStoredTokens()
       expect(tokens).toBeNull()
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith("google_calendar_tokens")
     })
 
-    it("clears stored tokens", () => {
-      storeTokens(mockTokens)
+    it("clears stored tokens", async () => {
+      await storeTokens(mockTokens)
       clearStoredTokens()
       expect(localStorageMock.removeItem).toHaveBeenCalledWith("google_calendar_tokens")
+    })
+
+    it("migrates unencrypted tokens to encrypted format", async () => {
+      // Store unencrypted tokens directly (simulating legacy data)
+      mockLocalStorage["google_calendar_tokens"] = JSON.stringify(mockTokens)
+
+      // First read should migrate
+      const retrieved = await getStoredTokens()
+      expect(retrieved).toEqual(mockTokens)
+
+      // After migration, storage should contain encrypted data
+      const storedValue = mockLocalStorage["google_calendar_tokens"]
+      const parsed = JSON.parse(storedValue)
+      expect(parsed).toHaveProperty("iv")
+      expect(parsed).toHaveProperty("ciphertext")
+      expect(parsed).toHaveProperty("version", 1)
+    })
+
+    it("returns null for data that is not valid tokens", async () => {
+      // Store something that parses as JSON but isn't tokens
+      mockLocalStorage["google_calendar_tokens"] = JSON.stringify({ foo: "bar" })
+      const tokens = await getStoredTokens()
+      expect(tokens).toBeNull()
     })
   })
 
@@ -259,7 +272,8 @@ describe("google-calendar", () => {
         expiresAt: Date.now() + 10 * 60 * 1000,
         tokenType: "Bearer",
       }
-      mockLocalStorage["google_calendar_tokens"] = JSON.stringify(validTokens)
+      // Store encrypted tokens
+      await storeTokens(validTokens)
 
       const tokens = await getValidTokens()
       expect(tokens).toEqual(validTokens)
@@ -272,7 +286,8 @@ describe("google-calendar", () => {
         expiresAt: Date.now() - 1000,
         tokenType: "Bearer",
       }
-      mockLocalStorage["google_calendar_tokens"] = JSON.stringify(expiredTokens)
+      // Store encrypted tokens
+      await storeTokens(expiredTokens)
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -294,7 +309,8 @@ describe("google-calendar", () => {
         expiresAt: Date.now() - 1000,
         tokenType: "Bearer",
       }
-      mockLocalStorage["google_calendar_tokens"] = JSON.stringify(expiredTokens)
+      // Store encrypted tokens
+      await storeTokens(expiredTokens)
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -509,18 +525,36 @@ describe("google-calendar", () => {
   })
 
   describe("isAuthenticated", () => {
-    it("returns false when no tokens stored", () => {
-      expect(isAuthenticated()).toBe(false)
+    it("returns false when no tokens stored", async () => {
+      expect(await isAuthenticated()).toBe(false)
     })
 
-    it("returns true when tokens are stored", () => {
+    it("returns true when tokens are stored (encrypted)", async () => {
       const tokens: GoogleTokens = {
         accessToken: "access",
         expiresAt: Date.now() + 3600000,
         tokenType: "Bearer",
       }
+      // Store encrypted tokens
+      await storeTokens(tokens)
+      expect(await isAuthenticated()).toBe(true)
+    })
+
+    it("returns true for legacy unencrypted tokens and migrates them", async () => {
+      const tokens: GoogleTokens = {
+        accessToken: "access",
+        expiresAt: Date.now() + 3600000,
+        tokenType: "Bearer",
+      }
+      // Store unencrypted tokens (legacy)
       mockLocalStorage["google_calendar_tokens"] = JSON.stringify(tokens)
-      expect(isAuthenticated()).toBe(true)
+      expect(await isAuthenticated()).toBe(true)
+
+      // After isAuthenticated, tokens should be migrated to encrypted format
+      const storedValue = mockLocalStorage["google_calendar_tokens"]
+      const parsed = JSON.parse(storedValue)
+      expect(parsed).toHaveProperty("iv")
+      expect(parsed).toHaveProperty("ciphertext")
     })
   })
 })

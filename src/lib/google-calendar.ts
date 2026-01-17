@@ -3,6 +3,14 @@
  * Handles OAuth flow and Calendar API to fetch events
  */
 
+import {
+  deriveEncryptionKey,
+  encrypt,
+  decrypt,
+  isEncryptedData,
+  type EncryptedData,
+} from "./crypto"
+
 // Google OAuth configuration
 // These should be set up in a Google Cloud project with Calendar API enabled
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
@@ -246,22 +254,43 @@ export async function refreshAccessToken(
 }
 
 /**
- * Store tokens in local storage
+ * Store tokens in local storage (encrypted)
  */
-export function storeTokens(tokens: GoogleTokens): void {
-  localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokens))
+export async function storeTokens(tokens: GoogleTokens): Promise<void> {
+  const key = await deriveEncryptionKey()
+  const encryptedData = await encrypt(JSON.stringify(tokens), key)
+  localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(encryptedData))
 }
 
 /**
- * Retrieve tokens from local storage
+ * Retrieve tokens from local storage (decrypts if encrypted, migrates if unencrypted)
  */
-export function getStoredTokens(): GoogleTokens | null {
+export async function getStoredTokens(): Promise<GoogleTokens | null> {
   const stored = localStorage.getItem(TOKEN_STORAGE_KEY)
   if (!stored) return null
 
   try {
-    return JSON.parse(stored) as GoogleTokens
+    // Check if the stored value is encrypted
+    if (isEncryptedData(stored)) {
+      const key = await deriveEncryptionKey()
+      const encryptedData = JSON.parse(stored) as EncryptedData
+      const decrypted = await decrypt(encryptedData, key)
+      return JSON.parse(decrypted) as GoogleTokens
+    }
+
+    // Handle unencrypted tokens (migration path)
+    const tokens = JSON.parse(stored) as GoogleTokens
+    // Validate that it looks like tokens and not some other data
+    if (tokens && typeof tokens.accessToken === "string" && typeof tokens.expiresAt === "number") {
+      // Migrate to encrypted storage
+      await storeTokens(tokens)
+      return tokens
+    }
+
+    return null
   } catch {
+    // If decryption fails or data is corrupted, clear the tokens
+    clearStoredTokens()
     return null
   }
 }
@@ -287,7 +316,7 @@ export function isTokenExpired(tokens: GoogleTokens): boolean {
 export async function getValidTokens(
   config: GoogleCalendarConfig = {},
 ): Promise<GoogleTokens | null> {
-  const tokens = getStoredTokens()
+  const tokens = await getStoredTokens()
   if (!tokens) return null
 
   if (!isTokenExpired(tokens)) {
@@ -298,7 +327,7 @@ export async function getValidTokens(
   if (tokens.refreshToken) {
     try {
       const newTokens = await refreshAccessToken(tokens.refreshToken, config)
-      storeTokens(newTokens)
+      await storeTokens(newTokens)
       return newTokens
     } catch {
       // Refresh failed, clear tokens
@@ -519,7 +548,7 @@ export function isGoogleCalendarConfigured(clientId?: string): boolean {
 /**
  * Check if user is authenticated with Google
  */
-export function isAuthenticated(): boolean {
-  const tokens = getStoredTokens()
+export async function isAuthenticated(): Promise<boolean> {
+  const tokens = await getStoredTokens()
   return tokens !== null
 }

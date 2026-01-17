@@ -8,11 +8,11 @@ vi.mock("../lib/google-calendar", () => ({
   getAuthUrl: vi.fn(),
   exchangeCodeForTokens: vi.fn(),
   getValidTokens: vi.fn(),
-  storeTokens: vi.fn(),
+  storeTokens: vi.fn().mockResolvedValue(undefined),
   clearStoredTokens: vi.fn(),
   fetchAllEventsForDate: vi.fn(),
   isGoogleCalendarConfigured: vi.fn(),
-  isAuthenticated: vi.fn(),
+  isAuthenticated: vi.fn().mockResolvedValue(false),
 }))
 
 describe("useGoogleCalendar", () => {
@@ -55,8 +55,9 @@ describe("useGoogleCalendar", () => {
 
     // Default mocks
     vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
-    vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
+    vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(false)
     vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+    vi.mocked(googleCalendar.storeTokens).mockResolvedValue(undefined)
 
     // Store and mock window.location.href
     originalHref = window.location.href
@@ -88,7 +89,7 @@ describe("useGoogleCalendar", () => {
 
     it("initializes with unauthenticated state when configured but not authenticated", () => {
       vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(false)
 
       const { result } = renderHook(() => useGoogleCalendar())
 
@@ -97,7 +98,7 @@ describe("useGoogleCalendar", () => {
 
     it("initializes with authenticated state when authenticated", async () => {
       vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockReturnValue(true)
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(true)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
 
       const { result } = renderHook(() => useGoogleCalendar())
@@ -113,7 +114,7 @@ describe("useGoogleCalendar", () => {
       vi.mocked(googleCalendar.isGoogleCalendarConfigured).mockImplementation((clientId?: string) =>
         Boolean(clientId),
       )
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(false)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
 
       const { result } = renderHook(() => useGoogleCalendar({ clientId: "custom-client-id" }))
@@ -269,7 +270,7 @@ describe("useGoogleCalendar", () => {
 
   describe("fetchEvents", () => {
     it("fetches events for a specific date", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(true)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
       vi.mocked(googleCalendar.fetchAllEventsForDate).mockResolvedValue({
         events: mockEvents,
@@ -277,6 +278,11 @@ describe("useGoogleCalendar", () => {
       })
 
       const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
 
       let fetchedEvents: googleCalendar.CalendarEvent[]
       await act(async () => {
@@ -289,16 +295,23 @@ describe("useGoogleCalendar", () => {
     })
 
     it("sets loading state while fetching", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(true)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
 
+      const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      // Setup a controlled getValidTokens for the fetchEvents call
       let resolveTokens: (value: googleCalendar.GoogleTokens) => void
       vi.mocked(googleCalendar.getValidTokens).mockReturnValue(
         new Promise(resolve => {
           resolveTokens = resolve
         }),
       )
-
-      const { result } = renderHook(() => useGoogleCalendar())
 
       act(() => {
         result.current.fetchEvents("2024-01-15")
@@ -323,7 +336,7 @@ describe("useGoogleCalendar", () => {
     })
 
     it("returns error when not authenticated", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(false)
+      vi.mocked(googleCalendar.isAuthenticated).mockResolvedValue(false)
 
       const { result } = renderHook(() => useGoogleCalendar())
 
@@ -337,10 +350,18 @@ describe("useGoogleCalendar", () => {
     })
 
     it("handles expired tokens", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
-      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
+      // Initial check says authenticated, but getValidTokens returns null (expired)
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
 
       const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
+
+      // Now make getValidTokens return null for the fetchEvents call
+      vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(null)
 
       await act(async () => {
         await result.current.fetchEvents("2024-01-15")
@@ -353,7 +374,6 @@ describe("useGoogleCalendar", () => {
     })
 
     it("handles fetch errors", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
       vi.mocked(googleCalendar.fetchAllEventsForDate).mockResolvedValue({
         events: [],
@@ -362,6 +382,11 @@ describe("useGoogleCalendar", () => {
       })
 
       const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
 
       await act(async () => {
         await result.current.fetchEvents("2024-01-15")
@@ -372,7 +397,6 @@ describe("useGoogleCalendar", () => {
     })
 
     it("handles authentication expired error from API", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
       vi.mocked(googleCalendar.fetchAllEventsForDate).mockResolvedValue({
         events: [],
@@ -381,6 +405,11 @@ describe("useGoogleCalendar", () => {
       })
 
       const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
 
       await act(async () => {
         await result.current.fetchEvents("2024-01-15")
@@ -392,7 +421,6 @@ describe("useGoogleCalendar", () => {
 
   describe("signOut", () => {
     it("clears tokens and resets state", async () => {
-      vi.mocked(googleCalendar.isAuthenticated).mockReturnValue(true)
       vi.mocked(googleCalendar.getValidTokens).mockResolvedValue(mockTokens)
       vi.mocked(googleCalendar.fetchAllEventsForDate).mockResolvedValue({
         events: mockEvents,
@@ -400,6 +428,11 @@ describe("useGoogleCalendar", () => {
       })
 
       const { result } = renderHook(() => useGoogleCalendar())
+
+      // Wait for auth state to be authenticated
+      await waitFor(() => {
+        expect(result.current.authState).toBe("authenticated")
+      })
 
       // First fetch some events
       await act(async () => {
