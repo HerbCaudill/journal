@@ -202,28 +202,14 @@ test.describe("Claude API key management", () => {
     await expect(page.getByRole("alert")).toBeHidden()
   })
 
-  test("can toggle API key visibility", async ({ page }) => {
+  test("shows API key as plain text", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
 
     // Enter a key
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
 
-    // Initially should be password type (hidden)
-    await expect(apiKeyInput).toHaveAttribute("type", "password")
-
-    // Click show button
-    const showButton = page.getByLabel("Show API key")
-    await showButton.click()
-
-    // Should now be text type (visible)
+    // Should be text type (visible)
     await expect(apiKeyInput).toHaveAttribute("type", "text")
-
-    // Click hide button
-    const hideButton = page.getByLabel("Hide API key")
-    await hideButton.click()
-
-    // Should be password type again
-    await expect(apiKeyInput).toHaveAttribute("type", "password")
   })
 
   test("can clear saved API key", async ({ page }) => {

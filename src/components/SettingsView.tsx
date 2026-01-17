@@ -62,8 +62,6 @@ export function SettingsView() {
   const [bio, setBio] = useState("")
   const [additionalInstructions, setAdditionalInstructions] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
-  const [showClaudeApiKey, setShowClaudeApiKey] = useState(false)
-  const [showOpenaiApiKey, setShowOpenaiApiKey] = useState(false)
   const [claudeApiKeyError, setClaudeApiKeyError] = useState<string | null>(null)
   const [openaiApiKeyError, setOpenaiApiKeyError] = useState<string | null>(null)
   const { authState, authenticate, signOut, error: googleError, clearError } = useGoogleCalendar()
@@ -434,36 +432,22 @@ export function SettingsView() {
           </p>
 
           <form onSubmit={handleClaudeSubmit} className="flex flex-col gap-3">
-            <div className="relative">
-              <input
-                type={showClaudeApiKey ? "text" : "password"}
-                value={claudeApiKey}
-                onChange={e => {
-                  setClaudeApiKey(e.target.value)
-                  setClaudeApiKeyError(null) // Clear error when user types
-                }}
-                placeholder="sk-ant-..."
-                className={`bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
-                  claudeApiKeyError ? "border-destructive" : ""
-                }`}
-                aria-label="Claude API key"
-                aria-invalid={!!claudeApiKeyError}
-                aria-describedby={claudeApiKeyError ? "claude-api-key-error" : undefined}
-                autoComplete="off"
-              />
-              {claudeApiKey && (
-                <button
-                  type="button"
-                  onClick={() => setShowClaudeApiKey(!showClaudeApiKey)}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
-                  aria-label={showClaudeApiKey ? "Hide API key" : "Show API key"}
-                >
-                  {showClaudeApiKey ?
-                    <EyeOffIcon />
-                  : <EyeIcon />}
-                </button>
-              )}
-            </div>
+            <input
+              type="text"
+              value={claudeApiKey}
+              onChange={e => {
+                setClaudeApiKey(e.target.value)
+                setClaudeApiKeyError(null) // Clear error when user types
+              }}
+              placeholder="sk-ant-..."
+              className={`bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                claudeApiKeyError ? "border-destructive" : ""
+              }`}
+              aria-label="Claude API key"
+              aria-invalid={!!claudeApiKeyError}
+              aria-describedby={claudeApiKeyError ? "claude-api-key-error" : undefined}
+              autoComplete="off"
+            />
 
             <div className="flex items-center gap-2">
               <button
@@ -537,36 +521,22 @@ export function SettingsView() {
           </p>
 
           <form onSubmit={handleOpenaiSubmit} className="flex flex-col gap-3">
-            <div className="relative">
-              <input
-                type={showOpenaiApiKey ? "text" : "password"}
-                value={openaiApiKey}
-                onChange={e => {
-                  setOpenaiApiKey(e.target.value)
-                  setOpenaiApiKeyError(null) // Clear error when user types
-                }}
-                placeholder="sk-..."
-                className={`bg-background focus:ring-ring w-full rounded-md border p-3 pr-12 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
-                  openaiApiKeyError ? "border-destructive" : ""
-                }`}
-                aria-label="OpenAI API key"
-                aria-invalid={!!openaiApiKeyError}
-                aria-describedby={openaiApiKeyError ? "openai-api-key-error" : undefined}
-                autoComplete="off"
-              />
-              {openaiApiKey && (
-                <button
-                  type="button"
-                  onClick={() => setShowOpenaiApiKey(!showOpenaiApiKey)}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 p-1 transition-colors"
-                  aria-label={showOpenaiApiKey ? "Hide API key" : "Show API key"}
-                >
-                  {showOpenaiApiKey ?
-                    <EyeOffIcon />
-                  : <EyeIcon />}
-                </button>
-              )}
-            </div>
+            <input
+              type="text"
+              value={openaiApiKey}
+              onChange={e => {
+                setOpenaiApiKey(e.target.value)
+                setOpenaiApiKeyError(null) // Clear error when user types
+              }}
+              placeholder="sk-..."
+              className={`bg-background focus:ring-ring w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                openaiApiKeyError ? "border-destructive" : ""
+              }`}
+              aria-label="OpenAI API key"
+              aria-invalid={!!openaiApiKeyError}
+              aria-describedby={openaiApiKeyError ? "openai-api-key-error" : undefined}
+              autoComplete="off"
+            />
 
             <div className="flex items-center gap-2">
               <button
@@ -787,46 +757,6 @@ function GoogleIcon() {
         fill="currentColor"
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
-    </svg>
-  )
-}
-
-function EyeIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
-
-function EyeOffIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-      <line x1="2" x2="22" y1="2" y2="22" />
     </svg>
   )
 }

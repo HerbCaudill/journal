@@ -269,7 +269,7 @@ describe("SettingsView", () => {
     expect(backLink).toHaveAttribute("href", "#/")
   })
 
-  it("shows API key as masked password field by default", () => {
+  it("shows API key as plain text input", () => {
     vi.mocked(JournalContext.useJournal).mockReturnValue({
       doc: createMockDoc(),
       changeDoc: mockChangeDoc,
@@ -280,35 +280,7 @@ describe("SettingsView", () => {
     render(<SettingsView />)
 
     const input = screen.getByLabelText(/claude api key/i)
-    expect(input).toHaveAttribute("type", "password")
-  })
-
-  it("toggles API key visibility when show/hide button is clicked", () => {
-    vi.mocked(JournalContext.useJournal).mockReturnValue({
-      doc: createMockDoc("sk-ant-test-key"),
-      changeDoc: mockChangeDoc,
-      handle: undefined,
-      isLoading: false,
-    })
-
-    render(<SettingsView />)
-
-    const input = screen.getByLabelText(/claude api key/i)
-    expect(input).toHaveAttribute("type", "password")
-
-    // Show button should be visible when there's an API key
-    const showButton = screen.getByRole("button", { name: /show api key/i })
-    fireEvent.click(showButton)
-
-    // After clicking, the input type should be text
     expect(input).toHaveAttribute("type", "text")
-
-    // Hide button should now be visible
-    const hideButton = screen.getByRole("button", { name: /hide api key/i })
-    fireEvent.click(hideButton)
-
-    // After clicking hide, the input type should be password again
-    expect(input).toHaveAttribute("type", "password")
   })
 
   it("displays security warning notice", () => {
