@@ -64,10 +64,20 @@ export function DayView({ date }: DayViewProps) {
   // Show EntryEditor when: no conversation yet, OR in edit mode
   const showEditor = !hasConversation || isEditing
 
-  // Handle when Claude conversation changes
+  /**
+   * Handle conversation changes from LLMSection.
+   *
+   * Message structure in the document:
+   * - messages[0]: The journal entry content (first user message, managed by EntryEditor)
+   * - messages[1+]: The LLM conversation (managed by LLMSection)
+   *
+   * This function replaces the conversation portion (messages[1+]) while preserving
+   * the journal entry (messages[0]). It uses Automerge's deleteAt/insertAt for CRDT
+   * operations to ensure proper sync across devices.
+   */
   const handleMessagesChange = useCallback(
     (messages: Message[]) => {
-      // Check if there are assistant messages - if so, mark conversation as started
+      // Mark conversation as started for immediate UI update (bypasses Automerge state timing)
       const hasAssistant = messages.some(m => m.role === "assistant")
       if (hasAssistant) {
         setConversationStarted(true)
@@ -78,7 +88,7 @@ export function DayView({ date }: DayViewProps) {
       changeDoc(d => {
         const now = Date.now()
 
-        // Ensure entry exists
+        // Ensure entry exists (this can happen if conversation starts before any text is typed)
         if (!d.entries[date]) {
           d.entries[date] = {
             id: `${date}-${now}`,
@@ -92,28 +102,31 @@ export function DayView({ date }: DayViewProps) {
         const existingEntry = d.entries[date]
         existingEntry.updatedAt = now
 
-        // Get the first user message index (journal entry managed by EntryEditor)
-        const firstUserMessageIndex = existingEntry.messages.findIndex(m => m.role === "user")
         const msgs = existingEntry.messages
 
-        // Delete all messages after the first user message (keep the journal entry)
-        // Use Automerge's deleteAt function for proper CRDT operations
-        while (msgs.length > (firstUserMessageIndex >= 0 ? 1 : 0)) {
-          deleteAt(msgs, firstUserMessageIndex >= 0 ? 1 : 0)
+        // Check if we have a journal entry (first user message from EntryEditor)
+        const hasJournalEntry = msgs.length > 0 && msgs[0].role === "user"
+
+        // Determine where conversation messages start and where to insert new ones
+        const conversationStartIndex = hasJournalEntry ? 1 : 0
+
+        // Remove all existing conversation messages (everything after the journal entry)
+        // We delete from the end to avoid index shifting issues
+        while (msgs.length > conversationStartIndex) {
+          deleteAt(msgs, msgs.length - 1)
         }
 
-        // Add all conversation messages using Automerge's insertAt function
-        // Clone each message to ensure we're not inserting document references
-        let insertPosition = firstUserMessageIndex >= 0 ? 1 : 0
-        for (const msg of messages) {
+        // Insert new conversation messages after the journal entry
+        for (let i = 0; i < messages.length; i++) {
+          const msg = messages[i]
+          // Clone each message to ensure we're not inserting document references
           const clonedMsg: Message = {
             id: msg.id,
             role: msg.role,
             content: msg.content,
             createdAt: msg.createdAt,
           }
-          insertAt(msgs, insertPosition, clonedMsg)
-          insertPosition++
+          insertAt(msgs, conversationStartIndex + i, clonedMsg)
         }
       })
     },
