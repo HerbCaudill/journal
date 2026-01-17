@@ -28,8 +28,15 @@ When you complete a task:
 
 - Run `ppnpm format`.
 - Run `pnpm build && pnpm test:all`.
-- Record a summary of the changes you made as a comment in the issue with `bd comments <id> --add "...markdown summary of changes"`.
+- Commit and push your work.
+- Record a summary of the changes you made as a comment in the issue with `bd comments add <id> "...markdown summary of changes"`.
 - Close the issue: `bd close <id>`.
-- Commit and push your work. Include the issue id
 - Output `✅ <task name>`.
 - End your turn.
+
+### Commit message format
+
+```
+<concise summary of changes> (<issue id>)
+<more detailed summary of changes>
+```
