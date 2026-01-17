@@ -306,4 +306,68 @@ describe("useLLM", () => {
       ),
     ).toThrow("Unknown provider: unsupported")
   })
+
+  it("syncs messages when initialMessages prop changes (navigation between days)", async () => {
+    const day1Messages: Message[] = [
+      { id: "1", role: "user", content: "Day 1 question", createdAt: 1000 },
+      { id: "2", role: "assistant", content: "Day 1 response", createdAt: 1001 },
+    ]
+    const day2Messages: Message[] = [
+      { id: "3", role: "user", content: "Day 2 question", createdAt: 2000 },
+      { id: "4", role: "assistant", content: "Day 2 response", createdAt: 2001 },
+    ]
+
+    // Start with Day 1 messages
+    const { result, rerender } = renderHook(
+      ({ initialMessages }) => useLLM({ ...defaultOptions, initialMessages }),
+      { initialProps: { initialMessages: day1Messages } },
+    )
+
+    expect(result.current.messages).toEqual(day1Messages)
+
+    // Simulate navigation to Day 2 by changing initialMessages prop
+    rerender({ initialMessages: day2Messages })
+
+    expect(result.current.messages).toEqual(day2Messages)
+
+    // Navigate to a day with no messages
+    rerender({ initialMessages: [] })
+
+    expect(result.current.messages).toEqual([])
+
+    // Navigate back to Day 1
+    rerender({ initialMessages: day1Messages })
+
+    expect(result.current.messages).toEqual(day1Messages)
+  })
+
+  it("clears error when initialMessages changes", async () => {
+    mockSendMessage.mockResolvedValue({
+      content: "",
+      success: false,
+      error: "API error",
+    })
+
+    const { result, rerender } = renderHook(
+      ({ initialMessages }) => useLLM({ ...defaultOptions, initialMessages }),
+      { initialProps: { initialMessages: [] as Message[] } },
+    )
+
+    // Trigger an error
+    await act(async () => {
+      await result.current.send("Hello")
+    })
+
+    expect(result.current.error).toBe("API error")
+
+    // Navigate to another day (change initialMessages)
+    const newMessages: Message[] = [
+      { id: "1", role: "user", content: "Previous question", createdAt: 1000 },
+    ]
+    rerender({ initialMessages: newMessages })
+
+    // Error should be cleared when navigating to a new day
+    expect(result.current.error).toBeNull()
+    expect(result.current.messages).toEqual(newMessages)
+  })
 })

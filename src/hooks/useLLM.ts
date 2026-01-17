@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import type { Message } from "@/types/journal"
 import type { LLMConfig, LLMProvider, LLMResponse, ProviderType } from "@/lib/llm/types"
 import { createClaudeProvider } from "@/lib/llm/providers/claude"
@@ -91,6 +91,19 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
   // when send is called rapidly in succession
   const messagesRef = useRef<Message[]>(messages)
   messagesRef.current = messages
+
+  // Use a stable key to detect when initialMessages actually changes
+  // This prevents infinite loops when initialMessages is recreated each render
+  const initialMessagesKey = JSON.stringify(initialMessages.map(m => m.id))
+
+  // Sync internal state when initialMessages changes (e.g., when navigating between days)
+  // This ensures each day has its own isolated conversation
+  useEffect(() => {
+    setMessages(initialMessages)
+    messagesRef.current = initialMessages
+    setError(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessagesKey])
 
   // Create the provider instance, memoized based on config
   const llmProvider = useMemo(() => {
