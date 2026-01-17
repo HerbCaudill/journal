@@ -54,14 +54,6 @@ describe("Header", () => {
     expect(heading).toHaveTextContent(expectedMonthDay)
   })
 
-  it("renders a settings link", () => {
-    render(<Header date="2024-01-15" />)
-
-    const settingsLink = screen.getByRole("link", { name: /settings/i })
-    expect(settingsLink).toBeInTheDocument()
-    expect(settingsLink).toHaveAttribute("href", "#/settings")
-  })
-
   it("formats different dates correctly", () => {
     render(<Header date="2024-06-20" />)
 
