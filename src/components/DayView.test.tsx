@@ -749,6 +749,237 @@ describe("DayView", () => {
     })
   })
 
+  describe("empty states", () => {
+    describe("first-time user (no entries)", () => {
+      it("shows empty EntryEditor for completely new user", () => {
+        // Mock has empty entries by default
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+        expect(textarea).toBeInTheDocument()
+        expect(textarea).toHaveValue("")
+      })
+
+      it("shows Ask Claude button for new user without API key", () => {
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        const button = screen.getByRole("button", { name: /ask claude/i })
+        expect(button).toBeInTheDocument()
+        expect(button).toBeDisabled() // Should be disabled without API key
+      })
+
+      it("shows API key configuration prompt for new user", () => {
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        expect(screen.getByText(/add your API key/i)).toBeInTheDocument()
+      })
+
+      it("handles new user navigating to any date", () => {
+        render(<DayView date={toDateString("2030-06-15")} />)
+
+        const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+        expect(textarea).toBeInTheDocument()
+        expect(textarea).toHaveValue("")
+      })
+    })
+
+    describe("entry with empty messages", () => {
+      it("shows EntryEditor when entry exists but has empty messages array", () => {
+        const docWithEmptyMessages = {
+          entries: {
+            "2024-01-15": {
+              id: "entry-1",
+              date: "2024-01-15",
+              messages: [],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+          },
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "claude" as const,
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithEmptyMessages,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+        expect(textarea).toBeInTheDocument()
+        expect(textarea).toHaveValue("")
+      })
+
+      it("does not show Edit button when messages array is empty", () => {
+        const docWithEmptyMessages = {
+          entries: {
+            "2024-01-15": {
+              id: "entry-1",
+              date: "2024-01-15",
+              messages: [],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+          },
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "claude" as const,
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithEmptyMessages,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        expect(
+          screen.queryByRole("button", { name: /edit journal entry/i }),
+        ).not.toBeInTheDocument()
+      })
+    })
+
+    describe("no API key configured", () => {
+      it("disables submit button when no Claude API key", () => {
+        const docWithoutApiKey = {
+          entries: {},
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "claude" as const,
+            // claudeApiKey is intentionally missing
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithoutApiKey,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        const button = screen.getByRole("button", { name: /ask claude/i })
+        expect(button).toBeDisabled()
+      })
+
+      it("shows API key prompt when switching providers without configured key", () => {
+        // User has Claude API key but not OpenAI
+        const docWithClaudeOnly = {
+          entries: {},
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "openai" as const, // Using OpenAI
+            claudeApiKey: "sk-ant-test123", // But only Claude key configured
+            // openaiApiKey is missing
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithClaudeOnly,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<DayView date={toDateString("2024-01-15")} />)
+
+        expect(screen.getByText(/add your API key/i)).toBeInTheDocument()
+      })
+    })
+
+    describe("conversation cleared/reset", () => {
+      it("shows EntryEditor after conversation is cleared", () => {
+        // Start with messages, then rerender without
+        const docWithMessages = {
+          entries: {
+            "2024-01-15": {
+              id: "entry-1",
+              date: "2024-01-15",
+              messages: [
+                {
+                  id: "user-1",
+                  role: "user" as const,
+                  content: "My entry",
+                  createdAt: Date.now(),
+                },
+              ],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+          },
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "claude" as const,
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithMessages,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        const { rerender } = render(<DayView date={toDateString("2024-01-15")} />)
+
+        // Entry editor should be visible initially
+        expect(screen.getByRole("textbox", { name: /journal entry/i })).toBeInTheDocument()
+
+        // Now simulate conversation being cleared
+        const docWithClearedMessages = {
+          entries: {
+            "2024-01-15": {
+              id: "entry-1",
+              date: "2024-01-15",
+              messages: [],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+          },
+          settings: {
+            displayName: "",
+            timezone: "UTC",
+            theme: "system" as const,
+            llmProvider: "claude" as const,
+          },
+        } as Doc<JournalDoc>
+
+        mockUseJournal.mockReturnValue({
+          doc: docWithClearedMessages,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        rerender(<DayView date={toDateString("2024-01-15")} />)
+
+        // Entry editor should still be visible with empty content
+        const textarea = screen.getByRole("textbox", { name: /journal entry/i })
+        expect(textarea).toBeInTheDocument()
+        expect(textarea).toHaveValue("")
+      })
+    })
+  })
+
   describe("error handling", () => {
     it("handles undefined doc gracefully", () => {
       mockUseJournal.mockReturnValue({

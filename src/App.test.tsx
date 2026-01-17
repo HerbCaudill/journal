@@ -132,6 +132,54 @@ describe("App", () => {
     })
   })
 
+  describe("first-time user (empty states)", () => {
+    it("renders correctly with empty entries object", () => {
+      // Default mock already has empty entries
+      render(<App />)
+
+      // Should render the day view with header and editor
+      expect(screen.getByRole("banner")).toBeInTheDocument()
+      const heading = screen.getByRole("heading", { level: 1 })
+      expect(heading).toHaveTextContent("Thursday")
+      expect(heading).toHaveTextContent("January 16, 2025")
+    })
+
+    it("renders empty textarea for new date", () => {
+      render(<App />)
+
+      // The entry editor should be rendered
+      expect(screen.getByRole("textbox")).toBeInTheDocument()
+    })
+
+    it("handles first visit to app with default settings", () => {
+      render(<App />)
+
+      // App should render without crashing
+      expect(screen.getByRole("banner")).toBeInTheDocument()
+      // Footer should be present (showing settings link)
+      expect(screen.getByRole("contentinfo")).toBeInTheDocument()
+    })
+
+    it("renders settings page even with empty doc", () => {
+      window.location.hash = "#/settings"
+      render(<App />)
+
+      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Settings")
+    })
+
+    it("handles navigation to non-existent date entry gracefully", () => {
+      // Use a past date to avoid the future date restriction
+      window.location.hash = "#/day/2020-12-25"
+      render(<App />)
+
+      // Should render the day view for that date without crashing
+      const heading = screen.getByRole("heading", { level: 1 })
+      // December 25, 2020 is a Friday
+      expect(heading).toHaveTextContent("Friday")
+      expect(heading).toHaveTextContent("December 25, 2020")
+    })
+  })
+
   it("renders header with today's date by default", () => {
     render(<App />)
     expect(screen.getByRole("banner")).toBeInTheDocument()

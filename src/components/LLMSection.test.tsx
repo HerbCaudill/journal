@@ -574,6 +574,259 @@ describe("LLMSection", () => {
     })
   })
 
+  describe("empty states", () => {
+    describe("empty conversation history", () => {
+      it("shows submit button when messages array is empty", () => {
+        mockUseLLM.mockReturnValue({
+          messages: [],
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+        expect(screen.getByRole("button", { name: /ask claude/i })).toBeInTheDocument()
+        // Follow-up input should not be shown
+        expect(
+          screen.queryByRole("textbox", { name: /follow-up message/i }),
+        ).not.toBeInTheDocument()
+      })
+
+      it("does not show any message bubbles when messages array is empty", () => {
+        mockUseLLM.mockReturnValue({
+          messages: [],
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+        expect(screen.queryByTestId("assistant-response")).not.toBeInTheDocument()
+        expect(screen.queryByTestId("user-message")).not.toBeInTheDocument()
+      })
+
+      it("handles component without initialMessages prop", () => {
+        // When initialMessages prop is not provided, it defaults to []
+        render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+        // useLLM should be called with default empty array
+        expect(mockUseLLM).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider: "claude",
+            apiKey: "test-key",
+            initialMessages: [], // defaults to empty array
+          }),
+        )
+      })
+
+      it("handles initialMessages being an empty array", () => {
+        render(
+          <LLMSection
+            entryContent="Test entry"
+            apiKey="test-key"
+            provider="claude"
+            initialMessages={[]}
+          />,
+        )
+
+        expect(mockUseLLM).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider: "claude",
+            apiKey: "test-key",
+            initialMessages: [],
+          }),
+        )
+      })
+    })
+
+    describe("first-time user scenarios", () => {
+      it("renders correctly with empty entry content for new user", () => {
+        render(<LLMSection entryContent="" apiKey="test-key" provider="claude" />)
+
+        // Button should be enabled (validation happens on click)
+        const button = screen.getByRole("button", { name: /ask claude/i })
+        expect(button).toBeInTheDocument()
+        expect(button).not.toBeDisabled()
+      })
+
+      it("shows validation error when new user tries to submit without content", async () => {
+        const user = userEvent.setup()
+
+        render(<LLMSection entryContent="" apiKey="test-key" provider="claude" />)
+
+        await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          /please write something in your journal first/i,
+        )
+        expect(mockSend).not.toHaveBeenCalled()
+      })
+
+      it("does not show any errors or alerts on initial render", () => {
+        render(<LLMSection entryContent="" apiKey="test-key" provider="claude" />)
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+      })
+
+      it("handles first-time user with no bio or additional instructions", () => {
+        render(
+          <LLMSection
+            entryContent="My first entry"
+            apiKey="test-key"
+            provider="claude"
+            bio={undefined}
+            additionalInstructions={undefined}
+          />,
+        )
+
+        expect(mockUseLLM).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider: "claude",
+            apiKey: "test-key",
+            initialMessages: [],
+          }),
+        )
+      })
+
+      it("handles first-time user with empty string bio and instructions", () => {
+        render(
+          <LLMSection
+            entryContent="My first entry"
+            apiKey="test-key"
+            provider="claude"
+            bio=""
+            additionalInstructions=""
+          />,
+        )
+
+        expect(mockUseLLM).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider: "claude",
+            apiKey: "test-key",
+            initialMessages: [],
+            bio: "",
+            additionalInstructions: "",
+          }),
+        )
+      })
+    })
+
+    describe("no API key configured state", () => {
+      it("shows API key prompt for Claude when key is not configured", () => {
+        render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        expect(screen.getByText(/to use claude, please add your api key/i)).toBeInTheDocument()
+        expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute(
+          "href",
+          "#/settings",
+        )
+      })
+
+      it("shows API key prompt for OpenAI when key is not configured", () => {
+        render(<LLMSection entryContent="Test entry" apiKey="" provider="openai" />)
+
+        expect(screen.getByText(/to use ai, please add your api key/i)).toBeInTheDocument()
+        expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute(
+          "href",
+          "#/settings",
+        )
+      })
+
+      it("disables submit button when API key is empty string", () => {
+        render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        expect(screen.getByRole("button", { name: /ask claude/i })).toBeDisabled()
+      })
+
+      it("enables submit button when API key is only whitespace (truthy string)", () => {
+        // Note: Whitespace-only string is truthy in JavaScript, so button is enabled
+        // The validation happens when user clicks submit, not on the button disabled state
+        render(<LLMSection entryContent="Test entry" apiKey="   " provider="claude" />)
+
+        expect(screen.getByRole("button", { name: /ask claude/i })).not.toBeDisabled()
+      })
+
+      it("shows both conversation and API key prompt when key removed after conversation", () => {
+        const messages: Message[] = [
+          { id: "1", role: "user", content: "Hello", createdAt: Date.now() },
+          { id: "2", role: "assistant", content: "Hi there!", createdAt: Date.now() },
+        ]
+
+        mockUseLLM.mockReturnValue({
+          messages,
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Conversation should still be visible
+        expect(screen.getByText("Hi there!")).toBeInTheDocument()
+        // API key prompt should also be visible
+        expect(screen.getByText(/please add your api key/i)).toBeInTheDocument()
+        // But follow-up input should be hidden
+        expect(
+          screen.queryByRole("textbox", { name: /follow-up message/i }),
+        ).not.toBeInTheDocument()
+      })
+
+      it("provides submit button props with disabled state when no API key", () => {
+        const onSubmitButtonProps = vi.fn()
+
+        render(
+          <LLMSection
+            entryContent="Test entry"
+            apiKey=""
+            provider="claude"
+            onSubmitButtonProps={onSubmitButtonProps}
+          />,
+        )
+
+        expect(onSubmitButtonProps).toHaveBeenCalledWith(
+          expect.objectContaining({
+            disabled: true,
+          }),
+        )
+      })
+
+      it("disables button when API key is removed", () => {
+        // Render with API key but simulate the validation error that happens when apiKey becomes empty
+        // Note: The button is disabled when no API key, but if somehow clicked, it shows an error
+        mockUseLLM.mockReturnValue({
+          messages: [],
+          isLoading: false,
+          error: null,
+          send: mockSend,
+          reset: mockReset,
+          setMessages: mockSetMessages,
+        })
+
+        const { rerender } = render(
+          <LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />,
+        )
+
+        // Button should be enabled with API key
+        expect(screen.getByRole("button", { name: /ask claude/i })).not.toBeDisabled()
+
+        // Now remove the API key
+        rerender(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
+
+        // Button should now be disabled
+        const button = screen.getByRole("button", { name: /ask claude/i })
+        expect(button).toBeDisabled()
+      })
+    })
+  })
+
   describe("edge cases", () => {
     it("handles very long entry content gracefully", async () => {
       const user = userEvent.setup()
