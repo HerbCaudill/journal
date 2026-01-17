@@ -415,18 +415,11 @@ test.describe("Google Integration section", () => {
     await expect(page.getByRole("heading", { name: "Google Integration" })).toBeVisible()
   })
 
-  test("shows unconfigured message when Google client ID is not set", async ({ page }) => {
-    // When Google client ID is not configured, should show unconfigured message
-    const unconfiguredMessage = page.getByText(/Google Calendar integration is not configured/)
-    // This will be visible if VITE_GOOGLE_CLIENT_ID is not set
-    // Note: This test depends on the test environment not having Google configured
+  test("shows Connect button when Google client ID is configured", async ({ page }) => {
+    // When Google client ID is configured (VITE_GOOGLE_CLIENT_ID is set),
+    // the Connect Google Account button should be visible
     const connectButton = page.getByRole("button", { name: "Connect Google Account" })
-
-    // Either the unconfigured message or the connect button should be visible
-    const isUnconfigured = await unconfiguredMessage.isVisible().catch(() => false)
-    const hasConnectButton = await connectButton.isVisible().catch(() => false)
-
-    expect(isUnconfigured || hasConnectButton).toBe(true)
+    await expect(connectButton).toBeVisible()
   })
 })
 
