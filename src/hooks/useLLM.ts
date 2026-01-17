@@ -17,6 +17,10 @@ export interface UseLLMOptions {
   maxTokens?: number
   /** Initial messages to start the conversation with */
   initialMessages?: Message[]
+  /** User's bio - helps the AI understand context about the user */
+  bio?: string
+  /** Additional instructions for customizing AI behavior */
+  additionalInstructions?: string
 }
 
 /**
@@ -81,7 +85,15 @@ function createProvider(provider: ProviderType, config: LLMConfig): LLMProvider 
  * ```
  */
 export function useLLM(options: UseLLMOptions): UseLLMReturn {
-  const { provider, apiKey, model, maxTokens, initialMessages = [] } = options
+  const {
+    provider,
+    apiKey,
+    model,
+    maxTokens,
+    initialMessages = [],
+    bio,
+    additionalInstructions,
+  } = options
 
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
@@ -107,9 +119,9 @@ export function useLLM(options: UseLLMOptions): UseLLMReturn {
 
   // Create the provider instance, memoized based on config
   const llmProvider = useMemo(() => {
-    const config: LLMConfig = { apiKey, model, maxTokens }
+    const config: LLMConfig = { apiKey, model, maxTokens, bio, additionalInstructions }
     return createProvider(provider, config)
-  }, [provider, apiKey, model, maxTokens])
+  }, [provider, apiKey, model, maxTokens, bio, additionalInstructions])
 
   const send = useCallback(
     async (content: string): Promise<LLMResponse> => {

@@ -355,9 +355,10 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
-    // Get the first save button (Claude section)
-    const saveButtons = screen.getAllByRole("button", { name: /save/i })
-    fireEvent.click(saveButtons[0])
+    // Find the save button that's in the form containing the Claude API key input
+    const form = input.closest("form")!
+    const saveButton = form.querySelector('button[type="submit"]')!
+    fireEvent.click(saveButton)
 
     expect(mockChangeDoc).toHaveBeenCalledTimes(1)
   })
@@ -372,9 +373,11 @@ describe("SettingsView", () => {
 
     render(<SettingsView />)
 
-    // Get the first save button (Claude section)
-    const saveButtons = screen.getAllByRole("button", { name: /save/i })
-    expect(saveButtons[0]).toBeDisabled()
+    // Find the save button that's in the form containing the Claude API key input
+    const input = screen.getByLabelText(/claude api key/i)
+    const form = input.closest("form")!
+    const saveButton = form.querySelector('button[type="submit"]')!
+    expect(saveButton).toBeDisabled()
   })
 
   it("enables save button when API key is changed", () => {
@@ -390,9 +393,10 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-new-key" } })
 
-    // Get the first save button (Claude section)
-    const saveButtons = screen.getAllByRole("button", { name: /save/i })
-    expect(saveButtons[0]).not.toBeDisabled()
+    // Find the save button that's in the form containing the Claude API key input
+    const form = input.closest("form")!
+    const saveButton = form.querySelector('button[type="submit"]')!
+    expect(saveButton).not.toBeDisabled()
   })
 
   it("shows clear button when API key exists", () => {
@@ -442,9 +446,10 @@ describe("SettingsView", () => {
     const input = screen.getByLabelText(/claude api key/i)
     fireEvent.change(input, { target: { value: "sk-ant-api03-validkey1234567890" } })
 
-    // Get the first save button (Claude section)
-    const saveButtons = screen.getAllByRole("button", { name: /save/i })
-    fireEvent.click(saveButtons[0])
+    // Find the save button that's in the form containing the Claude API key input
+    const form = input.closest("form")!
+    const saveButton = form.querySelector('button[type="submit"]')!
+    fireEvent.click(saveButton)
 
     expect(screen.getAllByText(/api key saved successfully/i)[0]).toBeInTheDocument()
 
@@ -557,8 +562,9 @@ describe("SettingsView", () => {
       const input = screen.getByLabelText(/openai api key/i)
       fireEvent.change(input, { target: { value: "sk-proj-validkey1234567890" } })
 
-      // There's only one save button now (for OpenAI)
-      const saveButton = screen.getByRole("button", { name: /save/i })
+      // Find the save button that's in the form containing the OpenAI API key input
+      const form = input.closest("form")!
+      const saveButton = form.querySelector('button[type="submit"]')!
       fireEvent.click(saveButton)
 
       expect(mockChangeDoc).toHaveBeenCalledTimes(1)
@@ -769,8 +775,10 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        const saveButtons = screen.getAllByRole("button", { name: /save/i })
-        fireEvent.click(saveButtons[0])
+        // Find the save button that's in the form containing the Claude API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
+        fireEvent.click(saveButton)
 
         expect(screen.getByRole("alert")).toHaveTextContent(
           "Claude API key should start with 'sk-ant-'",
@@ -791,8 +799,10 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "sk-ant-short" } })
 
-        const saveButtons = screen.getAllByRole("button", { name: /save/i })
-        fireEvent.click(saveButtons[0])
+        // Find the save button that's in the form containing the Claude API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
+        fireEvent.click(saveButton)
 
         expect(screen.getByRole("alert")).toHaveTextContent(
           "Claude API key appears to be too short",
@@ -813,8 +823,10 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        const saveButtons = screen.getAllByRole("button", { name: /save/i })
-        fireEvent.click(saveButtons[0])
+        // Find the save button that's in the form containing the Claude API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
+        fireEvent.click(saveButton)
 
         expect(screen.getByRole("alert")).toBeInTheDocument()
 
@@ -837,8 +849,10 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "sk-ant-api03-validkey12345678" } })
 
-        const saveButtons = screen.getAllByRole("button", { name: /save/i })
-        fireEvent.click(saveButtons[0])
+        // Find the save button that's in the form containing the Claude API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
+        fireEvent.click(saveButton)
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument()
         expect(mockChangeDoc).toHaveBeenCalledTimes(1)
@@ -857,10 +871,159 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/claude api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        const saveButtons = screen.getAllByRole("button", { name: /save/i })
-        fireEvent.click(saveButtons[0])
+        // Find the save button that's in the form containing the Claude API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
+        fireEvent.click(saveButton)
 
         expect(input).toHaveAttribute("aria-invalid", "true")
+      })
+    })
+
+    describe("Bio and Additional Instructions", () => {
+      it("renders bio section with textarea", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        expect(screen.getByRole("heading", { name: /about you/i })).toBeInTheDocument()
+        expect(screen.getByLabelText(/bio/i)).toBeInTheDocument()
+      })
+
+      it("renders additional instructions section with textarea", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        expect(
+          screen.getByRole("heading", { name: /additional instructions/i }),
+        ).toBeInTheDocument()
+        expect(screen.getByLabelText(/additional instructions/i)).toBeInTheDocument()
+      })
+
+      it("loads existing bio from document", () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.bio = "I am a software engineer"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const bioInput = screen.getByLabelText(/bio/i) as HTMLTextAreaElement
+        expect(bioInput.value).toBe("I am a software engineer")
+      })
+
+      it("loads existing additional instructions from document", () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.additionalInstructions = "Always be concise"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const instructionsInput = screen.getByLabelText(
+          /additional instructions/i,
+        ) as HTMLTextAreaElement
+        expect(instructionsInput.value).toBe("Always be concise")
+      })
+
+      it("saves bio when save button is clicked", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        fireEvent.change(bioInput, { target: { value: "I love coding" } })
+
+        // Find the save button that's in the bio section (using the heading)
+        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
+        const saveButton = bioSection.querySelector("button")!
+        fireEvent.click(saveButton)
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("saves additional instructions when save button is clicked", () => {
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: createMockDoc(),
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const instructionsInput = screen.getByLabelText(/additional instructions/i)
+        fireEvent.change(instructionsInput, { target: { value: "Be friendly" } })
+
+        // Find the save button that's in the additional instructions section
+        const instructionsSection = screen
+          .getByRole("heading", { name: /additional instructions/i })
+          .closest("section")!
+        const saveButton = instructionsSection.querySelector("button")!
+        fireEvent.click(saveButton)
+
+        expect(mockChangeDoc).toHaveBeenCalledTimes(1)
+      })
+
+      it("disables bio save button when there are no unsaved changes", () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.bio = "Existing bio"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
+        const saveButton = bioSection.querySelector("button")!
+        expect(saveButton).toBeDisabled()
+      })
+
+      it("enables bio save button when bio is changed", () => {
+        const mockDoc = createMockDoc()
+        mockDoc.settings.bio = "Existing bio"
+        vi.mocked(JournalContext.useJournal).mockReturnValue({
+          doc: mockDoc,
+          changeDoc: mockChangeDoc,
+          handle: undefined,
+          isLoading: false,
+        })
+
+        render(<SettingsView />)
+
+        const bioInput = screen.getByLabelText(/bio/i)
+        fireEvent.change(bioInput, { target: { value: "New bio" } })
+
+        const bioSection = screen.getByRole("heading", { name: /about you/i }).closest("section")!
+        const saveButton = bioSection.querySelector("button")!
+        expect(saveButton).not.toBeDisabled()
       })
     })
 
@@ -878,7 +1041,9 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/openai api key/i)
         fireEvent.change(input, { target: { value: "invalid-key" } })
 
-        const saveButton = screen.getByRole("button", { name: /save/i })
+        // Find the save button that's in the form containing the OpenAI API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
         fireEvent.click(saveButton)
 
         expect(screen.getByRole("alert")).toHaveTextContent(
@@ -900,7 +1065,9 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/openai api key/i)
         fireEvent.change(input, { target: { value: "sk-ant-api03-somekey" } })
 
-        const saveButton = screen.getByRole("button", { name: /save/i })
+        // Find the save button that's in the form containing the OpenAI API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
         fireEvent.click(saveButton)
 
         expect(screen.getByRole("alert")).toHaveTextContent(
@@ -922,7 +1089,9 @@ describe("SettingsView", () => {
         const input = screen.getByLabelText(/openai api key/i)
         fireEvent.change(input, { target: { value: "sk-proj-validkey12345678901234567890" } })
 
-        const saveButton = screen.getByRole("button", { name: /save/i })
+        // Find the save button that's in the form containing the OpenAI API key input
+        const form = input.closest("form")!
+        const saveButton = form.querySelector('button[type="submit"]')!
         fireEvent.click(saveButton)
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument()

@@ -59,6 +59,8 @@ export function SettingsView() {
   const [llmProvider, setLlmProvider] = useState<LLMProviderType>("claude")
   const [claudeApiKey, setClaudeApiKey] = useState("")
   const [openaiApiKey, setOpenaiApiKey] = useState("")
+  const [bio, setBio] = useState("")
+  const [additionalInstructions, setAdditionalInstructions] = useState("")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [showClaudeApiKey, setShowClaudeApiKey] = useState(false)
   const [showOpenaiApiKey, setShowOpenaiApiKey] = useState(false)
@@ -77,8 +79,16 @@ export function SettingsView() {
       // Use saved value if present, otherwise fall back to env var
       setClaudeApiKey(doc.settings.claudeApiKey || ENV_CLAUDE_API_KEY)
       setOpenaiApiKey(doc.settings.openaiApiKey || ENV_OPENAI_API_KEY)
+      setBio(doc.settings.bio || "")
+      setAdditionalInstructions(doc.settings.additionalInstructions || "")
     }
-  }, [doc?.settings?.llmProvider, doc?.settings?.claudeApiKey, doc?.settings?.openaiApiKey])
+  }, [
+    doc?.settings?.llmProvider,
+    doc?.settings?.claudeApiKey,
+    doc?.settings?.openaiApiKey,
+    doc?.settings?.bio,
+    doc?.settings?.additionalInstructions,
+  ])
 
   // Handle LLM provider change
   const handleProviderChange = useCallback(
@@ -176,6 +186,34 @@ export function SettingsView() {
     [handleSaveOpenaiApiKey],
   )
 
+  // Save bio to document
+  const handleSaveBio = useCallback(() => {
+    if (!doc) return
+
+    setSaveStatus("saving")
+    changeDoc(d => {
+      d.settings.bio = bio.trim()
+    })
+
+    // Show saved confirmation briefly
+    setSaveStatus("saved")
+    setTimeout(() => setSaveStatus("idle"), 2000)
+  }, [doc, changeDoc, bio])
+
+  // Save additional instructions to document
+  const handleSaveAdditionalInstructions = useCallback(() => {
+    if (!doc) return
+
+    setSaveStatus("saving")
+    changeDoc(d => {
+      d.settings.additionalInstructions = additionalInstructions.trim()
+    })
+
+    // Show saved confirmation briefly
+    setSaveStatus("saved")
+    setTimeout(() => setSaveStatus("idle"), 2000)
+  }, [doc, changeDoc, additionalInstructions])
+
   if (isLoading) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
@@ -190,8 +228,13 @@ export function SettingsView() {
   // Determine effective saved value (saved or env var default)
   const effectiveClaudeKey = doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
   const effectiveOpenaiKey = doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
+  const effectiveBio = doc?.settings?.bio || ""
+  const effectiveAdditionalInstructions = doc?.settings?.additionalInstructions || ""
   const hasClaudeUnsavedChanges = claudeApiKey !== effectiveClaudeKey
   const hasOpenaiUnsavedChanges = openaiApiKey !== effectiveOpenaiKey
+  const hasBioUnsavedChanges = bio !== effectiveBio
+  const hasAdditionalInstructionsUnsavedChanges =
+    additionalInstructions !== effectiveAdditionalInstructions
 
   // Track if key is from env var (for showing different UI indicator)
   const isClaudeFromEnv = !doc?.settings?.claudeApiKey && !!ENV_CLAUDE_API_KEY
@@ -292,6 +335,85 @@ export function SettingsView() {
           >
             OpenAI
           </button>
+        </div>
+      </section>
+
+      {/* Bio Section */}
+      <section className="flex flex-col gap-3">
+        <h3 className="text-foreground text-lg font-medium">About You</h3>
+        <p className="text-muted-foreground text-sm">
+          Tell the AI a bit about yourself. This helps personalize responses to your context.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <textarea
+            value={bio}
+            onChange={e => setBio(e.target.value)}
+            placeholder="e.g., I'm a software engineer living in San Francisco. I enjoy hiking and reading science fiction..."
+            className="bg-background focus:ring-ring min-h-[100px] w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+            aria-label="Bio"
+          />
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSaveBio}
+              disabled={!hasBioUnsavedChanges || saveStatus === "saving"}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saveStatus === "saving" ?
+                "Saving..."
+              : saveStatus === "saved" ?
+                "Saved!"
+              : "Save"}
+            </button>
+
+            {saveStatus === "saved" && hasBioUnsavedChanges === false && (
+              <span className="text-sm text-green-600 dark:text-green-400">
+                Bio saved successfully
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Instructions Section */}
+      <section className="flex flex-col gap-3">
+        <h3 className="text-foreground text-lg font-medium">Additional Instructions</h3>
+        <p className="text-muted-foreground text-sm">
+          Customize how the AI responds to you. These instructions will be included in every
+          conversation.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <textarea
+            value={additionalInstructions}
+            onChange={e => setAdditionalInstructions(e.target.value)}
+            placeholder="e.g., Always respond in a casual tone. Focus on practical advice. Ask follow-up questions..."
+            className="bg-background focus:ring-ring min-h-[100px] w-full rounded-md border p-3 text-base focus:ring-2 focus:ring-offset-2 focus:outline-none"
+            aria-label="Additional instructions"
+          />
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSaveAdditionalInstructions}
+              disabled={!hasAdditionalInstructionsUnsavedChanges || saveStatus === "saving"}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saveStatus === "saving" ?
+                "Saving..."
+              : saveStatus === "saved" ?
+                "Saved!"
+              : "Save"}
+            </button>
+
+            {saveStatus === "saved" && hasAdditionalInstructionsUnsavedChanges === false && (
+              <span className="text-sm text-green-600 dark:text-green-400">
+                Instructions saved successfully
+              </span>
+            )}
+          </div>
         </div>
       </section>
 

@@ -110,6 +110,120 @@ describe("ClaudeProvider", () => {
       )
     })
 
+    it("includes bio in system prompt when provided", async () => {
+      const mockResponse = {
+        content: [{ type: "text", text: "Response" }],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const configWithBio: LLMConfig = {
+        apiKey: "test-key",
+        bio: "I am a software engineer who loves coding",
+      }
+
+      const provider = createClaudeProvider(configWithBio)
+      await provider.sendMessage([], "Hello")
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("About the user:"),
+        }),
+      )
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("I am a software engineer who loves coding"),
+        }),
+      )
+    })
+
+    it("includes additional instructions in system prompt when provided", async () => {
+      const mockResponse = {
+        content: [{ type: "text", text: "Response" }],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const configWithInstructions: LLMConfig = {
+        apiKey: "test-key",
+        additionalInstructions: "Always be concise and friendly",
+      }
+
+      const provider = createClaudeProvider(configWithInstructions)
+      await provider.sendMessage([], "Hello")
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("Additional instructions:"),
+        }),
+      )
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("Always be concise and friendly"),
+        }),
+      )
+    })
+
+    it("includes both bio and additional instructions in system prompt", async () => {
+      const mockResponse = {
+        content: [{ type: "text", text: "Response" }],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const fullConfig: LLMConfig = {
+        apiKey: "test-key",
+        bio: "I am a writer",
+        additionalInstructions: "Focus on creative writing",
+      }
+
+      const provider = createClaudeProvider(fullConfig)
+      await provider.sendMessage([], "Hello")
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("About the user:"),
+        }),
+      )
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("I am a writer"),
+        }),
+      )
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("Additional instructions:"),
+        }),
+      )
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining("Focus on creative writing"),
+        }),
+      )
+    })
+
+    it("does not include bio section when bio is empty", async () => {
+      const mockResponse = {
+        content: [{ type: "text", text: "Response" }],
+      }
+
+      mockCreate.mockResolvedValue(mockResponse)
+
+      const configWithEmptyBio: LLMConfig = {
+        apiKey: "test-key",
+        bio: "   ",
+      }
+
+      const provider = createClaudeProvider(configWithEmptyBio)
+      await provider.sendMessage([], "Hello")
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.not.stringContaining("About the user:"),
+        }),
+      )
+    })
+
     it("handles API errors gracefully", async () => {
       mockCreate.mockRejectedValue(new Error("API rate limited"))
 

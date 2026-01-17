@@ -9,7 +9,24 @@ import type { Message } from "@/types/journal"
 import type { LLMConfig, LLMProvider, LLMResponse, LLMProviderFactory } from "../types"
 import { DEFAULT_MODELS, DEFAULT_MAX_TOKENS } from "../types"
 
-const SYSTEM_PROMPT = `You are a thoughtful journaling assistant. Your role is to help the user reflect on their day, thoughts, and feelings. Be empathetic, ask clarifying questions when appropriate, and help them explore their thoughts more deeply. Keep your responses concise but meaningful.`
+const BASE_SYSTEM_PROMPT = `You are a thoughtful journaling assistant. Your role is to help the user reflect on their day, thoughts, and feelings. Be empathetic, ask clarifying questions when appropriate, and help them explore their thoughts more deeply. Keep your responses concise but meaningful.`
+
+/**
+ * Build a system prompt by combining the base prompt with optional user bio and additional instructions
+ */
+function buildSystemPrompt(bio?: string, additionalInstructions?: string): string {
+  let systemPrompt = BASE_SYSTEM_PROMPT
+
+  if (bio?.trim()) {
+    systemPrompt += `\n\nAbout the user:\n${bio.trim()}`
+  }
+
+  if (additionalInstructions?.trim()) {
+    systemPrompt += `\n\nAdditional instructions:\n${additionalInstructions.trim()}`
+  }
+
+  return systemPrompt
+}
 
 /**
  * Create an Anthropic client instance
@@ -80,10 +97,12 @@ class ClaudeProvider implements LLMProvider {
         { role: "user", content: userMessage },
       ]
 
+      const systemPrompt = buildSystemPrompt(this.config.bio, this.config.additionalInstructions)
+
       const response = await client.messages.create({
         model: this.config.model ?? DEFAULT_MODELS.claude,
         max_tokens: this.config.maxTokens ?? DEFAULT_MAX_TOKENS,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: allMessages,
       })
 

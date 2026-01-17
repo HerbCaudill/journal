@@ -33,6 +33,8 @@ export function DayView({ date }: DayViewProps) {
     llmProvider === "claude" ?
       doc?.settings?.claudeApiKey || ENV_CLAUDE_API_KEY
     : doc?.settings?.openaiApiKey || ENV_OPENAI_API_KEY
+  const bio = doc?.settings?.bio ?? ""
+  const additionalInstructions = doc?.settings?.additionalInstructions ?? ""
 
   // Get assistant messages for initial conversation state
   const assistantMessages = entry?.messages.filter(m => m.role === "assistant") ?? []
@@ -83,6 +85,8 @@ export function DayView({ date }: DayViewProps) {
         provider={llmProvider}
         initialMessages={assistantMessages}
         onMessagesChange={handleMessagesChange}
+        bio={bio}
+        additionalInstructions={additionalInstructions}
       />
     </div>
   )

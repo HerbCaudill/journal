@@ -14,6 +14,10 @@ interface LLMSectionProps {
   initialMessages?: Message[]
   /** Callback when messages change (for persisting to document) */
   onMessagesChange?: (messages: Message[]) => void
+  /** User's bio - helps the AI understand context about the user */
+  bio?: string
+  /** Additional instructions for customizing AI behavior */
+  additionalInstructions?: string
 }
 
 /**
@@ -41,16 +45,20 @@ export function LLMSection({
   provider,
   initialMessages = [],
   onMessagesChange,
+  bio,
+  additionalInstructions,
 }: LLMSectionProps) {
   const { messages, isLoading, error, send, reset } = useLLM({
     provider,
     apiKey,
     initialMessages,
+    bio,
+    additionalInstructions,
   })
 
   const [localError, setLocalError] = useState<string | null>(null)
   const [followUpInput, setFollowUpInput] = useState("")
-  const followUpInputRef = useRef<HTMLInputElement>(null)
+  const followUpInputRef = useRef<HTMLTextAreaElement>(null)
 
   const providerName = getProviderDisplayName(provider)
 
@@ -225,26 +233,27 @@ export function LLMSection({
 
       {/* Follow-up input - shown after initial conversation */}
       {messages.length > 0 && apiKey && (
-        <div className="border-input bg-background focus-within:ring-ring relative flex min-h-[3rem] items-end rounded-lg border p-2 focus-within:ring-2">
-          <input
+        <div className="relative">
+          <textarea
             ref={followUpInputRef}
-            type="text"
             value={followUpInput}
             onChange={e => setFollowUpInput(e.target.value)}
             onKeyDown={e => {
-              if (e.key === "Enter" && !isLoading && followUpInput.trim()) {
+              if (e.key === "Enter" && !e.shiftKey && !isLoading && followUpInput.trim()) {
+                e.preventDefault()
                 handleFollowUp()
               }
             }}
             placeholder="Ask a follow-up question..."
             disabled={isLoading}
-            className="text-foreground placeholder:text-muted-foreground mr-2 min-w-0 flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            rows={2}
+            className="bg-card focus:ring-ring min-h-[80px] w-full resize-none rounded-md border p-4 pr-12 text-base leading-relaxed focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Follow-up message"
           />
           <button
             onClick={handleFollowUp}
             disabled={isLoading || !followUpInput.trim()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 absolute right-3 bottom-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Send follow-up"
           >
             {isLoading ?

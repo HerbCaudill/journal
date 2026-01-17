@@ -57,6 +57,10 @@ export interface Settings {
   claudeApiKey?: string
   /** OpenAI API key for AI integration */
   openaiApiKey?: string
+  /** User's bio - helps the AI understand context about the user */
+  bio?: string
+  /** Additional instructions for customizing AI behavior */
+  additionalInstructions?: string
 }
 
 /**

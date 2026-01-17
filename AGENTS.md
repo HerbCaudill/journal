@@ -55,14 +55,15 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 **LLM Integration**
 
 - `src/lib/llm/types.ts` - Provider-agnostic interfaces: `LLMProvider`, `LLMConfig`, `LLMResponse`, `ProviderType`
-- `src/lib/llm/providers/claude.ts` - Claude provider implementing `LLMProvider` interface
-- `src/hooks/useLLM.ts` - Provider-agnostic React hook for managing LLM conversation state. Syncs with `initialMessages` prop changes to ensure each day has its own isolated conversation.
+- `src/lib/llm/providers/claude.ts` - Claude provider implementing `LLMProvider` interface with dynamic system prompt builder
+- `src/hooks/useLLM.ts` - Provider-agnostic React hook for managing LLM conversation state. Syncs with `initialMessages` prop changes to ensure each day has its own isolated conversation. Accepts bio and additionalInstructions for customizing the system prompt.
 - `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude") for backward compatibility
 - `src/components/LLMSection.tsx` - Provider-agnostic UI component with submit button, follow-up input, and response display
-- `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
+- `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai), provider-specific API keys, `bio`, and `additionalInstructions` for system prompt customization
 - Settings view allows selecting LLM provider; only shows API key field for the selected provider
 - API keys stored in document settings, masked (password field with show/hide toggle) with security warning
 - API key format validation: Claude keys must start with `sk-ant-`, OpenAI keys must start with `sk-` (but not `sk-ant-`); validation functions exported from SettingsView.tsx
+- Bio and Additional Instructions: Users can customize the AI system prompt by providing a bio (context about themselves) and additional instructions (behavioral guidelines). These fields are stored in Settings and passed to the LLM provider when making requests.
 
 **Google Calendar Integration**
 

@@ -128,7 +128,11 @@ test.describe("Claude API key management", () => {
 
   test("can enter and save a valid Claude API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter a valid API key format
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
@@ -146,7 +150,11 @@ test.describe("Claude API key management", () => {
 
   test("shows validation error for invalid Claude API key format", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter an invalid API key (doesn't start with sk-ant-)
     await apiKeyInput.fill("invalid-api-key-format")
@@ -159,7 +167,11 @@ test.describe("Claude API key management", () => {
 
   test("shows validation error for API key that is too short", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter an API key that's too short
     await apiKeyInput.fill("sk-ant-short")
@@ -172,7 +184,11 @@ test.describe("Claude API key management", () => {
 
   test("clears validation error when user types", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter an invalid API key
     await apiKeyInput.fill("invalid-key")
@@ -212,7 +228,11 @@ test.describe("Claude API key management", () => {
 
   test("can clear saved API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Get the initial value to check if env variable is set
     const initialValue = await apiKeyInput.inputValue()
@@ -243,7 +263,11 @@ test.describe("Claude API key management", () => {
 
   test("saved API key persists across navigation", async ({ page }) => {
     const apiKeyInput = page.getByLabel("Claude API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the Claude AI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter and save a valid API key
     const testKey = "sk-ant-api03-test-key-12345678901234567890"
@@ -268,8 +292,12 @@ test.describe("Claude API key management", () => {
   })
 
   test("Save button is disabled when no changes made", async ({ page }) => {
-    // Initially save button should be disabled
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Initially all save buttons should be disabled
+    const apiKeyInput = page.getByLabel("Claude API key")
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
     await expect(saveButton).toBeDisabled()
   })
 })
@@ -285,7 +313,11 @@ test.describe("OpenAI API key management", () => {
 
   test("can enter and save a valid OpenAI API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("OpenAI API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the OpenAI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter a valid API key format
     await apiKeyInput.fill("sk-proj-test-key-123456789012345678901234567890")
@@ -303,7 +335,11 @@ test.describe("OpenAI API key management", () => {
 
   test("shows validation error for invalid OpenAI API key format", async ({ page }) => {
     const apiKeyInput = page.getByLabel("OpenAI API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the OpenAI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter an invalid API key (doesn't start with sk-)
     await apiKeyInput.fill("invalid-api-key-format")
@@ -316,7 +352,11 @@ test.describe("OpenAI API key management", () => {
 
   test("shows validation error when Claude key is entered in OpenAI field", async ({ page }) => {
     const apiKeyInput = page.getByLabel("OpenAI API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the OpenAI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Enter a Claude API key in OpenAI field
     await apiKeyInput.fill("sk-ant-api03-test-key-12345678901234567890")
@@ -331,7 +371,11 @@ test.describe("OpenAI API key management", () => {
 
   test("can clear saved OpenAI API key", async ({ page }) => {
     const apiKeyInput = page.getByLabel("OpenAI API key")
-    const saveButton = page.getByRole("button", { name: "Save" })
+    // Find the save button within the OpenAI form section
+    const saveButton = page
+      .locator("form")
+      .filter({ has: apiKeyInput })
+      .getByRole("button", { name: "Save" })
 
     // Get the initial value to check if env variable is set
     const initialValue = await apiKeyInput.inputValue()

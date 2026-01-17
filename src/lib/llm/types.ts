@@ -22,6 +22,10 @@ export interface LLMConfig {
   model?: string
   /** Maximum tokens in the response */
   maxTokens?: number
+  /** User's bio - helps the AI understand context about the user */
+  bio?: string
+  /** Additional instructions for customizing AI behavior */
+  additionalInstructions?: string
 }
 
 /**
