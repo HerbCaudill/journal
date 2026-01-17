@@ -115,6 +115,41 @@ describe("useLLM", () => {
     expect(result.current.isLoading).toBe(false)
   })
 
+  it("shows user message immediately (optimistically) before assistant response arrives", async () => {
+    let resolvePromise: (value: LLMResponse) => void
+    mockSendMessage.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          resolvePromise = resolve
+        }),
+    )
+
+    const { result } = renderHook(() => useLLM(defaultOptions))
+
+    // Start sending a message but don't wait for it to complete
+    act(() => {
+      result.current.send("My message")
+    })
+
+    // While still loading, the user message should already be visible
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(true)
+    })
+    expect(result.current.messages).toHaveLength(1)
+    expect(result.current.messages[0].role).toBe("user")
+    expect(result.current.messages[0].content).toBe("My message")
+
+    // Now resolve the promise
+    await act(async () => {
+      resolvePromise!({ content: "Response!", success: true })
+    })
+
+    // After completion, both messages should be present
+    expect(result.current.messages).toHaveLength(2)
+    expect(result.current.messages[0].role).toBe("user")
+    expect(result.current.messages[1].role).toBe("assistant")
+  })
+
   it("handles API errors and removes optimistic message", async () => {
     mockSendMessage.mockResolvedValue({
       content: "",

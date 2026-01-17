@@ -173,6 +173,7 @@ export function DayView({ date }: DayViewProps) {
         bio={bio}
         additionalInstructions={additionalInstructions}
         onSubmitButtonProps={hasConversation ? undefined : setSubmitButtonProps}
+        onConversationStart={() => setConversationStarted(true)}
       />
     </div>
   )

@@ -34,6 +34,8 @@ interface LLMSectionProps {
   additionalInstructions?: string
   /** Callback to receive submit button props - parent can render the button elsewhere */
   onSubmitButtonProps?: (props: LLMSubmitButtonProps) => void
+  /** Callback when conversation starts (user submits first message) */
+  onConversationStart?: () => void
 }
 
 /**
@@ -102,6 +104,7 @@ export function LLMSection({
   bio,
   additionalInstructions,
   onSubmitButtonProps,
+  onConversationStart,
 }: LLMSectionProps) {
   const { messages, isLoading, error, send } = useLLM({
     provider,
@@ -131,6 +134,9 @@ export function LLMSection({
       return
     }
 
+    // Notify parent that conversation has started (so it can hide the editor immediately)
+    onConversationStart?.()
+
     const response = await send(entryContent)
 
     if (response.success && onMessagesChange) {
@@ -151,7 +157,7 @@ export function LLMSection({
         },
       ])
     }
-  }, [apiKey, entryContent, send, messages, onMessagesChange])
+  }, [apiKey, entryContent, send, messages, onMessagesChange, onConversationStart])
 
   // Handle sending a follow-up message
   const handleFollowUp = useCallback(async () => {

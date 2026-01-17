@@ -256,6 +256,45 @@ describe("LLMSection", () => {
       })
     })
 
+    it("calls onConversationStart immediately when user submits", async () => {
+      const user = userEvent.setup()
+      const onConversationStart = vi.fn()
+      mockSend.mockResolvedValue({ content: "Response", success: true })
+
+      render(
+        <LLMSection
+          entryContent="My journal entry"
+          apiKey="test-key"
+          provider="claude"
+          onConversationStart={onConversationStart}
+        />,
+      )
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      // onConversationStart should be called immediately, before the response
+      expect(onConversationStart).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not call onConversationStart when validation fails", async () => {
+      const user = userEvent.setup()
+      const onConversationStart = vi.fn()
+
+      render(
+        <LLMSection
+          entryContent="   " // Empty content
+          apiKey="test-key"
+          provider="claude"
+          onConversationStart={onConversationStart}
+        />,
+      )
+
+      await user.click(screen.getByRole("button", { name: /ask claude/i }))
+
+      // onConversationStart should not be called when validation fails
+      expect(onConversationStart).not.toHaveBeenCalled()
+    })
+
     it("displays all messages from multi-turn conversation", () => {
       const messages: Message[] = [
         { id: "1", role: "user", content: "First question", createdAt: 1000 },
@@ -566,6 +605,37 @@ describe("LLMSection", () => {
 
       const input = screen.getByRole("textbox", { name: /follow-up message/i })
       expect(document.activeElement).not.toBe(input)
+    })
+
+    it("shows user message as read-only in conversation while loading (optimistic update)", () => {
+      // Simulate the state after a follow-up was submitted but before the response arrives
+      // The user's follow-up message should be visible as a read-only message
+      const messages: Message[] = [
+        { id: "1", role: "user", content: "First question", createdAt: Date.now() },
+        { id: "2", role: "assistant", content: "First response", createdAt: Date.now() },
+        { id: "3", role: "user", content: "Follow-up question", createdAt: Date.now() },
+      ]
+
+      mockUseLLM.mockReturnValue({
+        messages,
+        isLoading: true,
+        error: null,
+        send: mockSend,
+        reset: mockReset,
+        setMessages: mockSetMessages,
+      })
+
+      render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
+
+      // The user's follow-up should be visible as a read-only message in the conversation
+      const userMessages = screen.getAllByTestId("user-message")
+      expect(userMessages).toHaveLength(2) // First question + follow-up question
+      expect(screen.getByText("Follow-up question")).toBeInTheDocument()
+
+      // The input should be empty and disabled (not containing the user's message)
+      const input = screen.getByRole("textbox", { name: /follow-up message/i })
+      expect(input).toHaveValue("")
+      expect(input).toBeDisabled()
     })
   })
 })
