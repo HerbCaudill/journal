@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { RepoContext, useDocument } from "@automerge/automerge-repo-react-hooks"
 import type { AutomergeUrl, DocHandle } from "@automerge/automerge-repo"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
@@ -74,12 +74,15 @@ function JournalDocumentProvider({
     }
   }, [doc])
 
-  const value: JournalContextValue = {
-    doc,
-    changeDoc,
-    handle,
-    isLoading: isUrlLoading || doc === undefined,
-  }
+  const value: JournalContextValue = useMemo(
+    () => ({
+      doc,
+      changeDoc,
+      handle,
+      isLoading: isUrlLoading || doc === undefined,
+    }),
+    [doc, changeDoc, handle, isUrlLoading],
+  )
 
   return <JournalContext.Provider value={value}>{children}</JournalContext.Provider>
 }
