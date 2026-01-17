@@ -1,16 +1,66 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
-import { DayView } from "./DayView"
 import * as JournalContext from "../context/JournalContext"
 import type { JournalDoc } from "../types/journal"
 import type { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge"
 
-// Mock the useJournal hook
-vi.mock("../context/JournalContext", async () => {
-  const actual = await vi.importActual("../context/JournalContext")
+// Mock the useJournal hook - don't use importActual to avoid loading automerge
+vi.mock("../context/JournalContext", () => ({
+  useJournal: vi.fn(),
+}))
+
+// Import DayView after mocking context
+import { DayView } from "./DayView"
+
+// Mock the LLMSection component - the Anthropic SDK import causes memory issues in jsdom
+// Note: we use useEffect to call onSubmitButtonProps to avoid infinite render loops
+vi.mock("./LLMSection", () => {
+  const React = require("react")
   return {
-    ...actual,
-    useJournal: vi.fn(),
+    LLMSection: ({
+      apiKey,
+      initialMessages,
+      onSubmitButtonProps,
+    }: {
+      entryContent: string
+      apiKey: string
+      provider: string
+      initialMessages: Array<{ id: string; role: string; content: string; createdAt: number }>
+      onMessagesChange: (messages: unknown[]) => void
+      bio: string
+      additionalInstructions: string
+      onSubmitButtonProps: (props: {
+        onClick: () => void
+        disabled: boolean
+        isLoading: boolean
+        ariaLabel: string
+      }) => void
+    }) => {
+      // Use useEffect to call onSubmitButtonProps to avoid infinite render loops
+      React.useEffect(() => {
+        if (onSubmitButtonProps) {
+          onSubmitButtonProps({
+            onClick: () => {},
+            disabled: !apiKey,
+            isLoading: false,
+            ariaLabel: "Ask Claude",
+          })
+        }
+      }, [apiKey, onSubmitButtonProps])
+
+      // Render assistant messages if present
+      const assistantMessages =
+        initialMessages?.filter((m: { role: string }) => m.role === "assistant") || []
+      return (
+        <div data-testid="llm-section">
+          {assistantMessages.map((m: { id: string; content: string }) => (
+            <div key={m.id}>{m.content}</div>
+          ))}
+          {!apiKey && <span>add your API key</span>}
+        </div>
+      )
+    },
+    SubmitButtonIcon: () => null,
   }
 })
 

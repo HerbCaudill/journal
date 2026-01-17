@@ -104,6 +104,19 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - **E2e tests**: Playwright (Chromium only), auto-starts dev server on port 5173
 - Run single test: `pnpm test -- dates` or `pnpm test:pw app.spec.ts`
 
+**Important: Mocking Heavy Dependencies in Unit Tests**
+
+The `LLMSection` component imports the Anthropic SDK, which causes jsdom memory issues when running unit tests. Tests that render components importing `LLMSection` (like `App.tsx` or `DayView.tsx`) must mock the `LLMSection` component:
+
+```typescript
+vi.mock("./components/LLMSection", () => ({
+  LLMSection: () => null,
+  SubmitButtonIcon: () => null,
+}))
+```
+
+Similarly, when testing components that import from `@automerge/*` packages, avoid using `vi.importActual` as it will load the heavy automerge/WASM dependencies. Instead, create simple mock objects.
+
 **E2E test files:**
 
 - `e2e/app.spec.ts` - Basic app navigation tests

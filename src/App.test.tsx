@@ -1,8 +1,65 @@
 import { render, screen, act, waitFor } from "@testing-library/react"
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { App } from "./App"
 import type { JournalDoc } from "./types/journal"
-import type { Doc } from "@automerge/automerge"
+
+// Mock automerge modules early to prevent heavy WASM loading
+vi.mock("@automerge/automerge-repo", () => ({
+  Repo: vi.fn(),
+}))
+vi.mock("@automerge/automerge-repo-storage-indexeddb", () => ({
+  IndexedDBStorageAdapter: vi.fn(),
+}))
+vi.mock("@automerge/automerge-repo-react-hooks", () => ({
+  RepoContext: {
+    Provider: ({ children }: { children: React.ReactNode }) => children,
+  },
+  useDocument: vi.fn(() => [undefined, vi.fn()]),
+}))
+
+// Mock the repo module
+vi.mock("./lib/repo", () => ({
+  getRepo: vi.fn(() => ({})),
+}))
+
+// Mock the LLMSection component - the Anthropic SDK import causes memory issues in jsdom
+vi.mock("./components/LLMSection", () => ({
+  LLMSection: () => null,
+  SubmitButtonIcon: () => null,
+}))
+
+// Mock hooks that have side effects
+vi.mock("./hooks/useGeolocation", () => ({
+  useGeolocation: () => ({
+    position: null,
+    isLoading: false,
+    error: null,
+    permission: "prompt",
+    requestPosition: vi.fn().mockResolvedValue(null),
+    clear: vi.fn(),
+  }),
+}))
+
+vi.mock("./hooks/useGoogleCalendar", () => ({
+  useGoogleCalendar: () => ({
+    authState: "unconfigured",
+    isLoading: false,
+    error: null,
+    events: [],
+    authenticate: vi.fn(),
+    handleCallback: vi.fn().mockResolvedValue(false),
+    fetchEvents: vi.fn(),
+    signOut: vi.fn(),
+    clearError: vi.fn(),
+  }),
+}))
+
+vi.mock("./hooks/useTheme", () => ({
+  useTheme: () => ({
+    preference: "system",
+    resolved: "light",
+    setTheme: vi.fn(),
+  }),
+}))
 
 // Mock the dates module to have consistent test results
 vi.mock("./lib/dates", async () => {
@@ -12,6 +69,12 @@ vi.mock("./lib/dates", async () => {
     getToday: () => "2025-01-16",
   }
 })
+
+// Type for Doc from automerge (simplified mock version)
+type Doc<T> = T
+
+// Import App after mocking the heavy dependencies
+import { App } from "./App"
 
 // Store original location for restoration
 const originalLocation = window.location
