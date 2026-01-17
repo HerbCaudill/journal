@@ -55,8 +55,7 @@ Note: API keys set via environment variables serve as defaults. Users can overri
 - `src/lib/llm/types.ts` - Provider-agnostic interfaces: `LLMProvider`, `LLMConfig`, `LLMResponse`, `ProviderType`
 - `src/lib/llm/providers/claude.ts` - Claude provider implementing `LLMProvider` interface
 - `src/hooks/useLLM.ts` - Provider-agnostic React hook for managing LLM conversation state
-- `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude")
-- `src/lib/claude.ts` - Legacy Anthropic API wrapper (deprecated, use Claude provider instead)
+- `src/hooks/useClaude.ts` - Legacy hook (deprecated, wraps useLLM with provider="claude") for backward compatibility
 - `src/components/LLMSection.tsx` - Provider-agnostic UI component with submit button, follow-up input, and response display
 - `src/types/journal.ts` - Settings type includes `llmProvider` field (claude|openai) and provider-specific API keys
 - Settings view allows selecting LLM provider; only shows API key field for the selected provider

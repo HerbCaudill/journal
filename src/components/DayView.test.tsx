@@ -14,9 +14,9 @@ vi.mock("../context/JournalContext", async () => {
   }
 })
 
-// Mock the useClaude hook
-vi.mock("../hooks/useClaude", () => ({
-  useClaude: vi.fn(() => ({
+// Mock the useLLM hook (used by LLMSection)
+vi.mock("../hooks/useLLM", () => ({
+  useLLM: vi.fn(() => ({
     messages: [],
     isLoading: false,
     error: null,
@@ -166,8 +166,8 @@ describe("DayView", () => {
     })
 
     it("displays Claude's responses when present in entry", async () => {
-      const { useClaude } = await import("../hooks/useClaude")
-      vi.mocked(useClaude).mockReturnValue({
+      const { useLLM } = await import("../hooks/useLLM")
+      vi.mocked(useLLM).mockReturnValue({
         messages: [
           {
             id: "msg-1",
