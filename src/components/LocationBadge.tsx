@@ -1,6 +1,7 @@
 import type { GeoPosition } from "../hooks/useGeolocation"
 import { useReverseGeocode } from "../hooks/useReverseGeocode"
 import { LocationIcon } from "./Icons"
+import { cn } from "@/lib/utils"
 
 interface LocationBadgeProps {
   /** The geographic position to display */
@@ -73,7 +74,7 @@ export function LocationBadge({ position, onClick }: LocationBadgeProps) {
     return (
       <button
         onClick={onClick}
-        className={`${className} hover:text-foreground cursor-pointer transition-colors`}
+        className={cn(className, "hover:text-foreground cursor-pointer transition-colors")}
         aria-label={ariaLabel}
         title={tooltipText}
       >

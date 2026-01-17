@@ -3,6 +3,7 @@ import { parseDate, addDays, getToday, isFutureDate } from "../lib/dates"
 import { DatePicker } from "./DatePicker"
 import { LocationBadge } from "./LocationBadge"
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from "./Icons"
+import { cn } from "@/lib/utils"
 import type { GeoPosition } from "../hooks/useGeolocation"
 
 interface HeaderProps {
@@ -125,7 +126,7 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
           {showNavigation && (
             <button
               onClick={handlePreviousDay}
-              className="text-muted-foreground hover:text-foreground rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full p-2 transition-colors"
               aria-label="Previous day"
             >
               <ChevronLeftIcon />
@@ -142,7 +143,7 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
                 <button
                   ref={calendarButtonRef}
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1 rounded-full px-2 py-1 transition-colors"
                   aria-expanded={isDatePickerOpen}
                   aria-haspopup="dialog"
                 >
@@ -173,11 +174,12 @@ export function Header({ date, showNavigation = true, position, onLocationClick 
             <button
               onClick={handleNextDay}
               disabled={isToday}
-              className={`rounded-full p-2 transition-colors ${
+              className={cn(
+                "rounded-full p-2 transition-colors",
                 isToday ?
-                  "cursor-not-allowed text-gray-300 dark:text-gray-700"
-                : "text-muted-foreground hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+                  "text-muted-foreground/40 cursor-not-allowed"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+              )}
               aria-label="Next day"
               aria-disabled={isToday}
             >
