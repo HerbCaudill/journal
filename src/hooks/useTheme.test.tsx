@@ -338,6 +338,28 @@ describe("useTheme", () => {
         expect.any(Function),
       )
     })
+
+    it("does not add/remove listeners on re-render when preference unchanged", () => {
+      vi.mocked(JournalContext.useJournal).mockReturnValue({
+        doc: createMockDoc("system"),
+        changeDoc: mockChangeDoc,
+        handle: undefined,
+        isLoading: false,
+      })
+
+      const { rerender } = renderHook(() => useTheme())
+
+      // Initial render adds listener once
+      expect(mockMediaQueryList.addEventListener).toHaveBeenCalledTimes(1)
+      expect(mockMediaQueryList.removeEventListener).toHaveBeenCalledTimes(0)
+
+      // Re-render should NOT cause listener churn
+      rerender()
+
+      // Still only called once - no churn
+      expect(mockMediaQueryList.addEventListener).toHaveBeenCalledTimes(1)
+      expect(mockMediaQueryList.removeEventListener).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe("default theme", () => {

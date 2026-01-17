@@ -67,7 +67,10 @@ export function useTheme() {
   useEffect(() => {
     const resolved = resolveTheme(preference)
     applyTheme(resolved)
-  }, [preference, resolveTheme, applyTheme])
+    // Note: resolveTheme and applyTheme are stable (empty deps in useCallback),
+    // so we intentionally omit them to avoid unnecessary lint warnings
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preference])
 
   // Listen for system preference changes when using 'system' theme
   useEffect(() => {
@@ -81,7 +84,10 @@ export function useTheme() {
 
     mediaQuery.addEventListener("change", handleChange)
     return () => mediaQuery.removeEventListener("change", handleChange)
-  }, [preference, applyTheme])
+    // Note: applyTheme is stable (empty deps in useCallback),
+    // so we intentionally omit it to avoid unnecessary effect re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preference])
 
   const resolved = resolveTheme(preference)
 
