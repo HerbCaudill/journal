@@ -263,7 +263,7 @@ export function LLMSection({
                       }
                     }}
                     disabled={isLoading}
-                    className="text-foreground bg-background border-input focus:ring-ring min-h-20 w-full resize-none rounded-md border p-2 font-serif text-base leading-relaxed focus:outline-none focus:ring-2"
+                    className="text-foreground bg-background border-input focus:ring-ring min-h-20 w-full resize-none rounded-md border p-2 font-serif text-base leading-relaxed focus:ring-2 focus:outline-none"
                     aria-label="Edit message"
                   />
                   <div className="flex gap-2">
@@ -287,7 +287,9 @@ export function LLMSection({
                 </div>
               : /* Regular display mode for user messages */
                 <div className="group/message">
-                  <p className="text-foreground font-serif whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-foreground font-serif whitespace-pre-wrap">
+                    {message.content}
+                  </p>
                   <button
                     onClick={() => handleStartEdit(message.id, message.content)}
                     className="text-muted-foreground/40 hover:text-muted-foreground mt-1 p-1 transition-opacity md:opacity-0 md:group-hover/message:opacity-100 md:focus:opacity-100"

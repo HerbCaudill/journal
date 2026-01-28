@@ -777,7 +777,10 @@ describe("useLLM", () => {
 
       let response: LLMResponse
       await act(async () => {
-        response = await result.current.editAndResend(assistantMessageId, "Trying to edit assistant")
+        response = await result.current.editAndResend(
+          assistantMessageId,
+          "Trying to edit assistant",
+        )
       })
 
       expect(response!.success).toBe(false)

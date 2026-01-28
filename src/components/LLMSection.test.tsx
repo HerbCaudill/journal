@@ -113,7 +113,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -140,7 +140,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -163,7 +163,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -189,7 +189,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -213,7 +213,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -340,7 +340,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -367,7 +367,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -383,7 +383,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -399,7 +399,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -415,7 +415,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -431,7 +431,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -447,7 +447,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -464,7 +464,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -481,7 +481,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       const { rerender } = render(
@@ -501,7 +501,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -523,7 +523,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({
@@ -546,7 +546,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       // Force rerender to pick up error state
@@ -571,7 +571,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       // Simulate a failed send that should restore the input
@@ -604,7 +604,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -624,7 +624,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -787,7 +787,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
@@ -831,7 +831,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -899,7 +899,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -930,7 +930,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       // First send succeeds
@@ -1011,7 +1011,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1035,7 +1035,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       const { rerender } = render(
@@ -1052,7 +1052,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1078,7 +1078,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1128,7 +1128,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1156,7 +1156,7 @@ describe("LLMSection", () => {
           send: mockSend,
           reset: mockReset,
           setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+          editAndResend: mockEditAndResend,
         })
 
         const { rerender } = render(
@@ -1215,7 +1215,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1243,7 +1243,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="" provider="claude" />)
@@ -1264,7 +1264,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1287,7 +1287,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1315,7 +1315,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1342,7 +1342,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1370,7 +1370,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1398,7 +1398,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       mockSend.mockResolvedValue({ content: "Follow-up response", success: true })
@@ -1427,7 +1427,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1449,7 +1449,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1476,7 +1476,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       // Mock send to return the updated messages array (as useLLM now does)
@@ -1529,7 +1529,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1551,7 +1551,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1577,7 +1577,7 @@ describe("LLMSection", () => {
         send: mockSend,
         reset: mockReset,
         setMessages: mockSetMessages,
-      editAndResend: mockEditAndResend,
+        editAndResend: mockEditAndResend,
       })
 
       render(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
@@ -1669,7 +1669,9 @@ describe("LLMSection", () => {
 
       // Should show edit textarea
       expect(screen.getByRole("textbox", { name: /edit message/i })).toBeInTheDocument()
-      expect(screen.getByRole("textbox", { name: /edit message/i })).toHaveValue("Follow-up message")
+      expect(screen.getByRole("textbox", { name: /edit message/i })).toHaveValue(
+        "Follow-up message",
+      )
       // Should show Save and Cancel buttons
       expect(screen.getByRole("button", { name: /save and resend/i })).toBeInTheDocument()
       expect(screen.getByRole("button", { name: /cancel edit/i })).toBeInTheDocument()
@@ -1935,7 +1937,9 @@ describe("LLMSection", () => {
       rerender(<LLMSection entryContent="Test entry" apiKey="test-key" provider="claude" />)
 
       // Should show loading state
-      expect(screen.getByRole("button", { name: /save and resend/i })).toHaveTextContent("Sending...")
+      expect(screen.getByRole("button", { name: /save and resend/i })).toHaveTextContent(
+        "Sending...",
+      )
       expect(screen.getByRole("textbox", { name: /edit message/i })).toBeDisabled()
     })
   })
