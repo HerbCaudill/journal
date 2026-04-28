@@ -29,3 +29,8 @@ dist-ssr
 # Test output
 test-results
 playwright-report
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
