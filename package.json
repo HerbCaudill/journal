@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --open",
+    "dev": "localhost-dev pnpm dev:app",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -14,7 +14,9 @@
     "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "ralph": "npx @herbcaudill/ralph"
+    "ralph": "npx @herbcaudill/ralph",
+    "dev:app": "vite",
+    "dev:url": "localhost-dev url"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

@@ -18,8 +18,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    command: "pnpm dev:app",
     url: "http://localhost:5179",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 })
